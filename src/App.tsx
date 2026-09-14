@@ -1,0 +1,22998 @@
+// full aplication
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  createContext,
+  useContext,
+} from "react";
+
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
+// ═══════════════════════════════════════════════════════════════
+// MOCK DATA
+// ═══════════════════════════════════════════════════════════════
+const SCHOOL_CONFIG = {
+  name: "Sunrise Public School",
+  tagline: "Illuminating Futures Since 1998",
+  address: "12, Knowledge Park, Sector 62, Noida",
+  phone: "+91 98765 43210",
+  email: "info@sunriseschool.edu",
+  logo: "🌅",
+  color: "#E8600A",
+  colorLight: "#FFF3EC",
+  colorDark: "#B84800",
+};
+
+const CLASSES = [
+  "Class 1",
+  "Class 2",
+  "Class 3",
+  "Class 4",
+  "Class 5",
+  "Class 6",
+  "Class 7",
+  "Class 8",
+  "Class 9",
+  "Class 10",
+  "Class 11",
+  "Class 12",
+];
+const SECTIONS = {
+  "Class 1": ["A", "B"],
+  "Class 2": ["A", "B", "C"],
+  "Class 3": ["A", "B", "C"],
+  "Class 4": ["A", "B"],
+  "Class 5": ["A", "B", "C"],
+  "Class 6": ["A", "B", "C"],
+  "Class 7": ["A", "B", "C"],
+  "Class 8": ["A", "B"],
+  "Class 9": ["A", "B", "C"],
+  "Class 10": ["A", "B", "C"],
+  "Class 11": ["Science", "Commerce", "Arts"],
+  "Class 12": ["Science", "Commerce", "Arts"],
+};
+const CLASS_SUBJECTS = {
+  "Class 1": ["English", "Hindi", "Maths", "EVS", "Drawing"],
+  "Class 2": ["English", "Hindi", "Maths", "EVS", "Drawing"],
+  "Class 3": ["English", "Hindi", "Maths", "Science", "Social", "Drawing"],
+  "Class 4": ["English", "Hindi", "Maths", "Science", "Social", "Drawing"],
+  "Class 5": ["English", "Hindi", "Maths", "Science", "Social", "Computer"],
+  "Class 6": [
+    "English",
+    "Hindi",
+    "Maths",
+    "Science",
+    "Social",
+    "Computer",
+    "Sanskrit",
+  ],
+  "Class 7": [
+    "English",
+    "Hindi",
+    "Maths",
+    "Science",
+    "Social",
+    "Computer",
+    "Sanskrit",
+  ],
+  "Class 8": [
+    "English",
+    "Hindi",
+    "Maths",
+    "Science",
+    "Social",
+    "Computer",
+    "Sanskrit",
+  ],
+  "Class 9": ["English", "Hindi", "Maths", "Science", "Social", "Computer"],
+  "Class 10": ["English", "Hindi", "Maths", "Science", "Social", "Computer"],
+  "Class 11": [
+    "English",
+    "Physics",
+    "Chemistry",
+    "Maths",
+    "Biology",
+    "Computer",
+  ],
+  "Class 12": [
+    "English",
+    "Physics",
+    "Chemistry",
+    "Maths",
+    "Biology",
+    "Computer",
+  ],
+};
+const FEE_STRUCTURE = {
+  "Class 1": 2500,
+  "Class 2": 2500,
+  "Class 3": 2800,
+  "Class 4": 2800,
+  "Class 5": 3000,
+  "Class 6": 3200,
+  "Class 7": 3200,
+  "Class 8": 3500,
+  "Class 9": 4000,
+  "Class 10": 4000,
+  "Class 11": 5000,
+  "Class 12": 5000,
+};
+
+const STUDENTS = Array.from({ length: 120 }, (_, i) => ({
+  id: `STU${String(i + 1).padStart(4, "0")}`,
+  name: [
+    "Aarav Sharma",
+    "Priya Singh",
+    "Rahul Gupta",
+    "Sneha Patel",
+    "Arjun Verma",
+    "Kavya Nair",
+    "Vikram Joshi",
+    "Ananya Reddy",
+    "Rohan Mehta",
+    "Isha Agarwal",
+    "Dev Kumar",
+    "Meera Iyer",
+    "Siddharth Rao",
+    "Pooja Saxena",
+    "Aditya Tiwari",
+    "Riya Bose",
+    "Karan Malhotra",
+    "Simran Kaur",
+    "Nikhil Pandey",
+    "Tanvi Shah",
+  ][i % 20],
+  rollNo: i + 1,
+  class: CLASSES[Math.floor(i / 10)],
+  section: ["A", "B", "C"][i % 3],
+  gender: i % 2 === 0 ? "Male" : "Female",
+  dob: `${2000 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(
+    2,
+    "0"
+  )}-${String((i % 28) + 1).padStart(2, "0")}`,
+  phone: `98${String(7000000000 + i * 1000000).slice(0, 8)}`,
+  parent: `Parent of Student ${i + 1}`,
+  address: `${i + 1}, Block ${["A", "B", "C", "D"][i % 4]}, Knowledge Park`,
+  feeStatus: ["Paid", "Pending", "Partial"][i % 3],
+  admissionDate: `2020-0${(i % 9) + 1}-${String((i % 28) + 1).padStart(
+    2,
+    "0"
+  )}`,
+  photo: ["👦", "👧"][i % 2],
+}));
+
+const TEACHERS = Array.from({ length: 25 }, (_, i) => ({
+  id: `TCH${String(i + 1).padStart(3, "0")}`,
+  name: [
+    "Mr. Rajesh Kumar",
+    "Mrs. Sunita Sharma",
+    "Mr. Pradeep Singh",
+    "Mrs. Kavita Gupta",
+    "Mr. Amit Verma",
+    "Mrs. Rekha Patel",
+    "Mr. Suresh Nair",
+    "Mrs. Geeta Joshi",
+    "Mr. Manish Agarwal",
+    "Mrs. Anita Rao",
+    "Mr. Deepak Mehta",
+    "Mrs. Priti Iyer",
+    "Mr. Sanjay Tiwari",
+    "Mrs. Nisha Bose",
+    "Mr. Vikas Malhotra",
+    "Mrs. Pooja Kaur",
+    "Mr. Ajay Pandey",
+    "Mrs. Smita Shah",
+    "Mr. Ramesh Verma",
+    "Mrs. Sunita Singh",
+    "Mr. Prakash Kumar",
+    "Mrs. Lakshmi Nair",
+    "Mr. Mohan Gupta",
+    "Mrs. Geeta Sharma",
+    "Mr. Arun Patel",
+  ][i],
+  subject: [
+    "Mathematics",
+    "English",
+    "Science",
+    "Hindi",
+    "Social Studies",
+    "Computer",
+    "Physics",
+    "Chemistry",
+    "Biology",
+    "Sanskrit",
+    "Drawing",
+    "Physical Ed",
+    "Geography",
+    "History",
+    "Civics",
+    "Economics",
+    "Accountancy",
+    "Business Studies",
+    "EVS",
+    "Music",
+    "Art",
+    "Home Science",
+    "Psychology",
+    "Political Science",
+    "Sociology",
+  ][i % 25],
+  phone: `97${String(8000000000 + i * 1000000).slice(0, 8)}`,
+  email: `teacher${i + 1}@sunriseschool.edu`,
+  assignedClasses: [CLASSES[i % 12], CLASSES[(i + 2) % 12]],
+  experience: `${(i % 15) + 2} years`,
+  qualification: [
+    "B.Ed, M.Sc",
+    "B.Ed, M.A",
+    "B.Ed, B.Sc",
+    "M.Ed, M.A",
+    "B.Ed, M.Com",
+  ][i % 5],
+  joinDate: `20${String(10 + (i % 13)).padStart(2, "0")}-06-01`,
+  status: i === 3 || i === 7 ? "Absent" : "Present",
+  photo: ["👨‍🏫", "👩‍🏫"][i % 2],
+}));
+
+
+
+const generateMarks = () => {
+  const data = {};
+  STUDENTS.forEach((s) => {
+    data[s.id] = {};
+    const subjects = CLASS_SUBJECTS[s.class] || ["English", "Maths", "Science"];
+    subjects.forEach((sub) => {
+      data[s.id][sub] = {
+        ut1: Math.floor(Math.random() * 15) + 5,
+        ut2: Math.floor(Math.random() * 15) + 5,
+        half: Math.floor(Math.random() * 50) + 25,
+        annual: Math.floor(Math.random() * 80) + 40,
+      };
+    });
+  });
+  return data;
+};
+
+const MARKS_DATA = generateMarks();
+
+
+
+const FEES_DATA = STUDENTS.map((s) => ({
+  studentId: s.id,
+  studentName: s.name,
+  class: s.class,
+  section: s.section,
+  monthlyFee: FEE_STRUCTURE[s.class] || 3000,
+  paid:
+    s.feeStatus === "Paid"
+      ? FEE_STRUCTURE[s.class] * 11
+      : s.feeStatus === "Partial"
+      ? FEE_STRUCTURE[s.class] * 6
+      : 0,
+  pending:
+    s.feeStatus === "Pending"
+      ? FEE_STRUCTURE[s.class] * 11
+      : s.feeStatus === "Partial"
+      ? FEE_STRUCTURE[s.class] * 5
+      : 0,
+  lastPaid: s.feeStatus !== "Pending" ? `2024-11-01` : "Never",
+  history: Array.from({ length: 6 }, (_, i) => ({
+    month: ["June", "July", "August", "September", "October", "November"][i],
+    amount: FEE_STRUCTURE[s.class] || 3000,
+    status: [
+      "Paid",
+      "Paid",
+      "Paid",
+      "Paid",
+      s.feeStatus === "Pending" ? "Pending" : "Paid",
+      "Pending",
+    ][i],
+  })),
+}));
+
+// ═══════════════════════════════════════════════════════════════
+// THEME & COLORS
+// ═══════════════════════════════════════════════════════════════
+const C = {
+  primary: SCHOOL_CONFIG.color,
+  primaryLight: SCHOOL_CONFIG.colorLight,
+  primaryDark: SCHOOL_CONFIG.colorDark,
+  bg: "#0F1117",
+  surface: "#1A1D27",
+  surfaceAlt: "#21253A",
+  border: "#2D3250",
+  text: "#E8EAF6",
+  textMuted: "#8B92B8",
+  green: "#22C55E",
+  red: "#EF4444",
+  yellow: "#F59E0B",
+  blue: "#3B82F6",
+  purple: "#A855F7",
+  cyan: "#06B6D4",
+};
+
+const CHART_COLORS = [
+  C.primary,
+  "#3B82F6",
+  "#22C55E",
+  "#A855F7",
+  "#F59E0B",
+  "#06B6D4",
+  "#EF4444",
+  "#EC4899",
+];
+
+// ═══════════════════════════════════════════════════════════════
+// CSS INJECTION
+// ═══════════════════════════════════════════════════════════════
+const injectStyles = () => {
+  const style = document.createElement("style");
+
+  style.textContent = `
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:${C.bg};color:${C.text};overflow-x:hidden;}
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-track{background:${C.surface};}
+    ::-webkit-scrollbar-thumb{background:${C.border};border-radius:3px;}
+    ::-webkit-scrollbar-thumb:hover{background:${C.primary};}
+    .syne{font-family:'Syne',sans-serif;}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;cursor:pointer;transition:all 0.2s;color:${C.textMuted};font-size:13.5px;font-weight:500;text-decoration:none;border:none;background:transparent;width:100%;text-align:left;}
+    .sidebar-link:hover{background:${C.surfaceAlt};color:${C.text};}
+    .sidebar-link.active{background:linear-gradient(135deg,${C.primary}22,${C.primary}11);color:${C.primary};border-left:3px solid ${C.primary};}
+    .sidebar-group{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:${C.textMuted};padding:14px 14px 6px;font-weight:600;}
+    .card{background:${C.surface};border:1px solid ${C.border};border-radius:16px;padding:20px;}
+    .card-sm{background:${C.surface};border:1px solid ${C.border};border-radius:12px;padding:14px;}
+    .kpi-card{background:${C.surface};border:1px solid ${C.border};border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:transform 0.2s,border-color 0.2s;}
+    .kpi-card:hover{transform:translateY(-2px);border-color:${C.primary}44;}
+    .btn{padding:9px 18px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;transition:all 0.2s;}
+    .btn-primary{background:${C.primary};color:white;}
+    .btn-primary:hover{background:${C.primaryDark};}
+    .btn-ghost{background:transparent;color:${C.textMuted};border:1px solid ${C.border};}
+    .btn-ghost:hover{background:${C.surfaceAlt};color:${C.text};}
+    .btn-danger{background:${C.red}22;color:${C.red};border:1px solid ${C.red}44;}
+    .btn-success{background:${C.green}22;color:${C.green};border:1px solid ${C.green}44;}
+    .input{background:${C.surfaceAlt};border:1px solid ${C.border};border-radius:9px;padding:9px 13px;color:${C.text};font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color 0.2s;width:100%;}
+    .input:focus{border-color:${C.primary};}
+    .select{background:${C.surfaceAlt};border:1px solid ${C.border};border-radius:9px;padding:9px 13px;color:${C.text};font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;cursor:pointer;width:100%;}
+    .select:focus{border-color:${C.primary};}
+    .table{width:100%;border-collapse:collapse;font-size:13.5px;}
+    .table th{background:${C.surfaceAlt};color:${C.textMuted};padding:10px 14px;text-align:left;font-weight:600;font-size:11.5px;letter-spacing:0.5px;text-transform:uppercase;}
+    .table td{padding:11px 14px;border-bottom:1px solid ${C.border}22;color:${C.text};}
+    .table tr:hover td{background:${C.surfaceAlt}44;}
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:11.5px;font-weight:600;}
+    .badge-green{background:${C.green}22;color:${C.green};}
+    .badge-red{background:${C.red}22;color:${C.red};}
+    .badge-yellow{background:${C.yellow}22;color:${C.yellow};}
+    .badge-blue{background:${C.blue}22;color:${C.blue};}
+    .badge-purple{background:${C.purple}22;color:${C.purple};}
+    .tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;border:none;background:transparent;color:${C.textMuted};transition:all 0.2s;}
+    .tab.active{background:${C.primary}22;color:${C.primary};}
+    .tab:hover{color:${C.text};}
+    .modal-overlay{position:fixed;inset:0;background:#00000088;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .modal{background:${C.surface};border:1px solid ${C.border};border-radius:20px;padding:28px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;}
+    .progress-bar{height:6px;background:${C.border};border-radius:3px;overflow:hidden;}
+    .progress-fill{height:100%;border-radius:3px;transition:width 0.5s;}
+    @media(max-width:768px){
+      .sidebar-desktop{display:none!important;}
+      .main-content{margin-left:0!important;}
+      .grid-4{grid-template-columns:1fr 1fr!important;}
+      .grid-3{grid-template-columns:1fr!important;}
+      .grid-2{grid-template-columns:1fr!important;}
+      .hide-mobile{display:none!important;}
+    }
+    @media(min-width:769px){
+      .mobile-menu-btn{display:none!important;}
+      .mobile-sidebar{display:none!important;}
+    }
+    .pulse{animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+    .slide-in{animation:slideIn 0.3s ease;}
+    @keyframes slideIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    .attendance-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+    .form-grid-responsive{}
+    @media(max-width:640px){
+      .form-grid-responsive{grid-template-columns:1fr!important;}
+      .grid-4,.grid-3{grid-template-columns:1fr!important;}
+    }
+    .logo-loader-spin{display:inline-block;border-radius:14px;overflow:hidden;animation:logoSpinZoom 1.4s ease-in-out infinite;}
+    @keyframes logoSpinZoom{0%{transform:scale(0.82) rotate(0deg);opacity:0.75;}50%{transform:scale(1.08) rotate(180deg);opacity:1;}100%{transform:scale(0.82) rotate(360deg);opacity:0.75;}}
+  `;
+
+  document.head.appendChild(style);
+
+};
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY COMPONENTS
+// ═══════════════════════════════════════════════════════════════
+
+const BrandLogo = ({ size = 72 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 200 200"
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ display: "inline-block" }}
+  >
+    <defs>
+      <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#1E2E52" />
+        <stop offset="100%" stopColor="#0F1A33" />
+      </linearGradient>
+      <linearGradient id="ribbonGrad" x1="10%" y1="0%" x2="90%" y2="100%">
+        <stop offset="0%" stopColor="#FFB25B" />
+        <stop offset="100%" stopColor="#E8600A" />
+      </linearGradient>
+      <filter id="softLift" x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#0F1A33" floodOpacity="0.28" />
+      </filter>
+    </defs>
+
+    <rect x="4" y="4" width="192" height="192" rx="46" fill="url(#badgeGrad)" />
+    <rect x="4.5" y="4.5" width="191" height="191" rx="45.5" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
+    {/* recentered group: shape's own bbox center moved onto (100,100) */}
+    <g transform="translate(-7, 8)">
+      <path
+        d="M62,66 C100,44 152,52 146,82 C141,108 96,96 88,116 C81,134 116,140 150,132"
+        fill="none"
+        stroke="url(#ribbonGrad)"
+        strokeWidth="20"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        filter="url(#softLift)"
+      />
+      <circle cx="150" cy="132" r="13" fill="#FFD98A" />
+      <circle cx="150" cy="132" r="13" fill="none" stroke="#0F1A33" strokeWidth="2" opacity="0.15" />
+    </g>
+  </svg>
+);
+
+const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');`;
+
+/**
+ * Icon mark: a single flowing ribbon forming an "S" — reads as motion/growth
+ * (student progress, ERP workflow) rather than a generic ring/orbit.
+ * A single accent dot at the stroke's terminal acts as the one "smart" cue —
+ * one bold move, everything else kept quiet and disciplined.
+ */
+const Mark = ({ size = 96 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 200 200"
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ display: "block" }}
+  >
+    <defs>
+      <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#1E2E52" />
+        <stop offset="100%" stopColor="#0F1A33" />
+      </linearGradient>
+      <linearGradient id="ribbonGrad" x1="10%" y1="0%" x2="90%" y2="100%">
+        <stop offset="0%" stopColor="#FFB25B" />
+        <stop offset="100%" stopColor="#E8600A" />
+      </linearGradient>
+      <filter id="softLift" x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#0F1A33" floodOpacity="0.28" />
+      </filter>
+    </defs>
+
+    {/* Badge */}
+    <rect x="4" y="4" width="192" height="192" rx="46" fill="url(#badgeGrad)" />
+    <rect x="4.5" y="4.5" width="191" height="191" rx="45.5" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
+    {/* Flowing S ribbon */}
+    <path
+      d="M62,66 C100,44 152,52 146,82 C141,108 96,96 88,116 C81,134 116,140 150,132"
+      fill="none"
+      stroke="url(#ribbonGrad)"
+      strokeWidth="20"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      filter="url(#softLift)"
+    />
+
+    {/* Smart node — single accent, the terminal of the ribbon */}
+    <circle cx="150" cy="132" r="13" fill="#FFD98A" />
+    <circle cx="150" cy="132" r="13" fill="none" stroke="#0F1A33" strokeWidth="2" opacity="0.15" />
+  </svg>
+);
+
+const Wordmark = ({ tagline = true, dark = false }) => (
+  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+    <div
+      style={{
+        fontFamily: "'Space Grotesk', sans-serif",
+        fontWeight: 600,
+        fontSize: 30,
+        letterSpacing: "-0.01em",
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span style={{ color: dark ? "#F4F6FB" : "#14213D" }}>School</span>
+      <span style={{ color: "#E8600A" }}>Office</span>
+    </div>
+    {tagline && (
+      <div
+        style={{
+          fontFamily: "'Inter', sans-serif",
+          fontWeight: 500,
+          fontSize: 12.5,
+          letterSpacing: "0.02em",
+          color: dark ? "#9BA6C4" : "#6B7595",
+          marginTop: 6,
+        }}
+      >
+        smart ERP for Smart Schools
+      </div>
+    )}
+  </div>
+);
+
+const Lockup = ({ dark = false }) => (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 18,
+      padding: "28px 34px",
+      borderRadius: 20,
+      background: dark ? "#0B1224" : "#FFFFFF",
+      border: dark ? "1px solid rgba(255,255,255,0.06)" : "1px solid #ECEEF3",
+    }}
+  >
+    <Mark size={64} />
+    <Wordmark dark={dark} />
+  </div>
+);
+
+const SplashScreen = () => (
+  <div style={{
+    position: "fixed", inset: 0, zIndex: 100000,
+    background: "radial-gradient(circle at 50% 40%, #131A2E 0%, #0B0D14 70%)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    flexDirection: "column", gap: 26, overflow: "hidden",
+  }}>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&family=Inter:wght@500&display=swap');
+      @keyframes splashBreathe {
+        0%   { transform: scale(0.85) rotate(-3deg); }
+        50%  { transform: scale(1.06) rotate(2deg); }
+        100% { transform: scale(0.85) rotate(-3deg); }
+      }
+      @keyframes splashGlow {
+        0%   { opacity: 0.25; }
+        50%  { opacity: 0.65; }
+        100% { opacity: 0.25; }
+      }
+      @keyframes splashRing {
+        0%   { transform: scale(0.75); opacity: 0.5; }
+        100% { transform: scale(1.9); opacity: 0; }
+      }
+      @keyframes splashWordUp {
+        0%   { opacity: 0; transform: translateY(16px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes splashTagIn {
+        0%   { opacity: 0; letter-spacing: 0.5em; }
+        100% { opacity: 1; letter-spacing: 0.15em; }
+      }
+      @keyframes splashDotBounce {
+        0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
+        40% { opacity: 1; transform: translateY(-5px); }
+      }
+      .splash-logo-wrap { position: relative; width: 140px; height: 140px; display:flex; align-items:center; justify-content:center; }
+      .splash-ring { position: absolute; width: 140px; height: 140px; border-radius: 38px; border: 1.5px solid #E8600A; animation: splashRing 2.6s cubic-bezier(0.2,0.7,0.3,1) infinite; }
+      .splash-ring-2 { animation-delay: 0.9s; }
+      .splash-glow { position: absolute; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(232,96,10,0.35) 0%, transparent 70%); animation: splashGlow 2.6s ease-in-out infinite; }
+      .splash-mark { position: relative; z-index: 2; animation: splashBreathe 2.6s cubic-bezier(0.45,0,0.55,1) infinite; }
+      .splash-word { animation: splashWordUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
+      .splash-tag { animation: splashTagIn 1.2s ease 0.75s both; }
+      .splash-dot { width: 6px; height: 6px; border-radius: 50%; background: #E8600A; display: inline-block; animation: splashDotBounce 1.3s ease-in-out infinite; }
+    `}</style>
+
+    <div className="splash-logo-wrap">
+      <div className="splash-glow" />
+      <div className="splash-ring" />
+      <div className="splash-ring splash-ring-2" />
+      <div className="splash-mark"><Mark size={92} /></div>
+    </div>
+
+    <div style={{ textAlign: "center" }}>
+      <div
+        className="splash-word"
+        style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 600,
+          fontSize: 32,
+          letterSpacing: "-0.01em",
+          lineHeight: 1,
+        }}
+      >
+        <span style={{ color: "#F4F6FB" }}>School</span>
+        <span style={{ color: "#E8600A" }}>Office</span>
+      </div>
+      <div
+        className="splash-tag"
+        style={{
+          fontFamily: "'Inter', sans-serif",
+          fontWeight: 500,
+          fontSize: 12,
+          color: "#8891A8",
+          marginTop: 10,
+          textTransform: "uppercase",
+        }}
+      >
+        Smart ERP for Smart Schools
+      </div>
+    </div>
+
+    <div style={{ display: "flex", gap: 7, marginTop: 4 }}>
+      <span className="splash-dot" style={{ animationDelay: "0s" }} />
+      <span className="splash-dot" style={{ animationDelay: "0.15s" }} />
+      <span className="splash-dot" style={{ animationDelay: "0.3s" }} />
+    </div>
+  </div>
+);
+
+
+
+
+
+const Icon = ({ name, size = 16, color }) => {
+  const icons = {
+    dashboard: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z",
+    students:
+      "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75",
+    teachers:
+      "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z",
+    attendance:
+      "M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11",
+    fee: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",
+    result:
+      "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    timetable:
+      "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+    test: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+    setup:
+      "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
+    menu: "M4 6h16M4 12h16M4 18h16",
+    close: "M6 18L18 6M6 6l12 12",
+    plus: "M12 5v14M5 12h14",
+    search: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
+    bell: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9",
+    chart:
+      "M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z",
+    trophy:
+      "M8 21h8m-4-4v4M12 3l2.5 5h5.5l-4 4 1.5 5.5L12 15l-5.5 2.5L8 12 4 8h5.5L12 3z",
+    warning:
+      "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
+    edit: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z",
+    trash:
+      "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16",
+    eye: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z",
+    download: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4",
+    user: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+    arrow_right: "M9 5l7 7-7 7",
+    check: "M5 13l4 4L19 7",
+    academic:
+    "M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z",
+    homework:
+    "M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z M9 7h8 M9 11h8 M9 15h5",
+     upload:
+    "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12",
+    file:
+    "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6",
+    calendar:
+    "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z",
+    wallet: 
+    "M21 12V7H5a2 2 0 010-4h14v4 M3 5v14a2 2 0 002 2h16v-5 M18 12a2 2 0 000 4h4v-4z",
+    print: 
+    "M6 9V2h12v7 M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2 M6 14h12v8H6z",
+    refresh:
+        "M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0114.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0020.49 15",
+    alert: 
+         "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
+    users: 
+        "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75",
+    book:
+        "M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z",
+     close:
+        "M18 6L6 18M6 6l12 12",
+ };
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color || "currentColor"}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {icons[name]
+        ?.split("M")
+        .filter(Boolean)
+        .map((d, i) => (
+          <path key={i} d={"M" + d} />
+        ))}
+    </svg>
+  );
+};
+
+const KpiCard = ({ label, value, sub, icon, color, trend }) => (
+  <div className="kpi-card">
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        width: 80,
+        height: 80,
+        background: `radial-gradient(circle at 100% 0%,${
+          color || C.primary
+        }22,transparent 70%)`,
+        borderRadius: "0 16px 0 0",
+      }}
+    />
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+      }}
+    >
+      <div>
+        <div
+          style={{
+            color: C.textMuted,
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: "0.5px",
+            textTransform: "uppercase",
+            marginBottom: 8,
+          }}
+        >
+          {label}
+        </div>
+        <div
+          className="syne"
+          style={{
+            fontSize: 28,
+            fontWeight: 800,
+            color: C.text,
+            lineHeight: 1,
+          }}
+        >
+          {value}
+        </div>
+        {sub && (
+          <div style={{ color: C.textMuted, fontSize: 12, marginTop: 6 }}>
+            {sub}
+          </div>
+        )}
+        {trend !== undefined && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              marginTop: 6,
+              fontSize: 12,
+              color: trend >= 0 ? C.green : C.red,
+            }}
+          >
+            <span>
+              {trend >= 0 ? "↑" : "↓"}
+              {Math.abs(trend)}%
+            </span>
+            <span style={{ color: C.textMuted }}>vs last month</span>
+          </div>
+        )}
+      </div>
+      <div
+        style={{
+          background: `${color || C.primary}22`,
+          padding: 12,
+          borderRadius: 12,
+          color: color || C.primary,
+        }}
+      >
+        <Icon name={icon || "chart"} size={20} />
+      </div>
+    </div>
+  </div>
+);
+
+const SectionHeader = ({ title, sub, action }) => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: 20,
+      flexWrap: "wrap",
+      gap: 12,
+    }}
+  >
+    <div>
+      <h2
+        className="syne"
+        style={{ fontSize: 20, fontWeight: 700, color: C.text }}
+      >
+        {title}
+      </h2>
+      {sub && (
+        <p style={{ color: C.textMuted, fontSize: 13, marginTop: 3 }}>{sub}</p>
+      )}
+    </div>
+    {action && (
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{action}</div>
+    )}
+  </div>
+);
+
+const LogoLoader = ({ size = 44, label }) => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "24px 0", width: "100%" }}>
+    <div className="logo-loader-spin"><Mark size={size} /></div>
+    {label && <div style={{ fontSize: 12.5, fontWeight: 700, color: C.primary }}>{label}</div>}
+  </div>
+);
+
+const Modal = ({ open, onClose, title, children, width = 600, zIndex = 1000 }) => {
+  if (!open) return null;
+  return (
+    <div className="modal-overlay" style={{ zIndex: zIndex }} onClick={onClose}>
+
+      <div
+        className="modal"
+        style={{ maxWidth: width }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 20,
+          }}
+        >
+          <h3 className="syne" style={{ fontSize: 17, fontWeight: 700 }}>
+            {title}
+          </h3>
+          <button
+            className="btn btn-ghost"
+            style={{ padding: "6px 10px" }}
+            onClick={onClose}
+          >
+            <Icon name="close" size={16} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const FormRow = ({ label, children, cols = 1 }) => (
+  <div style={{ marginBottom: 14 }}>
+    <label
+      style={{
+        display: "block",
+        fontSize: 12,
+        fontWeight: 600,
+        color: C.textMuted,
+        marginBottom: 5,
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+      }}
+    >
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+const FormGrid = ({ children, cols = 2 }) => (
+  <div
+    className="form-grid-responsive"
+    style={{
+      display: "grid",
+      gridTemplateColumns: `repeat(${cols},1fr)`,
+      gap: 14,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Field = ({ label, name, type = "text", options, form, setF }) => (
+  <FormRow label={label}>
+    {options ? (
+      <select
+        className="select"
+        value={form[name] || ""}
+        onChange={(e) => setF(name, e.target.value)}
+      >
+        {options.map((o) => (
+          <option
+            key={o.v !== undefined ? o.v : o}
+            value={o.v !== undefined ? o.v : o}
+          >
+            {o.l !== undefined ? o.l : o}
+          </option>
+        ))}
+      </select>
+    ) : type === "checkbox" ? (
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          cursor: "pointer",
+          fontSize: 13,
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={!!form[name]}
+          onChange={(e) => setF(name, e.target.checked)}
+          style={{ width: 15, height: 15, cursor: "pointer" }}
+        />
+        <span style={{ color: C.textMuted }}>Yes</span>
+      </label>
+    ) : (
+      <input
+        className="input"
+        type={type}
+        value={form[name] || ""}
+        onChange={(e) => setF(name, e.target.value)}
+      />
+    )}
+  </FormRow>
+);
+
+const STATUS_META = {
+  P: { label: "Present", color: C.green },
+  A: { label: "Absent", color: C.red },
+  L: { label: "Leave", color: C.yellow },
+  OD: { label: "On Duty", color: C.blue },
+};
+
+const STATUS_KEYS = ["P", "A", "L", "OD"];
+const todayISO = () => new Date().toISOString().split("T")[0];
+const daysAgoISO = (n) =>
+  new Date(Date.now() - n * 86400000).toISOString().split("T")[0];
+
+  // 🔴 Recent Activity helpers — module level, DashboardModule ke bahar
+ 
+const ACTIVITY_META = {
+  LOGIN: { icon: "user", color: C.cyan, title: "System Login", desc: (d, user) => `By ${user}` },
+  LOGOUT: { icon: "user", color: C.textMuted, title: "System Logout", desc: (d, user) => `By ${user}` },
+  ATTENDANCE_MARKED: { 
+    icon: "attendance", color: C.green, 
+    title: "Student Attendance", 
+    desc: (d, user) => `${d.section_name ? `Class ${d.section_name}` : "Unknown Class"}${d.count ? ` (${d.count} students)` : ""} • By ${user}` 
+  },
+  STAFF_ATTENDANCE_MARKED: { 
+    icon: "attendance", color: C.green, 
+    title: "Staff Attendance", 
+    desc: (d, user) => `${d.count ? `${d.count} staff members` : "Marked"} • By ${user}` 
+  },
+  FEE_PAID: { 
+    icon: "fee", color: C.primary, 
+    title: "Fee Collected", 
+    desc: (d, user) => `₹${d.amount || ""} from ${d.studentName || "Student"} • By ${user}` 
+  },
+  NOTICE_CREATED: { 
+    icon: "warning", color: C.yellow, 
+    title: "New Notice", 
+    desc: (d, user) => `${d.title || "Published"} • By ${user}` 
+  },
+  TEST_CREATED: { 
+    icon: "test", color: C.blue, 
+    title: "Test Created", 
+    desc: (d, user) => `${d.testName || "New test"} • By ${user}` 
+  },
+  EXAM_CREATED: { 
+    icon: "test", color: C.blue, 
+    title: "Exam Scheduled", 
+    desc: (d, user) => `${d.examName || "New exam"} • By ${user}` 
+  },
+  STUDENT_ADDED: { 
+    icon: "students", color: C.purple, 
+    title: "New Admission", 
+    desc: (d, user) => `${d.studentName || "Student enrolled"} • By ${user}` 
+  },
+  HOMEWORK_ASSIGNED: { 
+    icon: "timetable", color: C.cyan, 
+    title: "Homework Assigned", 
+    desc: (d, user) => `${d.subject || "Subject"} • By ${user}` 
+  },
+};
+const timeAgo = (iso) => {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+};
+
+// ✅ Module-level — TeachersModule ke BAHAR
+const FF = ({
+  label,
+  name,
+  type = "text",
+  options,
+  placeholder,
+  hint,
+  form,
+  setF,
+    }) => (
+     <FormRow label={label}>
+       {options ? (
+         <select
+          className="select"
+           value={form[name] || ""}
+           onChange={(e) => setF(name, e.target.value)}
+            >
+        {options.map((o) => (
+          <option key={o.v ?? o} value={o.v ?? o}>
+            {o.l ?? o}
+          </option>
+        ))}
+      </select>
+    ) : type === "checkbox" ? (
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          cursor: "pointer",
+          fontSize: 13,
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={!!form[name]}
+          onChange={(e) => setF(name, e.target.checked)}
+          style={{
+            width: 15,
+            height: 15,
+            cursor: "pointer",
+            accentColor: C.primary,
+          }}
+        />
+        <span style={{ color: C.textMuted }}>Yes</span>
+      </label>
+    ) : (
+      <input
+        className="input"
+        type={type}
+        placeholder={placeholder || ""}
+        value={form[name] || ""}
+        onChange={(e) => setF(name, e.target.value)}
+      />
+    )}
+    {hint && (
+      <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 4 }}>
+        {hint}
+      </div>
+    )}
+  </FormRow>
+);
+
+
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+
+const DAY_SHORT = {
+  1: "Mon",
+  2: "Tue",
+  3: "Wed",
+  4: "Thu",
+  5: "Fri",
+  6: "Sat",
+};
+
+const TeacherSubjectsAndTimetable = ({ teacher, academicYearId }) => {
+  const [subjects, setSubjects] = useState([]);
+  const [timetable, setTimetable] = useState({ days: {} });
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState("subjects"); // 'subjects' | 'timetable'
+
+  useEffect(() => {
+    if (!teacher?.user_id) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const [subRes, ttRes] = await Promise.all([
+          apiRequest(`/teachers/${teacher.user_id}/assigned-subjects`),
+          academicYearId
+            ? apiRequest(
+                `/timetable/teacher/${teacher.user_id}?academic_year_id=${academicYearId}`
+              )
+            : Promise.resolve(null),
+        ]);
+        setSubjects(Array.isArray(subRes?.data) ? subRes.data : []);
+        if (ttRes) setTimetable(ttRes.data || { days: {} });
+      } catch (e) {
+        console.error("Failed to load teacher subjects/timetable", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [teacher?.user_id, academicYearId]);
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+        <button
+          onClick={() => setView("subjects")}
+          className={`tab ${view === "subjects" ? "active" : ""}`}
+          style={{ fontSize: 12 }}
+        >
+          📚 Subjects Assigned
+        </button>
+        <button
+          onClick={() => setView("timetable")}
+          className={`tab ${view === "timetable" ? "active" : ""}`}
+          style={{ fontSize: 12 }}
+        >
+          🗓 7-Day Timetable
+        </button>
+      </div>
+
+      {loading ? (
+        <div
+          className="pulse"
+          style={{
+            textAlign: "center",
+            color: C.primary,
+            padding: 16,
+            fontSize: 12,
+          }}
+        >
+          Loading…
+        </div>
+      ) : view === "subjects" ? (
+        subjects.length === 0 ? (
+          <div
+            style={{
+              padding: "14px 16px",
+              background: C.surfaceAlt,
+              borderRadius: 10,
+              fontSize: 12,
+              color: C.textMuted,
+              textAlign: "center",
+            }}
+          >
+            No subjects assigned yet. Use "Assign Subject" to link this teacher
+            to a class + subject.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {subjects.map((s) => (
+              <span
+              key={s.subject_id}
+              className="badge badge-blue"
+              style={{ fontSize: 11 }}
+            >
+              {s.subject_name}
+            </span>
+            ))}
+          </div>
+        )
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))",
+            gap: 8,
+          }}
+        >
+          {[1, 2, 3, 4, 5, 6].map((day) => {
+            const periods = timetable.days?.[day] || [];
+            return (
+              <div
+                key={day}
+                style={{
+                  background: C.surfaceAlt,
+                  borderRadius: 10,
+                  padding: 10,
+                  border: `1px solid ${C.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.primary,
+                    marginBottom: 6,
+                  }}
+                >
+                  {DAY_SHORT[day]}
+                </div>
+                {periods.length === 0 ? (
+                  <div style={{ fontSize: 10.5, color: C.textMuted }}>Free</div>
+                ) : (
+                  periods.map((p, i) => (
+                    <div key={i} style={{ fontSize: 10.5, marginBottom: 8, paddingBottom: 6, borderBottom: `1px solid ${C.border}33` }}>
+                      <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 2 }}>
+                        {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                      </div>
+                      <div style={{ fontWeight: 700, color: C.text }}>
+                        {p.subject_name || "—"}
+                      </div>
+                      <div style={{ color: C.textMuted, marginTop: 1 }}>
+                        {p.grade_name} - {p.section_name}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const useGradeSubjects = (gradeId) => {
+  const [subjects, setSubjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const reload = React.useCallback(async () => {
+    if (!gradeId) {
+      setSubjects([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await apiRequest(`/setup/grade-subjects?grade_id=${gradeId}`);
+      setSubjects(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) {
+      console.error("Failed to load grade subjects", e);
+      setSubjects([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [gradeId]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  return { subjects, loading, reload };
+};
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// 🔴 NEW SUBJECTS TAB — Class-level checkbox + custom-add setup.
+// Drop this JSX in place of the OLD {tab === "subjects" && (...)} block
+// inside SetupModule's return(). Needs: grades (already in SetupModule state).
+// ═══════════════════════════════════════════════════════════════
+const SubjectsClassLevelTab = ({ grades, subjects }) => {
+  const { dialogAlert, dialogConfirm } = useDialog(); // 🔴 Custom Dialog Hook को इम्पोर्ट किया
+
+  const [gradeId, setGradeId] = useState("");
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [initialIds, setInitialIds] = useState(new Set());
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const selectedGrade = grades.find((g) => g.id === gradeId);
+
+  useEffect(() => {
+    if (grades.length && !gradeId) setGradeId(grades[0].id);
+  }, [grades]); 
+
+  const loadAssigned = async () => {
+    if (!gradeId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(`/setup/grade-subjects?grade_id=${gradeId}`);
+      const list = Array.isArray(res?.data) ? res.data : [];
+      const ids = new Set(list.map((s) => s.id));
+      setSelectedIds(ids);
+      setInitialIds(ids); 
+    } catch (e) {
+      console.error(e);
+      setSelectedIds(new Set());
+      setInitialIds(new Set());
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => { loadAssigned(); }, [gradeId]); 
+
+  const toggle = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    if (!gradeId) return;
+
+    const removedCount = [...initialIds].filter(id => !selectedIds.has(id)).length;
+    
+    if (removedCount > 0) {
+      const confirmMsg = `You are removing ${removedCount} subject(s) from this class.\n\nThis action will automatically DELETE these subjects from:\n1. The Timetable of this class.\n2. Teacher Subject Assignments for this class.\n\nDo you want to proceed?`;
+      
+      // 🔴 Custom Dialog Confirm (Native window.confirm हटाया)
+      const isConfirmed = await dialogConfirm(confirmMsg, "⚠️ Critical Warning");
+      if (!isConfirmed) return; // Stop if user cancels
+    }
+
+    setSaving(true);
+    try {
+      await apiRequest("/setup/grade-subjects", "PUT", {
+        grade_id: gradeId,
+        subject_ids: Array.from(selectedIds),
+      });
+      // 🔴 Custom Dialog Alert (Native window.alert हटाया)
+      await dialogAlert("Subjects and dependencies synced successfully!", "✅ Success");
+      await loadAssigned(); 
+    } catch (e) {
+      await dialogAlert("Failed: " + e.message, "❌ Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <FormRow label="Select Class">
+          <select className="select" style={{ maxWidth: 260 }} value={gradeId} onChange={(e) => setGradeId(e.target.value)}>
+            <option value="">-- Choose a class --</option>
+            {grades.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}{g.stream && g.stream !== "none" ? ` (${g.stream})` : ""}</option>
+            ))}
+          </select>
+        </FormRow>
+      </div>
+
+      {!gradeId ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+          Select a class above to configure its subjects.
+        </div>
+      ) : subjects.length === 0 ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+          No school subjects created yet. Go to "School Subjects" tab first to build your subject master list.
+        </div>
+      ) : (
+        <div className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700 }}>Subjects for {selectedGrade?.name}</h3>
+            <span className="badge badge-blue">{selectedIds.size} selected</span>
+          </div>
+
+          {loading ? (
+            <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 20 }}>Loading…</div>
+          ) : (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 10, marginBottom: 20 }}>
+                {subjects.map((s) => {
+                  const checked = selectedIds.has(s.id);
+                  return (
+                    <label
+                      key={s.id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, cursor: "pointer",
+                        border: `1.5px solid ${checked ? C.primary : C.border}`, background: checked ? `${C.primary}11` : C.surfaceAlt,
+                      }}
+                    >
+                      <input type="checkbox" checked={checked} onChange={() => toggle(s.id)} style={{ width: 16, height: 16, cursor: "pointer", accentColor: C.primary }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: checked ? C.primary : C.text }}>{s.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div style={{ borderTop: `1px solid ${C.border}44`, paddingTop: 16, display: "flex", justifyContent: "flex-end" }}>
+                <button className="btn btn-primary" onClick={handleSave} disabled={saving} style={{ minWidth: 180, opacity: saving ? 0.7 : 1 }}>
+                  {saving ? "Saving…" : `Save Subjects for ${selectedGrade?.name}`}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
+const SchoolSubjectsTab = ({ subjects, onSubjectsChanged }) => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+  const [allTeachers, setAllTeachers] = useState([]);
+  const [assignedMap, setAssignedMap] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [addingFor, setAddingFor] = useState(null);
+  const [pickerTeacher, setPickerTeacher] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [newSubjectName, setNewSubjectName] = useState("");
+  const [newSubjectCat, setNewSubjectCat] = useState("core");
+  const [creating, setCreating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const loadAssignments = async () => {
+    setLoading(true);
+    try {
+      const [tRes, allAssignRes] = await Promise.all([
+        apiRequest("/teachers"),
+        apiRequest("/teachers/subject-teachers/all"),
+      ]);
+      setAllTeachers(Array.isArray(tRes?.data) ? tRes.data : []);
+      const rows = Array.isArray(allAssignRes?.data) ? allAssignRes.data : [];
+      const map = {};
+      rows.forEach((r) => {
+        if (!map[r.subject_id]) map[r.subject_id] = [];
+        map[r.subject_id].push(r);
+      });
+      setAssignedMap(map);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => { loadAssignments(); }, [subjects.length]); // eslint-disable-line
+
+  const availableTeachersFor = (subjectId) => {
+    const already = new Set((assignedMap[subjectId] || []).map((a) => a.teacher_user_id));
+    return allTeachers.filter((t) => !already.has(t.user_id));
+  };
+
+  const handleCreateSubject = async () => {
+    if (!newSubjectName.trim()) return dialogAlert("Subject name is required.", "Missing Info");
+    setCreating(true);
+    try {
+      await apiRequest("/setup/subjects", "POST", { name: newSubjectName.trim(), category: newSubjectCat });
+      setNewSubjectName("");
+      setNewSubjectCat("core");
+      await onSubjectsChanged();
+    } catch (e) {
+      dialogAlert("Failed: " + e.message, "Error");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleAddTeacher = async (subjectId) => {
+    if (!pickerTeacher) return;
+    setSaving(true);
+    try {
+      await apiRequest("/teachers/subject-teachers", "POST", { subject_id: subjectId, teacher_user_id: pickerTeacher });
+      setAddingFor(null);
+      setPickerTeacher("");
+      await loadAssignments();
+    } catch (e) {
+      dialogAlert("Failed: " + e.message, "Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemoveTeacher = async (assignmentId) => {
+    if (!(await dialogConfirm("Remove this teacher from the subject?", "Remove Teacher"))) return;
+    try {
+      await apiRequest(`/teachers/subject-teachers/${assignmentId}`, "DELETE");
+      await loadAssignments();
+    } catch (e) {
+      dialogAlert("Failed: " + e.message, "Error");
+    }
+  };
+
+  const handleDeleteSubject = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await apiRequest(`/setup/subjects/${deleteTarget.id}/hard`, "DELETE");
+      setDeleteTarget(null);
+      await onSubjectsChanged();
+    } catch (e) {
+      alert("❌ Failed: " + e.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 className="syne" style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, color: C.primary }}>
+          <Icon name="academic" size={16} /> School Subject Master List
+        </h3>
+        <p style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>
+          These are the ONLY subjects available across your school. Add them once here, assign
+          teachers, then pick per class in "Subjects & Curriculum".
+        </p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <FormRow label="New Subject Name">
+            <input
+              className="input"
+              style={{ minWidth: 220 }}
+              placeholder="e.g. Hindi"
+              value={newSubjectName}
+              onChange={(e) => setNewSubjectName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCreateSubject(); } }}
+            />
+          </FormRow>
+          <FormRow label="Category">
+            <select className="select" style={{ width: 150 }} value={newSubjectCat} onChange={(e) => setNewSubjectCat(e.target.value)}>
+              <option value="core">Core / Main</option>
+              <option value="language">Language</option>
+              <option value="elective">Elective</option>
+              <option value="practical">Lab / Practical</option>
+            </select>
+          </FormRow>
+          <button className="btn btn-primary" onClick={handleCreateSubject} disabled={creating}>
+            {creating ? "Adding…" : "+ Add Subject"}
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 30 }}>Loading…</div>
+      ) : subjects.length === 0 ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+          No subjects yet — add your first one above.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {subjects.map((sub) => {
+            const assigned = assignedMap[sub.id] || [];
+            const available = availableTeachersFor(sub.id);
+            const isAdding = addingFor === sub.id;
+            return (
+              <div key={sub.id} className="card" style={{ padding: "14px 16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: assigned.length || isAdding ? 10 : 0 }}>
+                  <div>
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{sub.name}</span>
+                    <span className="badge badge-purple" style={{ marginLeft: 8, fontSize: 10 }}>{sub.category}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {!isAdding && available.length > 0 && (
+                      <button className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 10px" }} onClick={() => setAddingFor(sub.id)}>
+                        <Icon name="plus" size={11} /> Add Teacher
+                      </button>
+                    )}
+                    <button className="btn btn-danger" style={{ padding: "4px 8px" }} title="Delete Subject" onClick={() => setDeleteTarget(sub)}>
+                      <Icon name="trash" size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {assigned.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: isAdding ? 10 : 0 }}>
+                    {assigned.map((a) => (
+                      <span key={a.assignment_id} className="badge badge-blue" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {a.teacher_name}
+                        <button
+                          onClick={() => handleRemoveTeacher(a.assignment_id)}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: C.blue, padding: 0, display: "flex" }}
+                        >
+                          <Icon name="close" size={11} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {isAdding && (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <select className="select" style={{ flex: 1 }} value={pickerTeacher} onChange={(e) => setPickerTeacher(e.target.value)}>
+                      <option value="">-- Select Teacher --</option>
+                      {available.map((t) => <option key={t.user_id} value={t.user_id}>{t.full_name}</option>)}
+                    </select>
+                    <button
+                      className="btn btn-primary"
+                      style={{ fontSize: 12, padding: "6px 12px", opacity: saving ? 0.7 : 1 }}
+                      disabled={saving || !pickerTeacher}
+                      onClick={() => handleAddTeacher(sub.id)}
+                    >
+                      {saving ? "Adding…" : "Add"}
+                    </button>
+                    <button className="btn btn-ghost" style={{ fontSize: 12, padding: "6px 10px" }} onClick={() => { setAddingFor(null); setPickerTeacher(""); }}>
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                {assigned.length === 0 && !isAdding && (
+                  <div style={{ fontSize: 11.5, color: C.textMuted }}>No teacher assigned yet.</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Subject?" width={420}>
+        {deleteTarget && (
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div>
+            <div className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+              Delete "{deleteTarget.name}"?
+            </div>
+            <div style={{ color: C.textMuted, fontSize: 13, marginBottom: 22, lineHeight: 1.6 }}>
+              This removes the subject school-wide — from every class it's assigned to, and all
+              teacher assignments and timetable/marks links for it.
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button className="btn btn-ghost" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleDeleteSubject} disabled={deleting} style={{ minWidth: 120, opacity: deleting ? 0.7 : 1 }}>
+                {deleting ? "Deleting…" : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+const NAV_ITEMS = [
+  {
+    group: "MAIN",
+    items: [{ id: "dashboard", label: "Dashboard", icon: "dashboard" }],
+  },
+  {
+    group: "ACADEMIC SETUP",
+    items: [
+      { id: "setup", label: "School Setup", icon: "setup" },
+      { id: "students", label: "Students", icon: "students" },
+      { id: "teachers", label: "Teachers", icon: "teachers" },
+    ],
+  },
+  {
+    group: "DAILY OPS",
+    items: [
+      { id: "attendance", label: "Attendance", icon: "attendance" },
+      { id: "arrangement", label: "Substitution", icon: "refresh" },
+      { id: "timetable", label: "Timetable", icon: "timetable" },
+      { id: "tests", label: "Quick Tests", icon: "test" },
+      { id: "homework", label: "Homework", icon: "homework" },
+    ],
+  },
+  {
+    group: "FINANCE & RESULTS",
+    items: [
+      { id: "fees", label: "Fee Management", icon: "fee" },
+      { id: "payroll", label: "Payroll", icon: "wallet" },
+      { id: "exams", label: "Exam Management", icon: "test" },
+      { id: "results", label: "Results", icon: "result" },
+    ],
+  },
+  {
+    group: "ANALYTICS",
+    items: [
+      { id: "leaderboard", label: "Leaderboard", icon: "trophy" },
+      { id: "analytics", label: "Academic Analytics", icon: "academic" },
+    ],
+  },
+  {
+    group: "ADMINISTRATION",
+    superAdminOnly: true,
+    items: [
+      { id: "usermanagement", label: "User Management", icon: "user" },
+      { id: "auditlogs", label: "Audit Logs", icon: "attendance" },
+    ],
+  },
+];
+
+
+const Sidebar = ({ active, onNav, collapsed, school, userRole }) => (
+   <div
+    style={{
+      width: collapsed ? 70 : 230,
+      background: C.surface,
+      borderRight: `1px solid ${C.border}`,
+      height: "100vh",
+      overflow: "hidden auto",
+      flexShrink: 0,
+      transition: "width 0.3s",
+      display: "flex",
+      flexDirection: "column",
+      position: "sticky",
+      top: 0,
+    }}
+  >
+        <div
+      style={{
+        padding: "18px 14px",
+        borderBottom: `1px solid ${C.border}`,
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        overflow: "hidden",
+      }}
+    >
+      {school.logo_url ? (
+        <img
+          src={school.logo_url}
+          alt=""
+          style={{ width: 32, height: 32, borderRadius: 8, objectFit: "contain", flexShrink: 0 }}
+        />
+      ) : (
+        <div style={{ flexShrink: 0 }}><Mark size={32} /></div>
+      )}
+      {!collapsed && (
+        <div style={{ overflow: "hidden" }}>
+          <div
+            className="syne"
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: C.text,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              lineHeight: 1.3,
+            }}
+          >
+            {school.name}
+          </div>
+          <div
+            style={{
+              fontSize: 10,
+              color: C.primary,
+              marginTop: 2,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {school.tagline || "smart ERP for Smart Schools"}
+          </div>
+        </div>
+      )}
+    </div>
+    <div style={{ flex: 1, padding: "8px 8px", overflowY: "auto" }}>
+      {NAV_ITEMS.filter((g) => !g.superAdminOnly || userRole === "school_admin").map((g) => (
+        <div key={g.group}>
+          {!collapsed && <div className="sidebar-group">{g.group}</div>}
+          {g.items.map((item) => (
+            <button
+              key={item.id}
+              className={`sidebar-link ${active === item.id ? "active" : ""}`}
+              onClick={() => onNav(item.id)}
+              title={collapsed ? item.label : ""}
+            >
+              <Icon name={item.icon} size={17} />
+              {!collapsed && <span>{item.label}</span>}
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+    <div style={{ padding: 12, borderTop: `1px solid ${C.border}` }}>
+      {!collapsed && (
+        <div style={{ fontSize: 11, color: C.textMuted, textAlign: "center" }}>
+          {school.tagline}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+  // ═══════════════════════════════════════════════════════════════
+  // MODULE: DASHBOARD
+  // ═══════════════════════════════════════════════════════════════
+const DashboardModule = ({ school }) => {
+  const { students: STUDENTS, teachers: TEACHERS } = useData(); // 🔴 Override mock data with real data
+  const [grades, setGrades] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [staffAttendance, setStaffAttendance] = useState([]);
+  const [staffLoading, setStaffLoading] = useState(true);
+  const activityScrollRef = useAutoScroll(recentActivity);
+  const [feeOverview, setFeeOverview] = useState(null);
+  const [feeLoading, setFeeLoading] = useState(true);
+
+  // 🔴 Real class-wise student counts (backend already computes student_count per grade)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest("/setup/grades");
+        setGrades(Array.isArray(res?.data) ? res.data : []);
+      } catch (e) {
+        console.error("Failed to load grades for dashboard", e);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+         (async () => {
+           setActivityLoading(true);
+           try {
+             const res = await apiRequest("/audit/recent-activity");
+             setRecentActivity(Array.isArray(res?.data) ? res.data : []);
+           } catch (e) {
+             console.error("Failed to load recent activity", e);
+             setRecentActivity([]);
+           } finally {
+             setActivityLoading(false);
+           }
+         })();
+       }, []);
+
+     useEffect(() => {
+        (async () => {
+          setStaffLoading(true);
+          try {
+            const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+            const res = await apiRequest(`/attendance/staff/roster?date=${today}`);
+            // Backend teachers ki list aur unka status (P, A, L, OD) return karta hai
+            setStaffAttendance(res?.data?.teachers || []);
+          } catch (e) {
+            console.error("Failed to load staff attendance", e);
+            setStaffAttendance([]);
+          } finally {
+            setStaffLoading(false);
+          }
+        })();
+      }, []);
+
+
+      
+    
+      useEffect(() => {
+        (async () => {
+          setFeeLoading(true);
+          try {
+            const res = await apiRequest("/fees/overview", "GET");
+            setFeeOverview(res?.data || null);
+          } catch (e) {
+            console.error("Failed to load fee overview for dashboard", e);
+            setFeeOverview(null);
+          } finally {
+            setFeeLoading(false);
+          }
+        })();
+      }, []);
+
+
+  const totalStudents = STUDENTS.length;
+  const totalTeachers = staffAttendance.length || TEACHERS.length;
+  const presentToday = staffAttendance.filter((t) => t.status === "P" || t.status === "OD").length;
+  const totalFeeCollected = (feeOverview?.summary?.total_paid_paise || 0) / 100;
+  const totalFeePending = (feeOverview?.summary?.total_pending_paise || 0) / 100;
+
+  // 🔴 Real class-wise enrollment — replaces mock CLASSES + STUDENTS.filter loop
+  const classStrength = grades.length
+    ? grades.map((g) => ({
+        name: g.name.replace("Class ", "C"),
+        students: g.student_count || 0,
+      }))
+    : CLASSES.map((c) => ({
+        name: c.replace("Class ", "C"),
+        students: 0,
+      })); 
+      
+      // fallback empty shape while grades are loading / not set up yet
+      const feeByClass = (feeOverview?.byClass || []).slice(0, 8).map((c) => ({
+        name: (c.class_name || "").replace("Class ", "C"),
+        paid: (c.paid_paise || 0) / 100000,
+        pending: (c.pending_paise || 0) / 100000,
+      }));
+
+
+  const attendanceTrend = Array.from({ length: 7 }, (_, i) => ({
+    day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i],
+    rate: Math.floor(Math.random() * 15) + 82,
+  }));
+
+    const feeStatusDist = [
+    { name: "Paid", value: feeOverview?.summary?.paid_count || 0 },
+    { name: "Partial", value: feeOverview?.summary?.partial_count || 0 },
+    { name: "Pending", value: feeOverview?.summary?.pending_count || 0 },
+  ];
+
+  return (
+    <div className="slide-in">
+      <div
+        style={{
+          background: `linear-gradient(135deg,${C.surface},${C.surfaceAlt})`,
+          border: `1px solid ${C.border}`,
+          borderRadius: 20,
+          padding: 24,
+          marginBottom: 24,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 4 }}>
+            Welcome back, Principal 👋
+          </div>
+          <h1
+            className="syne"
+            style={{ fontSize: 24, fontWeight: 800, color: C.text }}
+          >
+            {school.name}
+          </h1>
+          <div style={{ color: C.primary, fontSize: 13, marginTop: 4 }}>
+            {school.address}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ textAlign: "center" }}>
+            <div
+              className="syne"
+              style={{ fontSize: 20, fontWeight: 800, color: C.primary }}
+            >
+              {new Date().toLocaleDateString("en-IN", { weekday: "long" })}
+            </div>
+            <div style={{ color: C.textMuted, fontSize: 12 }}>
+              {new Date().toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="grid-4"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4,1fr)",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        <KpiCard
+          label="Total Students"
+          value={totalStudents}
+          sub={`Across ${CLASSES.length} classes`}
+          icon="students"
+          color={C.blue}
+          trend={3.2}
+        />
+        <KpiCard
+          label="Teaching Staff"
+          value={totalTeachers}
+          sub={`${presentToday} present today`}
+          icon="teachers"
+          color={C.green}
+          trend={0}
+        />
+        <KpiCard
+          label="Fee Collected"
+          value={`₹${(totalFeeCollected / 100000).toFixed(1)}L`}
+          sub="This academic year"
+          icon="fee"
+          color={C.primary}
+          trend={5.8}
+        />
+        <KpiCard
+          label="Fee Pending"
+          value={`₹${(totalFeePending / 100000).toFixed(1)}L`}
+          sub={`${feeOverview?.summary?.pending_count || 0} students`}
+          icon="warning"
+          color={C.red}
+          trend={-2.1}
+        />
+      </div>
+
+      <div
+        className="grid-2"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr",
+          gap: 20,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}
+          >
+            Class-wise Enrollment
+          </h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={classStrength} barSize={22}>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis
+                dataKey="name"
+                tick={{ fill: C.textMuted, fontSize: 11 }}
+              />
+              <YAxis tick={{ fill: C.textMuted, fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  color: C.text,
+                }}
+              />
+              <Bar dataKey="students" fill={C.primary} radius={[5, 5, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}
+          >
+            Fee Status
+          </h3>
+          {feeLoading ? (
+            <div
+              className="pulse"
+              style={{
+                height: 180,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: C.primary,
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              Loading fee status…
+            </div>
+          ) : feeStatusDist.every((d) => d.value === 0) ? (
+            <div
+              style={{
+                height: 180,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: C.textMuted,
+                fontSize: 12,
+              }}
+            >
+              No fee data yet
+            </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={220}>
+                        <PieChart>
+                          <Pie
+                            data={feeStatusDist}
+                            cx="50%"
+                            cy="45%"
+                            innerRadius={50}
+                            outerRadius={80}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {feeStatusDist.map((_, i) => (
+                              <Cell key={i} fill={[C.green, C.yellow, C.red][i]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              background: C.surface,
+                              border: `1px solid ${C.border}`,
+                              borderRadius: 8,
+                              color: C.text,
+                            }}
+                          />
+                          <Legend
+                            wrapperStyle={{ paddingTop: 8 }}
+                            formatter={(v) => (
+                              <span style={{ color: C.textMuted, fontSize: 12 }}>{v}</span>
+                            )}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+          
+        </div>
+      </div>
+
+      <div
+        className="grid-2"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 20,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}
+          >
+            Attendance Trend (This Week)
+          </h3>
+          <ResponsiveContainer width="100%" height={160}>
+            <AreaChart data={attendanceTrend}>
+              <defs>
+                <linearGradient id="atGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={C.primary} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.primary} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis dataKey="day" tick={{ fill: C.textMuted, fontSize: 11 }} />
+              <YAxis
+                domain={[70, 100]}
+                tick={{ fill: C.textMuted, fontSize: 11 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  color: C.text,
+                }}
+                formatter={(v) => `${v}%`}
+              />
+              <Area
+                type="monotone"
+                dataKey="rate"
+                stroke={C.primary}
+                fill="url(#atGrad)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}
+          >
+            Fee Collection by Class (₹K)
+          </h3>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={feeByClass} barSize={16}>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis
+                dataKey="name"
+                tick={{ fill: C.textMuted, fontSize: 10 }}
+              />
+              <YAxis tick={{ fill: C.textMuted, fontSize: 10 }} />
+              <Tooltip
+                contentStyle={{
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  color: C.text,
+                }}
+              />
+              <Bar
+                dataKey="paid"
+                fill={C.green}
+                radius={[4, 4, 0, 0]}
+                name="Paid"
+              />
+              <Bar
+                dataKey="pending"
+                fill={C.red}
+                radius={[4, 4, 0, 0]}
+                name="Pending"
+              />
+              <Legend
+                formatter={(v) => (
+                  <span style={{ color: C.textMuted, fontSize: 11 }}>{v}</span>
+                )}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div
+        className="grid-3"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3,1fr)",
+          gap: 20,
+        }}
+      >
+        <div className="card" style={{ display: "flex", flexDirection: "column", height: 380, paddingBottom: 10 }}>
+          <h3
+            className="syne"
+            style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, flexShrink: 0 }}
+          >
+            Absent Teachers Today
+          </h3>
+          <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+            {staffLoading ? (
+               <div className="pulse" style={{ color: C.primary, fontSize: 12, textAlign: "center", padding: "20px 0" }}>
+                 Syncing attendance...
+               </div>
+            ) : (
+               <>
+                 {staffAttendance.filter((t) => t.status === "A" || t.status === "L").map((t) => (
+                    <div
+                      key={t.user_id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "8px 0",
+                        borderBottom: `1px solid ${C.border}22`,
+                      }}
+                    >
+                      <div style={{ fontSize: 22 }}>
+                        <Avatar teacher={t} size={32} /> 
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.full_name}</div>
+                        <div style={{ fontSize: 11, color: C.red, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.department || "Teacher"}</div>
+                      </div>
+                      <span className={`badge ${t.status === 'L' ? 'badge-yellow' : 'badge-red'}`}>
+                        {t.status === 'L' ? 'On Leave' : 'Absent'}
+                      </span>
+                    </div>
+                  ))}
+                  
+                  {staffAttendance.filter((t) => t.status === "A" || t.status === "L").length === 0 && (
+                    <div style={{ color: C.textMuted, fontSize: 13, textAlign: "center", padding: "20px 0" }}>
+                      All teachers present ✓
+                    </div>
+                  )}
+               </>
+            )}
+          </div>
+        </div>
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}
+          >
+            Quick Stats
+          </h3>
+          {[
+            { label: "Avg Attendance", value: "87.3%", color: C.green },
+            {
+              label: "Pending Fees",
+              value: `₹${(totalFeePending / 100000).toFixed(1)}L`,
+              color: C.red,
+            },
+            { label: "Classes Running", value: CLASSES.length, color: C.blue },
+            {
+              label: "Total Sections",
+              value: Object.values(SECTIONS).flat().length,
+              color: C.purple,
+            },
+            {
+              label: "Subjects Taught",
+              value: Object.values(CLASS_SUBJECTS)
+                .flat()
+                .filter((v, i, a) => a.indexOf(v) === i).length,
+              color: C.cyan,
+            },
+          ].map((s, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "8px 0",
+                borderBottom: `1px solid ${C.border}22`,
+              }}
+            >
+              <span style={{ fontSize: 13, color: C.textMuted }}>
+                {s.label}
+              </span>
+              <span
+                className="syne"
+                style={{ fontSize: 15, fontWeight: 700, color: s.color }}
+              >
+                {s.value}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="card" style={{ display: "flex", flexDirection: "column", height: 380, paddingBottom: 10 }}>
+          <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+          <h3
+            className="syne"
+            style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, flexShrink: 0 }}
+          >
+            Recent Activities
+          </h3>
+          <div ref={activityScrollRef} style={{ flex: 1, overflowY: "auto", paddingRight: 4, scrollbarWidth: "none", msOverflowStyle: "none" }} className="hide-scrollbar">
+            <div> {/* Inner wrapper for seamless cloning */}
+              {activityLoading ? (
+                  <div className="pulse" style={{ color: C.primary, fontSize: 12, padding: "10px 0" }}>
+                    Loading activity…
+                  </div>
+                ) : recentActivity.length === 0 ? (
+                  <div style={{ color: C.textMuted, fontSize: 12, padding: "10px 0" }}>
+                    No recent activity yet.
+                  </div>
+                ) : (
+                  recentActivity.slice(0, 10).map((a, i) => {
+                    const meta = ACTIVITY_META[a.action_type] || { 
+                      icon: "chart", 
+                      color: C.textMuted, 
+                      title: a.action_type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), 
+                      desc: () => "System action" 
+                    };
+                    
+                    let details = {};
+                    try { details = a.details ? (typeof a.details === 'string' ? JSON.parse(a.details) : a.details) : {}; } catch (e) {}
+                    
+                    const userName = a.user_name || "System";
+                    const titleStr = typeof meta.title === 'function' ? meta.title(details) : meta.title;
+                    const descStr = meta.desc(details, userName);
+
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          padding: "9px 0",
+                          borderBottom: `1px solid ${C.border}22`,
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: `${meta.color}22`,
+                            borderRadius: 8,
+                            padding: 7,
+                            color: meta.color,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Icon name={meta.icon} size={14} />
+                        </div>
+                        
+                        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                            <div
+                              className="syne"
+                              style={{
+                                fontSize: 13.5,
+                                fontWeight: 700,
+                                color: C.text,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                              title={titleStr}
+                            >
+                              {titleStr}
+                            </div>
+                            <div style={{ fontSize: 10.5, color: C.textMuted, whiteSpace: "nowrap", marginLeft: 8, fontWeight: 600 }}>
+                              {timeAgo(a.created_at)}
+                            </div>
+                          </div>
+                          <div 
+                            style={{ 
+                              fontSize: 11,
+                              color: C.textMuted,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap", 
+                            }}
+                            title={descStr}
+                          >
+                            {descStr}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+ // 🔴 UPGRADED: Professional Seamless Auto-Scrolling Marquee Effect
+const useAutoScroll = (dependency) => {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || el.children.length === 0) return;
+
+    const innerWrapper = el.children[0];
+    // Purana clone clean karein agar pehle se hai
+    const existingClone = el.querySelector('.scroll-clone');
+    if (existingClone) existingClone.remove();
+
+    let reqId;
+    let isPaused = false; // 🔴 Flag to control scroll state robustly
+
+    const scroll = () => {
+      // Sirf tabhi DOM update karo jab paused NAHI hai aur content bada hai
+      if (!isPaused && innerWrapper.scrollHeight > el.clientHeight) {
+        // Seamless loop ke liye content duplicate karte hain
+        if (!el.querySelector('.scroll-clone')) {
+          const clone = innerWrapper.cloneNode(true);
+          clone.classList.add('scroll-clone');
+          el.appendChild(clone);
+        }
+
+        el.scrollTop += 0.6; // Scroll speed
+        
+        // Jaise hi original content cross ho jaye, chup chap 0 par wapas aa jao
+        if (el.scrollTop >= innerWrapper.scrollHeight) {
+          el.scrollTop = 0;
+        }
+      }
+      // Loop chalta rahega, bas paused mode me DOM update skip ho jayega
+      reqId = requestAnimationFrame(scroll); 
+    };
+
+    const startTimeout = setTimeout(() => { 
+      reqId = requestAnimationFrame(scroll); 
+    }, 500);
+
+    const handlePause = () => { isPaused = true; };
+    const handlePlay = () => { isPaused = false; };
+
+    el.addEventListener("mouseenter", handlePause);
+    el.addEventListener("mouseleave", handlePlay);
+    el.addEventListener("touchstart", handlePause, { passive: true });
+    el.addEventListener("touchend", handlePlay);
+
+    return () => {
+      clearTimeout(startTimeout);
+      cancelAnimationFrame(reqId);
+      el.removeEventListener("mouseenter", handlePause);
+      el.removeEventListener("mouseleave", handlePlay);
+      el.removeEventListener("touchstart", handlePause);
+      el.removeEventListener("touchend", handlePlay);
+    };
+  }, [dependency]);
+  return ref;
+};
+
+
+const StudentCard = ({ s, gradeName, secName, onView, onEdit, onDelete }) => {
+  const enr = s.enrolment;
+  const primary = s.guardians?.[0];
+  const fullName = [s.first_name, s.middle_name, s.last_name]
+    .filter(Boolean)
+    .join(" ");
+  const isFemale = s.gender === "Female";
+  const col = isFemale ? C.purple : C.blue;
+
+  return (
+    <div
+      key={s.id}
+      style={{
+        background: C.surface,
+        border: `1px solid ${C.border}`,
+        borderRadius: 16,
+        overflow: "hidden",
+        transition: "transform 0.18s, border-color 0.18s",
+      }}
+    >
+      <div
+        style={{
+          height: 4,
+          background: s.is_active
+            ? `linear-gradient(90deg,${C.primary},${C.primaryDark})`
+            : `linear-gradient(90deg,${C.textMuted},${C.border})`,
+        }}
+      />
+      <div style={{ padding: "16px 16px 12px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "flex-start",
+            marginBottom: 12,
+          }}
+        >
+          {s.photo_url ? (
+            <img 
+              src={s.photo_url} 
+              alt={fullName} 
+              style={{ 
+                width: 44, 
+                height: 44, 
+                borderRadius: "50%", 
+                objectFit: "cover", 
+                border: `2px solid ${col}55`, 
+                flexShrink: 0 
+              }} 
+            />
+          ) : (
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                flexShrink: 0,
+                background: `${col}33`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 16,
+                fontWeight: 700,
+                color: col,
+                border: `2px solid ${col}55`,
+              }}
+            >
+              {(s.first_name?.[0] || "?").toUpperCase()}
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              className="syne"
+              style={{
+                fontWeight: 700,
+                fontSize: 14,
+                color: C.text,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {fullName}
+            </div>
+            <div style={{ fontSize: 11.5, color: C.primary, marginTop: 2 }}>
+              {enr
+                ? `${gradeName(enr.grade_id)} ${secName(enr.section_id)}`
+                : "Not enrolled"}
+            </div>
+            {s.admission_no && (
+              <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 1 }}>
+                Adm# {s.admission_no}
+              </div>
+            )}
+          </div>
+          <span
+            className={`badge ${s.is_active ? "badge-green" : "badge-red"}`}
+            style={{ fontSize: 10 }}
+          >
+            {s.is_active ? "Active" : "Inactive"}
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 6,
+            marginBottom: 12,
+          }}
+        >
+          {[
+            ["Roll No.", enr?.roll_no || "—"],
+            [
+              "DOB",
+              s.date_of_birth
+                ? new Date(s.date_of_birth).toLocaleDateString("en-IN")
+                : "—",
+            ],
+          ].map(([k, v]) => (
+            <div
+              key={k}
+              style={{
+                background: C.surfaceAlt,
+                borderRadius: 7,
+                padding: "5px 8px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 9.5,
+                  color: C.textMuted,
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                {k}
+              </div>
+              <div
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {v}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {primary && (
+          <div
+            style={{
+              fontSize: 11.5,
+              color: C.textMuted,
+              marginBottom: 10,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            👤 {primary.full_name} · {primary.phone}
+          </div>
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            borderTop: `1px solid ${C.border}33`,
+            paddingTop: 10,
+          }}
+        >
+          <button
+            className="btn btn-ghost"
+            onClick={() => onView(s)}
+            style={{
+              flex: 1,
+              fontSize: 11,
+              padding: "6px 4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+            }}
+          >
+            <Icon name="eye" size={12} /> View
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={() => onEdit(s)}
+            style={{
+              flex: 1,
+              fontSize: 11,
+              padding: "6px 4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+            }}
+          >
+            <Icon name="edit" size={12} /> Edit
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={() => onDelete(s)}
+            style={{ fontSize: 11, padding: "6px 8px" }}
+            title="Delete"
+          >
+            <Icon name="trash" size={12} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StudentsModule = () => {
+  // ── State ──────────────────────────────────────────────────
+  const [students, setStudents] = useState([]);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [stats, setStats] = useState({ active: 0, male: 0, female: 0 });
+  const [grades, setGrades] = useState([]);
+  const [sections, setSections] = useState([]);
+  const { academicYears: academicYrs, currentYear } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [viewMode, setViewMode] = useState("table"); // 'table' | 'grid'
+  // 🔴 Student Photo Upload Handler
+  const [uploadingStudentPhoto, setUploadingStudentPhoto] = useState(false);
+
+  const handleStudentPhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingStudentPhoto(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setF("photo_url", url);
+    } catch (err) {
+      alert("Photo upload failed. Please try again.");
+    } finally {
+      setUploadingStudentPhoto(false);
+    }
+  };
+  // Filters
+  const [search, setSearch] = useState("");
+  const [filterGrade, setFilterGrade] = useState("");
+  const [filterSec, setFilterSec] = useState("");
+  const [filterGender, setFilterGender] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  // Modals
+  const [modal, setModal] = useState(null); // 'add' | 'edit' | 'view' | 'delete' | 'bulk'
+  const [activeTab, setActiveTab] = useState("personal");
+  const [selected, setSelected] = useState(null);
+
+  // Bulk import
+  const [bulkRows, setBulkRows] = useState([]);
+  const [bulkErrors, setBulkErrors] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const fileRef = useRef(null);
+
+  // ── Blank Form ─────────────────────────────────────────────
+  const blankForm = () => ({
+    admission_no: "",
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+    gender: "Male",
+    date_of_birth: "",
+    blood_group: "",
+    nationality: "Indian",
+    religion: "",
+    caste: "",
+    sub_caste: "",
+    is_ews: false,
+    aadhaar_no: "",
+    previous_school: "",
+    tc_no: "",
+    admission_date: new Date().toISOString().split("T")[0],
+    address_permanent: "",
+    address_current: "",
+    city: "",
+    state: "",
+    pincode: "",
+    photo_url: "",
+    medical_conditions: "",
+    disabilities: "",
+    extra_curricular: "",
+    is_active: true,
+    grade_id: "",
+    section_id: "",
+    academic_year_id: "",
+    roll_no: "",
+    g_relation: "Father",
+    g_full_name: "",
+    g_phone: "",
+    g_email: "",
+    g2_relation: "Mother",
+    g2_full_name: "",
+    g2_phone: "",
+    g2_email: "",
+  });
+
+  const [form, setForm] = useState(blankForm());
+  const setF = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  // ── Fetch ──────────────────────────────────────────────────
+  useEffect(() => {
+    setPage(1);
+  }, [search, filterGrade, filterSec, filterGender, filterStatus]);
+
+  useEffect(() => {
+    loadAll();
+  }, [page, search, filterGrade, filterSec, filterGender, filterStatus]);
+
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page,
+        limit: PAGE_SIZE,
+        search: search || "",
+        grade_id: filterGrade || "",
+        section_id: filterSec || "",
+        gender: filterGender || "",
+        sort: "roll_no",
+        order: "asc",
+        is_active:
+          filterStatus === "active"
+            ? "true"
+            : filterStatus === "inactive"
+            ? "false"
+            : "",
+      });
+
+      const [gRes, secRes, stuRes] = await Promise.all([
+        apiRequest("/setup/grades"),
+        apiRequest("/setup/sections"),
+        apiRequest(`/students?include=guardian,enrolment&${params.toString()}`),
+      ]);
+
+      setGrades(gRes?.data || []);
+      setSections(secRes?.data || []);
+      setStudents(Array.isArray(stuRes?.data) ? stuRes.data : []);
+      setTotalStudents(stuRes?.total || 0);
+      if (stuRes?.stats) {
+        setStats(stuRes.stats);
+      } else {
+        const d = stuRes?.data || [];
+        setStats({
+          active: d.filter((s) => s.is_active).length,
+          male: d.filter((s) => s.gender === "Male").length,
+          female: d.filter((s) => s.gender === "Female").length,
+        });
+      }
+    } catch (e) {
+      console.error("Load failed", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Helpers ────────────────────────────────────────────────
+  const filteredSections = (gid) => sections.filter((s) => s.grade_id === gid);
+  const gradeName = (gid) => grades.find((g) => g.id === gid)?.name || "—";
+  const secName = (sid) => sections.find((s) => s.id === sid)?.name || "—";
+  const totalPages = Math.ceil(totalStudents / PAGE_SIZE) || 0;
+  const pageData = students;
+
+  // ── Open modals ────────────────────────────────────────────
+  const openAdd = () => {
+    setForm({ ...blankForm(), academic_year_id: currentYear?.id || "" });
+    setActiveTab("personal");
+    setModal("add");
+  };
+
+  const openEdit = (s) => {
+    setForm({
+      ...blankForm(),
+      ...s,
+      admission_date: s.admission_date ? s.admission_date.split("T")[0] : "",
+      date_of_birth: s.date_of_birth ? s.date_of_birth.split("T")[0] : "",
+      photo_url: s.photo_url || "",
+      grade_id: s.enrolment?.grade_id || "",
+      section_id: s.enrolment?.section_id || "",
+      academic_year_id: s.enrolment?.academic_year_id || currentYear?.id || "",
+      roll_no: s.enrolment?.roll_no || "",
+      g_relation: s.guardians?.[0]?.relation || "Father",
+      g_full_name: s.guardians?.[0]?.full_name || "",
+      g_phone: s.guardians?.[0]?.phone || "",
+      g_email: s.guardians?.[0]?.email || "",
+      g2_relation: s.guardians?.[1]?.relation || "Mother",
+      g2_full_name: s.guardians?.[1]?.full_name || "",
+      g2_phone: s.guardians?.[1]?.phone || "",
+      g2_email: s.guardians?.[1]?.email || "",
+    });
+    setSelected(s);
+    setActiveTab("personal");
+    setModal("edit");
+  };
+
+  const openView = (s) => {
+    setSelected(s);
+    setModal("view");
+  };
+  const openDel = (s) => {
+    setSelected(s);
+    setModal("delete");
+  };
+
+  // ── Save ───────────────────────────────────────────────────
+  const handleSave = async () => {
+    if (!form.first_name || !form.date_of_birth || !form.gender) {
+      alert("First name, DOB and Gender are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        admission_no: form.admission_no,
+        first_name: form.first_name,
+        middle_name: form.middle_name,
+        last_name: form.last_name,
+        gender: form.gender,
+        date_of_birth: form.date_of_birth,
+        blood_group: form.blood_group,
+        nationality: form.nationality,
+        religion: form.religion,
+        caste: form.caste,
+        sub_caste: form.sub_caste,
+        is_ews: form.is_ews,
+        aadhaar_no: form.aadhaar_no,
+        previous_school: form.previous_school,
+        tc_no: form.tc_no,
+        admission_date: form.admission_date,
+        address_permanent: form.address_permanent,
+        address_current: form.address_current,
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+        photo_url: form.photo_url,
+        medical_conditions: form.medical_conditions,
+        disabilities: form.disabilities,
+        extra_curricular: form.extra_curricular,
+        is_active: form.is_active,
+        enrolment: form.grade_id
+          ? {
+              grade_id: form.grade_id,
+              section_id: form.section_id,
+              academic_year_id: form.academic_year_id,
+              roll_no: form.roll_no,
+            }
+          : null,
+        guardians: [
+          form.g_full_name
+            ? {
+                relation: form.g_relation,
+                full_name: form.g_full_name,
+                phone: form.g_phone,
+                email: form.g_email,
+                is_primary: true,
+              }
+            : null,
+          form.g2_full_name
+            ? {
+                relation: form.g2_relation,
+                full_name: form.g2_full_name,
+                phone: form.g2_phone,
+                email: form.g2_email,
+                is_primary: false,
+              }
+            : null,
+        ].filter(Boolean),
+      };
+
+      if (modal === "edit" && selected?.id) {
+        await apiRequest(`/students/${selected.id}`, "PUT", payload);
+      } else {
+        await apiRequest("/students", "POST", payload);
+      }
+      setModal(null);
+      await loadAll();
+    } catch (e) {
+      alert("Save failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await apiRequest(`/students/${selected.id}`, "DELETE");
+      setModal(null);
+      await loadAll();
+    } catch (e) {
+      alert("Delete failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Bulk CSV Import (unchanged logic) ───────────────────────
+  const CSV_COLS = [
+    "admission_no",
+    "student_full_name",
+    "gender",
+    "date_of_birth",
+    "class_name",
+    "section_name",
+    "roll_no",
+    "guardian_name",
+    "guardian_phone",
+    "guardian_relation",
+    "guardian_email",
+    "address_city",
+    "address_pincode",
+  ];
+
+  const parseCsv = (text) => {
+    const lines = text.trim().split("\n");
+    if (!lines.length) return [];
+    const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    return lines
+      .slice(1)
+      .map((line, i) => {
+        const vals = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+        const row = {};
+        CSV_COLS.forEach((col, ci) => {
+          const hi = header.indexOf(col);
+          row[col] = hi >= 0 ? vals[hi] : vals[ci] || "";
+        });
+        row._line = i + 2;
+
+        const nameParts = (row.student_full_name || "").trim().split(/\s+/);
+        row._first_name = nameParts[0] || "";
+        row._last_name =
+          nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+        row._middle_name =
+          nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
+
+        const g = grades.find(
+          (gr) => gr.name.toLowerCase() === (row.class_name || "").toLowerCase()
+        );
+        row._grade_id = g?.id || null;
+        const sec = sections.find(
+          (s) =>
+            s.grade_id === row._grade_id &&
+            s.name.toLowerCase() === (row.section_name || "").toLowerCase()
+        );
+        row._section_id = sec?.id || null;
+
+        row._errors = [];
+        if (!row._first_name) row._errors.push("Student name required");
+        if (!row.date_of_birth) row._errors.push("DOB required");
+        if (!row.gender) row._errors.push("Gender required");
+        if (!row.guardian_name) row._errors.push("Guardian name required");
+        if (!row.guardian_phone) row._errors.push("Guardian phone required");
+        if (row.class_name && !row._grade_id)
+          row._errors.push(`Class "${row.class_name}" not found`);
+        if (row.section_name && row._grade_id && !row._section_id)
+          row._errors.push(`Section "${row.section_name}" not in class`);
+        return row;
+      })
+      .filter((r) => r._first_name || r.admission_no);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const rows = parseCsv(ev.target.result);
+      setBulkRows(rows);
+      setBulkErrors(rows.filter((r) => r._errors.length > 0));
+    };
+    reader.readAsText(file);
+  };
+
+  const handleBulkImport = async () => {
+    const valid = bulkRows.filter((r) => r._errors.length === 0);
+    if (!valid.length) {
+      alert("No valid rows to import.");
+      return;
+    }
+    setBulkLoading(true);
+    let success = 0,
+      fail = 0;
+    let failedRows = [];
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    for (let i = 0; i < valid.length; i++) {
+      const row = valid[i];
+      try {
+        await apiRequest("/students", "POST", {
+          admission_no:
+            row.admission_no ||
+            `ADM-${Date.now().toString().slice(-5)}${Math.floor(
+              Math.random() * 100
+            )}-${success}`,
+          first_name: row._first_name || "Unknown",
+          middle_name: row._middle_name || "",
+          last_name: row._last_name || "",
+          gender: row.gender || "Male",
+          date_of_birth: row.date_of_birth,
+          admission_date: new Date().toISOString().split("T")[0],
+          city: row.address_city || "",
+          pincode: row.address_pincode || "",
+          is_active: true,
+          enrolment: row._grade_id
+            ? {
+                grade_id: row._grade_id,
+                section_id: row._section_id,
+                academic_year_id: currentYear?.id,
+                roll_no: row.roll_no || "",
+              }
+            : null,
+          guardians: [
+            {
+              relation: row.guardian_relation || "Parent",
+              full_name: row.guardian_name || "Unknown Guardian",
+              phone: row.guardian_phone || "",
+              email: row.guardian_email || "",
+              is_primary: true,
+            },
+          ],
+        });
+        success++;
+      } catch (err) {
+        fail++;
+        const backendError =
+          err?.response?.data?.error ||
+          err?.response?.data?.message ||
+          err.message ||
+          "Database execution failed";
+        row.Backend_Error = backendError;
+        row._errors = [`Backend Error: ${backendError}`];
+        failedRows.push(row);
+      }
+      if ((i + 1) % 10 === 0) await sleep(1000);
+    }
+
+    setBulkLoading(false);
+    await loadAll();
+
+    if (fail > 0) {
+      setBulkRows(failedRows);
+      setBulkErrors(failedRows);
+      alert(
+        `⚠️ ${success} Imported, ${fail} Failed.\nDownloading Failed Students CSV...`
+      );
+      downloadFailedCSV(failedRows);
+    } else {
+      alert(`🎉 All ${success} Students Imported Successfully!`);
+      setModal(null);
+      setBulkRows([]);
+    }
+  };
+
+  const downloadFailedCSV = (failedRows) => {
+    if (!failedRows || failedRows.length === 0) return;
+    const sampleRow = failedRows[0];
+    const headers = Object.keys(sampleRow).filter((k) => !k.startsWith("_"));
+    if (!headers.includes("Backend_Error")) headers.push("Backend_Error");
+    let csvContent = headers.join(",") + "\n";
+    failedRows.forEach((row) => {
+      const rowData = headers.map((header) => {
+        let val = row[header] == null ? "" : String(row[header]);
+        val = val.replace(/"/g, '""');
+        if (val.search(/("|,|\n)/g) >= 0) val = `"${val}"`;
+        return val;
+      });
+      csvContent += rowData.join(",") + "\n";
+    });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `Failed_Students_Import_${new Date().getTime()}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadSample = () => {
+    const sample = [
+      CSV_COLS.join(","),
+      `ADM001,Rahul Kumar Sharma,Male,2012-06-15,${
+        grades[0]?.name || "Class 7"
+      },${
+        filteredSections(grades[0]?.id)[0]?.name || "A"
+      },101,Suresh Sharma,9876543210,Father,suresh@email.com,Jaipur,302001`,
+      `ADM002,Priya Gupta,Female,2011-03-20,${grades[0]?.name || "Class 7"},${
+        filteredSections(grades[0]?.id)[0]?.name || "A"
+      },102,Meena Gupta,9812345678,Mother,,Delhi,110001`,
+    ].join("\n");
+    const a = document.createElement("a");
+    a.href = "data:text/csv," + encodeURIComponent(sample);
+    a.download = "school_bulk_students_template.csv";
+    a.click();
+  };
+
+  const totalActive = students.filter((s) => s.is_active).length;
+  const totalMale = students.filter((s) => s.gender === "BOY").length;
+  const totalFemale = students.filter((s) => s.gender === "GIRL").length;
+
+  // ── UI helpers ─────────────────────────────────────────────
+  // 🔴 FIX: TabBtn is a plain function now — call it as TabBtn({...}),
+  // never as <TabBtn .../>. This prevents remounting the tab bar (and
+  // any input inside the active tab) on every keystroke.
+  const TabBtn = ({ id, label, icon }) => (
+    <button
+      key={id}
+      onClick={() => setActiveTab(id)}
+      style={{
+        padding: "8px 14px",
+        borderRadius: 8,
+        border: "none",
+        cursor: "pointer",
+        fontFamily: "'DM Sans',sans-serif",
+        fontSize: 12.5,
+        fontWeight: 600,
+        background: activeTab === id ? `${C.primary}22` : "transparent",
+        color: activeTab === id ? C.primary : C.textMuted,
+        borderBottom:
+          activeTab === id ? `2px solid ${C.primary}` : "2px solid transparent",
+        transition: "all 0.15s",
+        display: "flex",
+        alignItems: "center",
+        gap: 5,
+      }}
+    >
+      <Icon name={icon} size={13} />
+      {label}
+    </button>
+  );
+
+  // 🔴 FIX: FormBody is a plain function now — call it as {FormBody()},
+  // never as <FormBody />. It still closes over `form`, `setF`,
+  // `activeTab`, `grades`, `sections` etc. from StudentsModule's scope,
+  // so no props need to be threaded through. This is what stops the
+  // cursor from jumping out after one character.
+  const FormBody = () => (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          marginBottom: 18,
+          borderBottom: `1px solid ${C.border}44`,
+          flexWrap: "wrap",
+        }}
+      >
+        {TabBtn({ id: "personal", label: "Personal", icon: "user" })}
+        {TabBtn({ id: "academic", label: "Academic", icon: "academic" })}
+        {TabBtn({ id: "guardian", label: "Guardian", icon: "teachers" })}
+        {TabBtn({ id: "address", label: "Address", icon: "dashboard" })}
+        {TabBtn({ id: "medical", label: "Medical", icon: "warning" })}
+      </div>
+
+      {activeTab === "personal" && (
+        <div>
+          <FormGrid cols={3}>
+            <Field
+              form={form}
+              setF={setF}
+              label="First Name *"
+              name="first_name"
+            />
+            <Field
+              form={form}
+              setF={setF}
+              label="Middle Name"
+              name="middle_name"
+            />
+            <Field form={form} setF={setF} label="Last Name" name="last_name" />
+          </FormGrid>
+          <FormGrid cols={3}>
+            <Field
+              form={form}
+              setF={setF}
+              label="Gender *"
+              name="gender"
+              options={["BOY", "GIRL", "Other"]}
+            />
+            <Field
+              form={form}
+              setF={setF}
+              label="Date of Birth *"
+              name="date_of_birth"
+              type="date"
+            />
+            <Field
+              form={form}
+              setF={setF}
+              label="Blood Group"
+              name="blood_group"
+              options={["", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]}
+            />
+          </FormGrid>
+          <FormGrid cols={3}>
+            <Field
+              form={form}
+              setF={setF}
+              label="Nationality"
+              name="nationality"
+            />
+            <Field form={form} setF={setF} label="Religion" name="religion" />
+            <Field form={form} setF={setF} label="Caste" name="caste" />
+          </FormGrid>
+          <FormGrid cols={3}>
+            <Field form={form} setF={setF} label="Sub-Caste" name="sub_caste" />
+            <Field
+              form={form}
+              setF={setF}
+              label="Aadhaar No."
+              name="aadhaar_no"
+            />
+            <Field
+              form={form}
+              setF={setF}
+              label="EWS Student"
+              name="is_ews"
+              type="checkbox"
+            />
+          </FormGrid>
+          {/* 🔴 Direct Student Photo Upload UI */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: C.textMuted, marginBottom: 6, textTransform: "uppercase" }}>
+              Student Photo
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, background: C.surfaceAlt, padding: 14, borderRadius: 12, border: `1px solid ${C.border}` }}>
+              {form.photo_url ? (
+                <img src={form.photo_url} alt="Student" style={{ width: 50, height: 50, borderRadius: "50%", objectFit: "cover", border: `2px solid ${C.primary}` }} />
+              ) : (
+                <div style={{ width: 50, height: 50, borderRadius: "50%", background: `${C.primary}22`, color: C.primary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700 }}>
+                  {(form.first_name?.[0] || "?").toUpperCase()}
+                </div>
+              )}
+              <div>
+                <input 
+                  type="file" 
+                  id="student-photo-input" 
+                  accept="image/*" 
+                  style={{ display: "none" }} 
+                  onChange={handleStudentPhotoUpload} 
+                  disabled={uploadingStudentPhoto}
+                />
+                <label 
+                  htmlFor="student-photo-input" 
+                  className="btn btn-primary" 
+                  style={{ cursor: uploadingStudentPhoto ? "wait" : "pointer", padding: "6px 14px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  {uploadingStudentPhoto ? "Uploading..." : "📷 Select Photo"}
+                </label>
+                <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 4 }}>Square JPG/PNG image</div>
+              </div>
+            </div>
+          </div>
+          <FormGrid cols={2}>
+            <Field
+              form={form}
+              setF={setF}
+              label="Extra-curricular Activities"
+              name="extra_curricular"
+            />
+            <Field
+              form={form}
+              setF={setF}
+              label="Is Active"
+              name="is_active"
+              type="checkbox"
+            />
+          </FormGrid>
+        </div>
+      )}
+
+      {activeTab === "academic" && (
+        <div>
+          <FormGrid cols={2}>
+            <Field
+              form={form}
+              setF={setF}
+              label="Admission No. *"
+              name="admission_no"
+            />
+            <Field
+              form={form}
+              setF={setF}
+              label="Admission Date *"
+              name="admission_date"
+              type="date"
+            />
+          </FormGrid>
+          <FormGrid cols={2}>
+            <Field
+              form={form}
+              setF={setF}
+              label="Previous School"
+              name="previous_school"
+            />
+            <Field form={form} setF={setF} label="TC No." name="tc_no" />
+          </FormGrid>
+          <div
+            style={{
+              padding: "14px 16px",
+              background: `${C.primary}11`,
+              borderRadius: 12,
+              border: `1px solid ${C.primary}22`,
+              marginBottom: 14,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: C.primary,
+                textTransform: "uppercase",
+                marginBottom: 10,
+                letterSpacing: "0.5px",
+              }}
+            >
+              Class Enrolment
+            </div>
+            <FormGrid cols={2}>
+              <FormRow label="Class / Grade">
+                <select
+                  className="select"
+                  value={form.grade_id || ""}
+                  onChange={(e) => {
+                    setF("grade_id", e.target.value);
+                    setF("section_id", "");
+                  }}
+                >
+                  <option value="">-- Select Class --</option>
+                  {grades.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </FormRow>
+              <FormRow label="Section">
+                <select
+                  className="select"
+                  value={form.section_id || ""}
+                  onChange={(e) => setF("section_id", e.target.value)}
+                  disabled={!form.grade_id}
+                >
+                  <option value="">-- Select Section --</option>
+                  {filteredSections(form.grade_id).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </FormRow>
+            </FormGrid>
+            <FormGrid cols={2}>
+              <FormRow label="Academic Year">
+                <select
+                  className="select"
+                  value={form.academic_year_id || ""}
+                  onChange={(e) => setF("academic_year_id", e.target.value)}
+                >
+                  <option value="">-- Select Year --</option>
+                  {academicYrs.map((ay) => (
+                    <option key={ay.id} value={ay.id}>
+                      {ay.name}
+                      {ay.is_current ? " (Current)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </FormRow>
+              <Field form={form} setF={setF} label="Roll No." name="roll_no" />
+            </FormGrid>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "guardian" && (
+        <div>
+          <div
+            style={{
+              padding: "14px 16px",
+              background: `${C.green}11`,
+              borderRadius: 12,
+              border: `1px solid ${C.green}22`,
+              marginBottom: 14,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: C.green,
+                textTransform: "uppercase",
+                marginBottom: 10,
+                letterSpacing: "0.5px",
+              }}
+            >
+              Primary Guardian
+            </div>
+            <FormGrid cols={2}>
+              <Field
+                form={form}
+                setF={setF}
+                label="Relation"
+                name="g_relation"
+                options={[
+                  "Father",
+                  "Mother",
+                  "Guardian",
+                  "Uncle",
+                  "Aunt",
+                  "Grandparent",
+                  "Other",
+                ]}
+              />
+              <Field
+                form={form}
+                setF={setF}
+                label="Full Name *"
+                name="g_full_name"
+              />
+            </FormGrid>
+            <FormGrid cols={2}>
+              <Field
+                form={form}
+                setF={setF}
+                label="Phone *"
+                name="g_phone"
+                type="tel"
+              />
+              <Field
+                form={form}
+                setF={setF}
+                label="Email"
+                name="g_email"
+                type="email"
+              />
+            </FormGrid>
+          </div>
+          <div
+            style={{
+              padding: "14px 16px",
+              background: `${C.blue}11`,
+              borderRadius: 12,
+              border: `1px solid ${C.blue}22`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: C.blue,
+                textTransform: "uppercase",
+                marginBottom: 10,
+                letterSpacing: "0.5px",
+              }}
+            >
+              Secondary Guardian (Optional)
+            </div>
+            <FormGrid cols={2}>
+              <Field
+                form={form}
+                setF={setF}
+                label="Relation"
+                name="g2_relation"
+                options={[
+                  "Father",
+                  "Mother",
+                  "Guardian",
+                  "Uncle",
+                  "Aunt",
+                  "Grandparent",
+                  "Other",
+                ]}
+              />
+              <Field
+                form={form}
+                setF={setF}
+                label="Full Name"
+                name="g2_full_name"
+              />
+            </FormGrid>
+            <FormGrid cols={2}>
+              <Field
+                form={form}
+                setF={setF}
+                label="Phone"
+                name="g2_phone"
+                type="tel"
+              />
+              <Field
+                form={form}
+                setF={setF}
+                label="Email"
+                name="g2_email"
+                type="email"
+              />
+            </FormGrid>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "address" && (
+        <div>
+          <FormRow label="Permanent Address">
+            <textarea
+              className="input"
+              rows={3}
+              value={form.address_permanent || ""}
+              onChange={(e) => setF("address_permanent", e.target.value)}
+              style={{ resize: "vertical", minHeight: 70 }}
+            />
+          </FormRow>
+          <FormRow label="Current Address (if different)">
+            <textarea
+              className="input"
+              rows={3}
+              value={form.address_current || ""}
+              onChange={(e) => setF("address_current", e.target.value)}
+              style={{ resize: "vertical", minHeight: 70 }}
+            />
+          </FormRow>
+          <FormGrid cols={3}>
+            <Field form={form} setF={setF} label="City" name="city" />
+            <Field form={form} setF={setF} label="State" name="state" />
+            <Field form={form} setF={setF} label="Pincode" name="pincode" />
+          </FormGrid>
+        </div>
+      )}
+
+      {activeTab === "medical" && (
+        <div>
+          <FormRow label="Medical Conditions (if any)">
+            <textarea
+              className="input"
+              rows={3}
+              value={form.medical_conditions || ""}
+              onChange={(e) => setF("medical_conditions", e.target.value)}
+              style={{ resize: "vertical", minHeight: 80 }}
+            />
+          </FormRow>
+          <FormRow label="Disabilities (if any)">
+            <textarea
+              className="input"
+              rows={3}
+              value={form.disabilities || ""}
+              onChange={(e) => setF("disabilities", e.target.value)}
+              style={{ resize: "vertical", minHeight: 80 }}
+            />
+          </FormRow>
+          <div
+            style={{
+              padding: 12,
+              background: `${C.yellow}11`,
+              border: `1px solid ${C.yellow}33`,
+              borderRadius: 10,
+              marginTop: 8,
+            }}
+          >
+            <p
+              style={{
+                fontSize: 12,
+                color: C.yellow,
+                margin: 0,
+                fontWeight: 600,
+              }}
+            >
+              ℹ This information is confidential and used only for emergency
+              medical response.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // ── MAIN RENDER ────────────────────────────────────────────
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Student Management"
+        sub={`${students.length} students enrolled`}
+        action={
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setBulkRows([]);
+                setBulkErrors([]);
+                setModal("bulk");
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+              }}
+            >
+              <Icon name="download" size={14} /> Bulk Import
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={openAdd}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+              }}
+            >
+              <Icon name="plus" size={14} /> New Admission
+            </button>
+          </div>
+        }
+      />
+
+      {/* Stats Row */}
+      <div
+        className="grid-4"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4,1fr)",
+          gap: 12,
+          marginBottom: 18,
+        }}
+      >
+        {[
+          {
+            label: "Total Enrolled",
+            value: totalStudents,
+            color: C.blue,
+            icon: "students",
+          },
+          {
+            label: "Active",
+            value: totalActive,
+            color: C.green,
+            icon: "check",
+          },
+          { label: "Boys", value: totalMale, color: C.cyan, icon: "user" },
+          { label: "Girls", value: totalFemale, color: C.purple, icon: "user" },
+        ].map((k, i) => (
+          <div key={i} className="kpi-card" style={{ padding: "14px 16px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: C.textMuted,
+                    textTransform: "uppercase",
+                    fontWeight: 600,
+                    letterSpacing: "0.5px",
+                    marginBottom: 4,
+                  }}
+                >
+                  {k.label}
+                </div>
+                <div
+                  className="syne"
+                  style={{ fontSize: 26, fontWeight: 800, color: C.text }}
+                >
+                  {loading ? "—" : k.value}
+                </div>
+              </div>
+              <div
+                style={{
+                  background: `${k.color}22`,
+                  padding: 10,
+                  borderRadius: 10,
+                  color: k.color,
+                }}
+              >
+                <Icon name={k.icon} size={18} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter Bar */}
+      <div className="card" style={{ marginBottom: 14, padding: "12px 16px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
+            <Icon
+              name="search"
+              size={14}
+              color={C.textMuted}
+              style={{
+                position: "absolute",
+                left: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+              }}
+            />
+            <input
+              className="input"
+              placeholder="Search name or admission no…"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              style={{ paddingLeft: 32 }}
+            />
+          </div>
+          <select
+            className="select"
+            style={{ width: 140 }}
+            value={filterGrade}
+            onChange={(e) => {
+              setFilterGrade(e.target.value);
+              setFilterSec("");
+              setPage(1);
+            }}
+          >
+            <option value="">All Classes</option>
+            {grades.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="select"
+            style={{ width: 120 }}
+            value={filterSec}
+            onChange={(e) => {
+              setFilterSec(e.target.value);
+              setPage(1);
+            }}
+            disabled={!filterGrade}
+          >
+            <option value="">All Sections</option>
+            {filteredSections(filterGrade).map((s) => (
+              <option key={s.id} value={s.id}>
+                Sec {s.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="select"
+            style={{ width: 110 }}
+            value={filterGender}
+            onChange={(e) => {
+              setFilterGender(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">All Gender</option>
+            <option value="Male">BOY</option>
+            <option value="Female">GIRL</option>
+          </select>
+          <select
+            className="select"
+            style={{ width: 120 }}
+            value={filterStatus}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          {(search || filterGrade || filterGender || filterStatus) && (
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: 12, padding: "7px 12px" }}
+              onClick={() => {
+                setSearch("");
+                setFilterGrade("");
+                setFilterSec("");
+                setFilterGender("");
+                setFilterStatus("");
+                setPage(1);
+              }}
+            >
+              Clear
+            </button>
+          )}
+
+          {/* Grid / Table toggle — same pattern as TeachersModule */}
+          <div
+            style={{
+              display: "flex",
+              background: C.surfaceAlt,
+              borderRadius: 8,
+              border: `1px solid ${C.border}`,
+              overflow: "hidden",
+            }}
+          >
+            {[
+              ["grid", "chart"],
+              ["table", "result"],
+            ].map(([m, icon]) => (
+              <button
+                key={m}
+                onClick={() => setViewMode(m)}
+                style={{
+                  padding: "7px 11px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans',sans-serif",
+                  background: viewMode === m ? `${C.primary}22` : "transparent",
+                  color: viewMode === m ? C.primary : C.textMuted,
+                }}
+                title={m === "grid" ? "Grid view" : "Table view"}
+              >
+                <Icon name={icon} size={14} />
+              </button>
+            ))}
+          </div>
+
+          <div
+            style={{
+              marginLeft: 8,
+              fontSize: 12,
+              color: C.textMuted,
+              fontWeight: 600,
+            }}
+          >
+            {totalStudents} result{totalStudents !== 1 ? "s" : ""}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      {loading ? (
+                <div className="card" style={{ padding: 30 }}>
+                <LogoLoader size={44} label="Syncing student records…" />
+              </div>
+      ) : pageData.length === 0 ? (
+        <div className="card" style={{ padding: 50, textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>🎓</div>
+          <div
+            className="syne"
+            style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}
+          >
+            No students found
+          </div>
+          <div style={{ color: C.textMuted, fontSize: 13, marginBottom: 20 }}>
+            {students.length === 0
+              ? "Start by adding new admissions or importing via CSV."
+              : "Try adjusting filters."}
+          </div>
+          {students.length === 0 && (
+            <button className="btn btn-primary" onClick={openAdd}>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="plus" size={14} /> Add First Student
+              </span>
+            </button>
+          )}
+        </div>
+      ) : viewMode === "grid" ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))",
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          {pageData.map((s) =>
+            StudentCard({
+              s,
+              gradeName,
+              secName,
+              onView: openView,
+              onEdit: openEdit,
+              onDelete: openDel,
+            })
+          )}
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ width: 36 }}>#</th>
+                  <th>Student</th>
+                  <th>Adm. No.</th>
+                  <th>Class</th>
+                  <th>DOB</th>
+                  <th>Guardian</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: "center" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageData.map((s, idx) => {
+                  const enr = s.enrolment;
+                  const primary = s.guardians?.[0];
+                  const gname = enr
+                    ? `${gradeName(enr.grade_id)} ${secName(enr.section_id)}`
+                    : "—";
+                  const fullName = [s.first_name, s.middle_name, s.last_name]
+                    .filter(Boolean)
+                    .join(" ");
+                  return (
+                    <tr key={s.id}>
+                      <td style={{ color: C.textMuted, fontSize: 11 }}>
+                        {(page - 1) * PAGE_SIZE + idx + 1}
+                      </td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: "50%",
+                              flexShrink: 0,
+                              background:
+                                s.gender === "GIRL"
+                                  ? `${C.purple}33`
+                                  : `${C.blue}33`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: s.gender === "GIRL" ? C.purple : C.blue,
+                            }}
+                          >
+                            {(s.first_name?.[0] || "?").toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 13 }}>
+                              {fullName}
+                            </div>
+                            {enr?.roll_no && (
+                              <div
+                                style={{ fontSize: 10.5, color: C.textMuted }}
+                              >
+                                Roll #{enr.roll_no}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: 12,
+                          color: C.textMuted,
+                        }}
+                      >
+                        {s.admission_no || "—"}
+                      </td>
+                      <td>
+                        {enr ? (
+                          <span className="badge badge-blue">{gname}</span>
+                        ) : (
+                          <span style={{ color: C.red, fontSize: 12 }}>
+                            Not enrolled
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ fontSize: 12, color: C.textMuted }}>
+                        {s.date_of_birth
+                          ? new Date(s.date_of_birth).toLocaleDateString(
+                              "en-IN"
+                            )
+                          : "—"}
+                      </td>
+                      <td>
+                        {primary ? (
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600 }}>
+                              {primary.full_name}
+                            </div>
+                            <div style={{ fontSize: 11, color: C.textMuted }}>
+                              {primary.phone}
+                            </div>
+                          </div>
+                        ) : (
+                          <span style={{ color: C.textMuted, fontSize: 12 }}>
+                            —
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            s.is_active ? "badge-green" : "badge-red"
+                          }`}
+                        >
+                          {s.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 4,
+                            justifyContent: "center",
+                          }}
+                        >
+                          <button
+                            className="btn btn-ghost"
+                            title="View"
+                            style={{ padding: "5px 8px" }}
+                            onClick={() => openView(s)}
+                          >
+                            <Icon name="eye" size={13} />
+                          </button>
+                          <button
+                            className="btn btn-ghost"
+                            title="Edit"
+                            style={{ padding: "5px 8px" }}
+                            onClick={() => openEdit(s)}
+                          >
+                            <Icon name="edit" size={13} />
+                          </button>
+                          <button
+                            className="btn btn-danger"
+                            title="Delete"
+                            style={{ padding: "5px 8px" }}
+                            onClick={() => openDel(s)}
+                          >
+                            <Icon name="trash" size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "10px 16px",
+                borderTop: `1px solid ${C.border}33`,
+              }}
+            >
+              <div style={{ fontSize: 12, color: C.textMuted }}>
+                Showing {(page - 1) * PAGE_SIZE + 1}–
+                {Math.min(page * PAGE_SIZE, totalStudents)} of {totalStudents}
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  className="btn btn-ghost"
+                  style={{ padding: "5px 12px", fontSize: 12 }}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  ← Prev
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pg = page <= 3 ? i + 1 : page + i - 2;
+                  if (pg < 1 || pg > totalPages) return null;
+                  return (
+                    <button
+                      key={pg}
+                      className="btn btn-ghost"
+                      style={{
+                        padding: "5px 10px",
+                        fontSize: 12,
+                        background:
+                          pg === page ? `${C.primary}22` : "transparent",
+                        color: pg === page ? C.primary : C.textMuted,
+                      }}
+                      onClick={() => setPage(pg)}
+                    >
+                      {pg}
+                    </button>
+                  );
+                })}
+                <button
+                  className="btn btn-ghost"
+                  style={{ padding: "5px 12px", fontSize: 12 }}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Grid view pagination (simple, since grid uses same pageData) */}
+      {viewMode === "grid" && totalPages > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 6,
+            marginBottom: 16,
+          }}
+        >
+          <button
+            className="btn btn-ghost"
+            style={{ padding: "5px 12px", fontSize: 12 }}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            ← Prev
+          </button>
+          <span
+            style={{ alignSelf: "center", fontSize: 12, color: C.textMuted }}
+          >
+            Page {page} of {totalPages}
+          </span>
+          <button
+            className="btn btn-ghost"
+            style={{ padding: "5px 12px", fontSize: 12 }}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next →
+          </button>
+        </div>
+      )}
+
+      {/* ════════ MODAL: ADD / EDIT ════════ */}
+      <Modal
+        open={modal === "add" || modal === "edit"}
+        onClose={() => setModal(null)}
+        title={modal === "edit" ? "Edit Student Profile" : "New Admission"}
+        width={700}
+      >
+        {FormBody()}
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            marginTop: 20,
+            justifyContent: "flex-end",
+            borderTop: `1px solid ${C.border}33`,
+            paddingTop: 16,
+          }}
+        >
+          <button
+            className="btn btn-ghost"
+            onClick={() => setModal(null)}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+            style={{ minWidth: 140, opacity: saving ? 0.7 : 1 }}
+          >
+            {saving
+              ? "Saving…"
+              : modal === "edit"
+              ? "Update Student"
+              : "Admit Student"}
+          </button>
+        </div>
+      </Modal>
+
+      {/* ════════ MODAL: VIEW ════════ */}
+      <Modal
+        open={modal === "view"}
+        onClose={() => setModal(null)}
+        title="Student Profile"
+        width={680}
+      >
+        {selected &&
+          (() => {
+            const enr = selected.enrolment;
+            const primary = selected.guardians?.[0];
+            const sec2 = selected.guardians?.[1];
+            const fullName = [
+              selected.first_name,
+              selected.middle_name,
+              selected.last_name,
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <div>
+                <div
+                  style={{
+                    background: `linear-gradient(135deg,${C.surfaceAlt},${C.surface})`,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 14,
+                    padding: 20,
+                    marginBottom: 16,
+                    display: "flex",
+                    gap: 16,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      background:
+                        selected.gender === "GIRL"
+                          ? `${C.purple}33`
+                          : `${C.blue}33`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 22,
+                      fontWeight: 800,
+                      color: selected.gender === "GIRL" ? C.purple : C.blue,
+                      border: `2px solid ${
+                        selected.gender === "BOY" ? C.purple : C.blue
+                      }55`,
+                    }}
+                  >
+                    {(selected.first_name?.[0] || "?").toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      className="syne"
+                      style={{ fontSize: 18, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                    >
+                      {fullName}
+                    </div>
+                    <div
+                      style={{ color: C.textMuted, fontSize: 13, marginTop: 2 }}
+                    >
+                      {selected.admission_no && (
+                        <span style={{ marginRight: 10 }}>
+                          Adm# {selected.admission_no}
+                        </span>
+                      )}
+                      {enr && (
+                        <span style={{ color: C.primary, fontWeight: 600 }}>
+                          {gradeName(enr.grade_id)} — Sec{" "}
+                          {secName(enr.section_id)}
+                          {enr.roll_no ? ` | Roll #${enr.roll_no}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <span
+                      className={`badge ${
+                        selected.is_active ? "badge-green" : "badge-red"
+                      }`}
+                    >
+                      {selected.is_active ? "Active" : "Inactive"}
+                    </span>
+                    {selected.is_ews && (
+                      <span className="badge badge-yellow">EWS</span>
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  className="grid-2"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 12,
+                  }}
+                >
+                  {[
+                    ["Gender", selected.gender],
+                    [
+                      "Date of Birth",
+                      selected.date_of_birth
+                        ? new Date(selected.date_of_birth).toLocaleDateString(
+                            "en-IN"
+                          )
+                        : "—",
+                    ],
+                    ["Blood Group", selected.blood_group || "—"],
+                    ["Nationality", selected.nationality || "—"],
+                    ["Religion", selected.religion || "—"],
+                    ["Caste", selected.caste || "—"],
+                    ["Aadhaar", selected.aadhaar_no || "—"],
+                    [
+                      "Adm. Date",
+                      selected.admission_date
+                        ? new Date(selected.admission_date).toLocaleDateString(
+                            "en-IN"
+                          )
+                        : "—",
+                    ],
+                  ].map(([k, v]) => (
+                    <div
+                      key={k}
+                      style={{
+                        background: C.surfaceAlt,
+                        borderRadius: 8,
+                        padding: "8px 12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10.5,
+                          color: C.textMuted,
+                          textTransform: "uppercase",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {k}
+                      </div>
+                      <div
+                        style={{ fontSize: 13, fontWeight: 600, marginTop: 2 }}
+                      >
+                        {v}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {(primary || sec2) && (
+                  <div style={{ marginTop: 14 }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: C.textMuted,
+                        textTransform: "uppercase",
+                        fontWeight: 700,
+                        marginBottom: 8,
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Guardians
+                    </div>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      {[primary, sec2].filter(Boolean).map((g, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            flex: 1,
+                            minWidth: 200,
+                            background: C.surfaceAlt,
+                            borderRadius: 10,
+                            padding: "10px 12px",
+                            border: `1px solid ${C.border}55`,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: i === 0 ? C.green : C.blue,
+                              fontWeight: 700,
+                              marginBottom: 4,
+                            }}
+                          >
+                            {i === 0 ? "Primary" : "Secondary"} — {g.relation}
+                          </div>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>
+                            {g.full_name}
+                          </div>
+                          <div style={{ fontSize: 12, color: C.textMuted }}>
+                            {g.phone}
+                          </div>
+                          {g.email && (
+                            <div style={{ fontSize: 11, color: C.textMuted }}>
+                              {g.email}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(selected.address_permanent || selected.city) && (
+                  <div
+                    style={{
+                      marginTop: 14,
+                      padding: "10px 12px",
+                      background: C.surfaceAlt,
+                      borderRadius: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10.5,
+                        color: C.textMuted,
+                        textTransform: "uppercase",
+                        fontWeight: 700,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Address
+                    </div>
+                    <div style={{ fontSize: 13 }}>
+                      {[
+                        selected.address_permanent,
+                        selected.city,
+                        selected.state,
+                        selected.pincode,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    marginTop: 18,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => setModal(null)}
+                  >
+                    Close
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setModal(null);
+                      openEdit(selected);
+                    }}
+                  >
+                    <span
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <Icon name="edit" size={13} /> Edit Profile
+                    </span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+      </Modal>
+
+      {/* ════════ MODAL: DELETE CONFIRM ════════ */}
+      <Modal
+        open={modal === "delete"}
+        onClose={() => setModal(null)}
+        title="Confirm Deletion"
+        width={420}
+      >
+        {selected && (
+          <div style={{ textAlign: "center", padding: "8px 0 4px" }}>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div>
+            <div
+              className="syne"
+              style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}
+            >
+              Delete {selected.first_name} {selected.last_name}?
+            </div>
+            <div
+              style={{
+                color: C.textMuted,
+                fontSize: 13,
+                marginBottom: 24,
+                lineHeight: 1.6,
+              }}
+            >
+              This is a soft delete. Student record, enrolment, and guardian
+              data will be archived and hidden from all views. This action can
+              be reversed by a database admin.
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setModal(null)}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleDelete}
+                disabled={saving}
+                style={{ minWidth: 120, opacity: saving ? 0.7 : 1 }}
+              >
+                {saving ? "Deleting…" : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ════════ MODAL: BULK IMPORT ════════ */}
+      <Modal
+        open={modal === "bulk"}
+        onClose={() => setModal(null)}
+        title="Bulk CSV Import — Data Migration"
+        width={750}
+      >
+        <div>
+          <div
+            style={{
+              padding: "12px 14px",
+              background: `${C.blue}11`,
+              border: `1px solid ${C.blue}22`,
+              borderRadius: 10,
+              marginBottom: 16,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: C.blue,
+                marginBottom: 6,
+              }}
+            >
+              CSV Column Order:
+            </div>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+              {CSV_COLS.map((c, i) => (
+                <span
+                  key={c}
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "monospace",
+                    background: `${C.blue}22`,
+                    color: C.blue,
+                    padding: "2px 7px",
+                    borderRadius: 4,
+                  }}
+                >
+                  {i + 1}. {c}
+                </span>
+              ))}
+            </div>
+            <div style={{ fontSize: 12, color: C.textMuted, marginTop: 8 }}>
+              • Class & Section names must exactly match your setup
+              (case-insensitive)
+              <br />• date_of_birth format: YYYY-MM-DD&nbsp;&nbsp;• Header row
+              required
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              marginBottom: 16,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <button
+              className="btn btn-ghost"
+              onClick={downloadSample}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+              }}
+            >
+              <Icon name="download" size={13} /> Download Template CSV
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+            <button
+              className="btn btn-primary"
+              onClick={() => fileRef.current?.click()}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+              }}
+            >
+              <Icon name="plus" size={13} /> Upload CSV File
+            </button>
+          </div>
+
+          {bulkRows.length > 0 && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 10,
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 600 }}>
+                  Preview:{" "}
+                  <span style={{ color: C.green }}>
+                    {bulkRows.filter((r) => r._errors.length === 0).length}{" "}
+                    valid
+                  </span>
+                  {bulkErrors.length > 0 && (
+                    <span style={{ color: C.red }}>
+                      , {bulkErrors.length} with errors
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11, color: C.textMuted }}>
+                  {bulkRows.length} total rows
+                </div>
+              </div>
+              <div
+                style={{
+                  overflowX: "auto",
+                  maxHeight: 300,
+                  overflowY: "auto",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 10,
+                }}
+              >
+                <table className="table" style={{ fontSize: 11 }}>
+                  <thead>
+                    <tr>
+                      <th>Line</th>
+                      <th>Name</th>
+                      <th>Adm#</th>
+                      <th>DOB</th>
+                      <th>Class</th>
+                      <th>Section</th>
+                      <th>Guardian</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkRows.map((row, i) => (
+                      <tr
+                        key={i}
+                        style={{
+                          background: row._errors.length
+                            ? `${C.red}08`
+                            : "transparent",
+                        }}
+                      >
+                        <td style={{ color: C.textMuted }}>{row._line}</td>
+                        <td style={{ fontWeight: 600 }}>
+                          {[row.first_name, row.middle_name, row.last_name]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </td>
+                        <td style={{ fontFamily: "monospace" }}>
+                          {row.admission_no || "—"}
+                        </td>
+                        <td>{row.date_of_birth || "—"}</td>
+                        <td>{row.class_name || "—"}</td>
+                        <td>{row.section_name || "—"}</td>
+                        <td>{row.guardian_name || "—"}</td>
+                        <td>
+                          {row._errors.length === 0 ? (
+                            <span
+                              className="badge badge-green"
+                              style={{ fontSize: 10 }}
+                            >
+                              ✓ Valid
+                            </span>
+                          ) : (
+                            <span
+                              title={row._errors.join(", ")}
+                              className="badge badge-red"
+                              style={{ fontSize: 10, cursor: "help" }}
+                            >
+                              ⚠ {row._errors[0]}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  marginTop: 16,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setBulkRows([])}
+                >
+                  Clear
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleBulkImport}
+                  disabled={
+                    bulkLoading ||
+                    bulkRows.filter((r) => r._errors.length === 0).length === 0
+                  }
+                  style={{ minWidth: 160, opacity: bulkLoading ? 0.7 : 1 }}
+                >
+                  {bulkLoading
+                    ? "Importing…"
+                    : `Import ${
+                        bulkRows.filter((r) => r._errors.length === 0).length
+                      } Students`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {bulkRows.length === 0 && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "30px 0",
+                color: C.textMuted,
+                fontSize: 13,
+              }}
+            >
+              Upload a CSV file to preview students before importing.
+            </div>
+          )}
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// 🔴 NEW: Daily Routine Builder — full period-wise schedule editor.
+// Replaces old flat "Start/End Time + Periods/Day" fields.
+// Backed by period_slots via GET/PUT /timetable/periods.
+// ═══════════════════════════════════════════════════════════════
+
+const PERIOD_TYPES = [
+  { v: "period", l: "Teaching Period" },
+  { v: "assembly", l: "Assembly" },
+  { v: "lunch", l: "Lunch Break" },
+  { v: "break", l: "Short Break" },
+  { v: "custom", l: "Other (custom label)" },
+];
+
+
+const addMinutes = (time, mins) => {
+  const [h, m] = time.split(":").map(Number);
+  const total = ((h * 60 + m + mins) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+};
+
+
+const DailyRoutineBuilder = ({ periods, onSaved }) => {
+  const [rows, setRows] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [genStart, setGenStart] = useState("08:00");
+  const [genDuration, setGenDuration] = useState(45);
+  const [genCount, setGenCount] = useState(8);
+
+  // 🔴 Populate from parent's central state — same pattern as Grades/Subjects.
+  // Runs whenever SetupModule re-fetches (mount, or after this save).
+  useEffect(() => {
+    const list = Array.isArray(periods) ? periods : [];
+    setRows(
+      list.map((p) => ({
+        type: p.is_break
+          ? p.label?.toLowerCase().includes("lunch")
+            ? "lunch"
+            : p.label?.toLowerCase().includes("assembly")
+            ? "assembly"
+            : "break"
+          : "period",
+        label: p.label || "",
+        start_time: (p.start_time || "").slice(0, 5),
+        end_time: (p.end_time || "").slice(0, 5),
+        is_break: !!p.is_break,
+      }))
+    );
+  }, [periods]);
+
+  const autoGenerate = () => {
+    const generated = [];
+    let cursor = genStart;
+    for (let i = 1; i <= genCount; i++) {
+      const end = addMinutes(cursor, genDuration);
+      generated.push({ type: "period", label: `Period ${i}`, start_time: cursor, end_time: end, is_break: false });
+      cursor = end;
+    }
+    setRows(generated);
+  };
+
+  const updateRow = (i, field, value) => {
+    setRows((prev) =>
+      prev.map((r, idx) => {
+        if (idx !== i) return r;
+        const next = { ...r, [field]: value };
+        if (field === "type") {
+          next.is_break = value !== "period";
+          if (value !== "custom") {
+            next.label =
+              value === "assembly" ? "Assembly" :
+              value === "lunch" ? "Lunch Break" :
+              value === "break" ? "Short Break" : next.label;
+          }
+        }
+        return next;
+      })
+    );
+  };
+
+  const addRow = () => {
+    const last = rows[rows.length - 1];
+    const start = last ? last.end_time : "08:00";
+    setRows((prev) => [
+      ...prev,
+      {
+        type: "period",
+        label: `Period ${prev.filter((r) => r.type === "period").length + 1}`,
+        start_time: start,
+        end_time: addMinutes(start, 45),
+        is_break: false,
+      },
+    ]);
+  };
+
+  const removeRow = (i) => setRows((prev) => prev.filter((_, idx) => idx !== i));
+
+  const handleSave = async () => {
+    if (rows.length === 0) return alert("Add at least one period before saving.");
+    for (const r of rows) {
+      if (!r.label?.trim() || !r.start_time || !r.end_time) {
+        return alert("Every row needs a label, start time and end time.");
+      }
+    }
+    setSaving(true);
+    try {
+      await apiRequest("/timetable/periods", "PUT", { periods: rows });
+      alert("✅ Daily routine saved! This now drives your Timetable grid.");
+      await onSaved?.(); // 🔴 refresh SetupModule's central `periods` state → re-populates this tab
+    } catch (e) {
+      alert("❌ Failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <h3 className="syne" style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, color: C.purple }}>
+        <Icon name="timetable" size={16} /> Daily Routine — Period-wise Setup
+      </h3>
+      <p style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>
+        Define your school's full day: assembly, periods, lunch, breaks — in order.
+      </p>
+
+      {rows.length === 0 ? (
+        <div style={{ padding: "20px 16px", background: C.surfaceAlt, borderRadius: 12, marginBottom: 16 }}>
+          <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 10, fontWeight: 700, textTransform: "uppercase" }}>
+            Quick Start — auto-generate periods
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <FormRow label="School Start Time">
+              <input className="input" type="time" style={{ width: 130 }} value={genStart} onChange={(e) => setGenStart(e.target.value)} />
+            </FormRow>
+            <FormRow label="Period Duration">
+              <select className="select" style={{ width: 120 }} value={genDuration} onChange={(e) => setGenDuration(Number(e.target.value))}>
+                {[30, 35, 40, 45, 50, 60].map((v) => <option key={v} value={v}>{v} min</option>)}
+              </select>
+            </FormRow>
+            <FormRow label="No. of Periods">
+              <select className="select" style={{ width: 100 }} value={genCount} onChange={(e) => setGenCount(Number(e.target.value))}>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((v) => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </FormRow>
+            <button className="btn btn-primary" onClick={autoGenerate}>Generate</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ marginBottom: 16 }}>
+          {rows.map((r, i) => (
+            <div key={i} style={{
+              display: "grid", gridTemplateColumns: "40px 160px 1fr 130px 130px 40px", gap: 8,
+              alignItems: "center", padding: "8px 10px",
+              background: r.is_break ? `${C.yellow}11` : C.surfaceAlt, borderRadius: 10, marginBottom: 6,
+              border: `1px solid ${r.is_break ? C.yellow + "33" : C.border}`,
+            }}>
+              <div style={{ textAlign: "center", fontSize: 11, color: C.textMuted, fontWeight: 700 }}>{i + 1}</div>
+              <select className="select" style={{ fontSize: 12 }} value={r.type} onChange={(e) => updateRow(i, "type", e.target.value)}>
+                {PERIOD_TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
+              </select>
+              <input className="input" style={{ fontSize: 12 }} value={r.label}
+                disabled={r.type !== "custom" && r.type !== "period"}
+                onChange={(e) => updateRow(i, "label", e.target.value)} />
+              <input className="input" type="time" style={{ fontSize: 12 }} value={r.start_time} onChange={(e) => updateRow(i, "start_time", e.target.value)} />
+              <input className="input" type="time" style={{ fontSize: 12 }} value={r.end_time} onChange={(e) => updateRow(i, "end_time", e.target.value)} />
+              <button className="btn btn-danger" style={{ padding: "4px 6px" }} onClick={() => removeRow(i)}>
+                <Icon name="trash" size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 10, justifyContent: "space-between", flexWrap: "wrap" }}>
+        {rows.length > 0 && (
+          <button className="btn btn-ghost" onClick={addRow}><Icon name="plus" size={13} /> Add Row</button>
+        )}
+        <button className="btn btn-primary" style={{ marginLeft: "auto", opacity: saving ? 0.7 : 1 }} onClick={handleSave} disabled={saving}>
+          {saving ? "Saving…" : "Save Daily Routine"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+  // ═══════════════════════════════════════════════════════════════
+ // MODULE: SCHOOL SETUP (Enterprise Level Deep Config UI) — FIXED
+ // ═══════════════════════════════════════════════════════════════
+
+
+const SetupModule = () => {
+  const { academicYears } = useSession();
+  const [tab, setTab] = useState("identity"); // 'identity', 'operations', 'classes', 'sections', 'subjects'
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Real Data States
+  const [schoolData, setSchoolData] = useState({});
+  const [grades, setGrades] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  
+  const [periods, setPeriods] = useState([]); // 🔴 Daily routine — same pattern as grades/sections
+
+  // Modal States
+  const [showAddGrade, setShowAddGrade] = useState(false);
+  const [showAddSection, setShowAddSection] = useState({
+    show: false,
+    prefillGradeId: "",
+  });
+  const [showAddSubject, setShowAddSubject] = useState(false);
+
+  // Form States
+  const [gradeForm, setGradeForm] = useState({
+    name: "",
+    numeric_order: "",
+    stream: "none",
+    description: "",
+  });
+  const [sectionForm, setSectionForm] = useState({
+    grade_id: "",
+    name: "",
+    max_strength: 40,
+  });
+  const [subjectForm, setSubjectForm] = useState({
+    name: "",
+    category: "core",
+  });
+
+  // ── inline saving flags per-modal (so buttons show "Saving…" and disable) ──
+  const [gradeSaving, setGradeSaving] = useState(false);
+  const [sectionSaving, setSectionSaving] = useState(false);
+  const [subjectSaving, setSubjectSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); 
+  const [deleting, setDeleting] = useState(false);
+
+  // 🔥 1. Reusable fetch function — NOT tied only to mount.
+  // useCallback so its reference stays stable across re-renders.
+  const fetchSetupData = React.useCallback(
+    async ({ showLoader = false } = {}) => {
+      if (showLoader) setLoading(true);
+      try {
+        const [schRes, grRes, secRes, subRes, prRes] = await Promise.all([
+          apiRequest("/setup/school", "GET").catch(() => ({ data: {} })),
+          apiRequest("/setup/grades", "GET").catch(() => ({ data: [] })),
+          apiRequest("/setup/sections", "GET").catch(() => ({ data: [] })),
+          apiRequest("/setup/subjects", "GET").catch(() => ({ data: [] })),
+          apiRequest("/timetable/periods", "GET").catch(() => ({ data: [] })),
+        ]);
+
+        if (schRes?.data) setSchoolData(schRes.data);
+        setGrades(Array.isArray(grRes?.data) ? grRes.data : []);
+        setSections(Array.isArray(secRes?.data) ? secRes.data : []);
+        setSubjects(Array.isArray(subRes?.data) ? subRes.data : []);
+        setPeriods(Array.isArray(prRes?.data) ? prRes.data : []); // 🔴 populate saved routine
+      } catch (error) {
+        console.error("Failed to load setup data", error);
+      } finally {
+        if (showLoader) setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Initial load on mount
+  useEffect(() => {
+    fetchSetupData({ showLoader: true });
+   }, [fetchSetupData]);
+
+  // 🔥 2. Handler to Save Deep School Config (unchanged — this one never reloaded)
+  const handleSaveSchool = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        name: schoolData.name,
+        tagline: schoolData.tagline,
+        established_year: schoolData.established_year,
+        principal_name: schoolData.principal_name,
+        affiliation_board: schoolData.affiliation_board,
+        affiliation_no: schoolData.affiliation_no,
+        udise_code: schoolData.udise_code,
+        logo_url: schoolData.logo_url,
+        brand_color: schoolData.brand_color,
+
+        address_line1: schoolData.address_line1,
+        address_line2: schoolData.address_line2,
+        city: schoolData.city,
+        state: schoolData.state,
+        pincode: schoolData.pincode,
+        website: schoolData.website,
+        phone: schoolData.phone,
+        email: schoolData.email,
+
+        academic_year_start: schoolData.academic_year_start,
+        academic_year_end: schoolData.academic_year_end,
+        school_start_time: schoolData.school_start_time,
+        school_end_time: schoolData.school_end_time,
+        periods_per_day: schoolData.periods_per_day,
+        period_duration_min: schoolData.period_duration_min,
+      };
+
+      await apiRequest("/setup/school", "PUT", payload);
+      alert("✅ School configuration updated successfully!");
+    } catch (err) {
+      alert("❌ Failed to update: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ✅ FIXED: no more window.location.reload()
+  const handleCreateGrade = async () => {
+    if (!gradeForm.name?.trim()) {
+      alert("Class name is required.");
+      return;
+    }
+    setGradeSaving(true);
+    try {
+      await apiRequest("/setup/grades", "POST", gradeForm);
+      setShowAddGrade(false);
+      setGradeForm({
+        name: "",
+        numeric_order: "",
+        stream: "none",
+        description: "",
+      });
+      await fetchSetupData(); // 🔴 refresh in place — no reload, no navigation change
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      setGradeSaving(false);
+    }
+  };
+
+  // ✅ FIXED: no more window.location.reload()
+  const handleCreateSection = async () => {
+    try {
+      const currentYear =
+        academicYears.find((y) => y.is_current) || academicYears[0];
+      const payload = { ...sectionForm, academic_year_id: currentYear?.id };
+
+      if (!payload.grade_id) return alert("Please select a Grade/Class");
+      if (!payload.name?.trim()) return alert("Section name is required.");
+
+      setSectionSaving(true);
+      await apiRequest("/setup/sections", "POST", payload);
+      setShowAddSection({ show: false, prefillGradeId: "" });
+      setSectionForm({ grade_id: "", name: "", max_strength: 40 });
+      await fetchSetupData(); // 🔴 refresh in place — no reload, no navigation change
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      setSectionSaving(false);
+    }
+  };
+
+  // ✅ FIXED: no more window.location.reload()
+  const handleCreateSubject = async () => {
+    if (!subjectForm.name?.trim()) {
+      alert("Subject name is required.");
+      return;
+    }
+    setSubjectSaving(true);
+    try {
+      await apiRequest("/setup/subjects", "POST", subjectForm);
+      setShowAddSubject(false);
+      setSubjectForm({ name: "", category: "core" });
+      await fetchSetupData(); // 🔴 refresh in place — no reload, no navigation change
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      setSubjectSaving(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const endpoint =
+        deleteTarget.type === "grade"
+          ? `/setup/grades/${deleteTarget.id}/hard`
+          : `/setup/sections/${deleteTarget.id}/hard`;
+      await apiRequest(endpoint, "DELETE");
+      setDeleteTarget(null);
+      await fetchSetupData(); // list turant refresh, koi reload nahi
+    } catch (err) {
+      alert("❌ Delete failed: " + err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const EmptyState = ({ icon, title, desc, btnText, onClick }) => (
+    <div
+      style={{
+        textAlign: "center",
+        padding: "40px 20px",
+        background: C.surfaceAlt,
+        borderRadius: 16,
+        border: `2px dashed ${C.border}`,
+      }}
+    >
+      <div style={{ fontSize: 48, marginBottom: 12 }}>{icon}</div>
+      <h3
+        className="syne"
+        style={{
+          fontSize: 18,
+          fontWeight: 700,
+          color: C.text,
+          marginBottom: 8,
+        }}
+      >
+        {title}
+      </h3>
+      <p
+        style={{
+          color: C.textMuted,
+          fontSize: 13,
+          marginBottom: 20,
+          maxWidth: 400,
+          margin: "0 auto 20px",
+        }}
+      >
+        {desc}
+      </p>
+      <button className="btn btn-primary" onClick={onClick}>
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            justifyContent: "center",
+          }}
+        >
+          <Icon name="plus" size={16} /> {btnText}
+        </span>
+      </button>
+    </div>
+  );
+
+  if (loading)
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "50vh" }}>
+        <LogoLoader size={56} label="Synchronizing Global Workspace..." />
+      </div>
+    );
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Institution Configuration"
+        sub="Control your SaaS environment, academic structure, and daily operations."
+      />
+
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          marginBottom: 20,
+          flexWrap: "wrap",
+          borderBottom: `1px solid ${C.border}44`,
+          paddingBottom: 10,
+        }}
+      >
+        {[
+          { id: "identity", label: "Identity & Branding" },
+          { id: "operations", label: "Daily Operations" },
+          { id: "classes", label: "Class Hierarchy" },
+          { id: "sections", label: "Sections" },
+          { id: "school-subjects", label: "School Subjects" },
+          { id: "subjects", label: "Subjects & Curriculum" },
+        ].map((t) => (
+          <button
+            key={t.id}
+            className={`tab ${tab === t.id ? "active" : ""}`}
+            onClick={() => setTab(t.id)}
+            style={{ fontWeight: tab === t.id ? 700 : 500 }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ──────────────────────────────────────────────────────────── */}
+      {/* 1. IDENTITY & CONTACT TAB */}
+      {/* ──────────────────────────────────────────────────────────── */}
+      {tab === "identity" && (
+        <div>
+          <div
+            className="grid-2"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+              marginBottom: 20,
+            }}
+          >
+            {/* Core Details */}
+            <div className="card">
+              <h3
+                className="syne"
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  marginBottom: 16,
+                  color: C.primary,
+                }}
+              >
+                <Icon name="setup" size={16} /> Core Identity
+              </h3>
+              <FormRow label="School / Institution Name">
+                <input
+                  className="input"
+                  value={schoolData.name || ""}
+                  onChange={(e) =>
+                    setSchoolData({ ...schoolData, name: e.target.value })
+                  }
+                />
+              </FormRow>
+              <FormGrid>
+                <FormRow label="Established Year">
+                  <input
+                    className="input"
+                    type="number"
+                    placeholder="e.g. 1998"
+                    value={schoolData.established_year || ""}
+                    onChange={(e) =>
+                      setSchoolData({
+                        ...schoolData,
+                        established_year: e.target.value,
+                      })
+                    }
+                  />
+                </FormRow>
+                <FormRow label="Principal / Head Name">
+                  <input
+                    className="input"
+                    value={schoolData.principal_name || ""}
+                    onChange={(e) =>
+                      setSchoolData({
+                        ...schoolData,
+                        principal_name: e.target.value,
+                      })
+                    }
+                  />
+                </FormRow>
+              </FormGrid>
+              <FormRow label="Tagline / Motto">
+                <input
+                  className="input"
+                  placeholder="Illuminating Futures..."
+                  value={schoolData.tagline || ""}
+                  onChange={(e) =>
+                    setSchoolData({ ...schoolData, tagline: e.target.value })
+                  }
+                />
+              </FormRow>
+              <FormGrid>
+                <FormRow label="Affiliation Board">
+                  <select
+                    className="select"
+                    value={schoolData.affiliation_board || ""}
+                    onChange={(e) =>
+                      setSchoolData({
+                        ...schoolData,
+                        affiliation_board: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="">-- Select --</option>
+                    <option value="CBSE">CBSE</option>
+                    <option value="ICSE">ICSE</option>
+                    <option value="STATE">State Board</option>
+                    <option value="IB">IB / Cambridge</option>
+                  </select>
+                </FormRow>
+                <FormRow label="Affiliation / Reg No.">
+                  <input
+                    className="input"
+                    value={schoolData.affiliation_no || ""}
+                    onChange={(e) =>
+                      setSchoolData({
+                        ...schoolData,
+                        affiliation_no: e.target.value,
+                      })
+                    }
+                  />
+                </FormRow>
+              </FormGrid>
+              <FormGrid>
+                <FormRow label="School Logo">
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {schoolData.logo_url && (
+                      <img src={schoolData.logo_url} alt="Logo" style={{ width: 44, height: 44, borderRadius: 8, objectFit: "contain", background: C.surfaceAlt, border: `1px solid ${C.border}` }} />
+                    )}
+                    <input type="file" id="logo-upload" accept="image/*" style={{ display: "none" }} onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const fd = new FormData();
+                      fd.append("file", file);
+                      fd.append("type", "logo");
+                      try {
+                        const res = await apiRequest("/setup/school/upload-asset", "POST", fd, true);
+                        setSchoolData((p) => ({ ...p, logo_url: res.data.url }));
+                      } catch (err) { alert("Upload failed: " + err.message); }
+                    }} />
+                    <label htmlFor="logo-upload" className="btn btn-ghost" style={{ cursor: "pointer", fontSize: 12 }}>
+                      <Icon name="plus" size={12} /> Upload Logo
+                    </label>
+                  </div>
+                </FormRow>
+                <FormRow label="Watermark (for receipts/documents)">
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {schoolData.watermark_url && (
+                      <img src={schoolData.watermark_url} alt="Watermark" style={{ width: 44, height: 44, borderRadius: 8, objectFit: "contain", background: C.surfaceAlt, border: `1px solid ${C.border}` }} />
+                    )}
+                    <input type="file" id="watermark-upload" accept="image/*" style={{ display: "none" }} onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const fd = new FormData();
+                      fd.append("file", file);
+                      fd.append("type", "watermark");
+                      try {
+                        const res = await apiRequest("/setup/school/upload-asset", "POST", fd, true);
+                        setSchoolData((p) => ({ ...p, watermark_url: res.data.url }));
+                      } catch (err) { alert("Upload failed: " + err.message); }
+                    }} />
+                    <label htmlFor="watermark-upload" className="btn btn-ghost" style={{ cursor: "pointer", fontSize: 12 }}>
+                      <Icon name="plus" size={12} /> Upload Watermark
+                    </label>
+                  </div>
+                </FormRow>
+              </FormGrid>
+
+              <FormGrid>
+                <FormRow label="UDISE Code (Govt)">
+            
+                  <input
+                    className="input"
+                    value={schoolData.udise_code || ""}
+                    onChange={(e) =>
+                      setSchoolData({
+                        ...schoolData,
+                        udise_code: e.target.value,
+                      })
+                    }
+                  />
+                </FormRow>
+                <FormRow label="ERP Brand Color">
+                  <div
+                    style={{ display: "flex", gap: 10, alignItems: "center" }}
+                  >
+                    <input
+                      type="color"
+                      value={schoolData.brand_color || "#E8600A"}
+                      onChange={(e) =>
+                        setSchoolData({
+                          ...schoolData,
+                          brand_color: e.target.value,
+                        })
+                      }
+                      style={{
+                        width: 45,
+                        height: 38,
+                        borderRadius: 8,
+                        border: `1px solid ${C.border}`,
+                        background: "transparent",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <input
+                      className="input"
+                      value={schoolData.brand_color || "#E8600A"}
+                      onChange={(e) =>
+                        setSchoolData({
+                          ...schoolData,
+                          brand_color: e.target.value,
+                        })
+                      }
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                </FormRow>
+              </FormGrid>
+            </div>
+
+            {/* Reachability */}
+            <div className="card">
+              <h3
+                className="syne"
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  marginBottom: 16,
+                  color: C.blue,
+                }}
+              >
+                <Icon name="user" size={16} /> Contact & Reachability
+              </h3>
+              <FormRow label="Primary Campus Address">
+                <input
+                  className="input"
+                  value={schoolData.address_line1 || ""}
+                  onChange={(e) =>
+                    setSchoolData({
+                      ...schoolData,
+                      address_line1: e.target.value,
+                    })
+                  }
+                />
+              </FormRow>
+              <FormRow label="Address Line 2 (Optional)">
+                <input
+                  className="input"
+                  value={schoolData.address_line2 || ""}
+                  onChange={(e) =>
+                    setSchoolData({
+                      ...schoolData,
+                      address_line2: e.target.value,
+                    })
+                  }
+                />
+              </FormRow>
+              <FormGrid>
+                <FormRow label="City">
+                  <input
+                    className="input"
+                    value={schoolData.city || ""}
+                    onChange={(e) =>
+                      setSchoolData({ ...schoolData, city: e.target.value })
+                    }
+                  />
+                </FormRow>
+                <FormRow label="State">
+                  <input
+                    className="input"
+                    value={schoolData.state || ""}
+                    onChange={(e) =>
+                      setSchoolData({ ...schoolData, state: e.target.value })
+                    }
+                  />
+                </FormRow>
+              </FormGrid>
+              <FormGrid>
+                <FormRow label="Pincode / ZIP">
+                  <input
+                    className="input"
+                    value={schoolData.pincode || ""}
+                    onChange={(e) =>
+                      setSchoolData({ ...schoolData, pincode: e.target.value })
+                    }
+                  />
+                </FormRow>
+                <FormRow label="Official Phone">
+                  <input
+                    className="input"
+                    value={schoolData.phone || ""}
+                    onChange={(e) =>
+                      setSchoolData({ ...schoolData, phone: e.target.value })
+                    }
+                  />
+                </FormRow>
+              </FormGrid>
+              <FormGrid>
+                <FormRow label="Official Email">
+                  <input
+                    className="input"
+                    type="email"
+                    value={schoolData.email || ""}
+                    onChange={(e) =>
+                      setSchoolData({ ...schoolData, email: e.target.value })
+                    }
+                  />
+                </FormRow>
+                <FormRow label="Website Domain">
+                  <input
+                    className="input"
+                    placeholder="www.school.com"
+                    value={schoolData.website || ""}
+                    onChange={(e) =>
+                      setSchoolData({ ...schoolData, website: e.target.value })
+                    }
+                  />
+                </FormRow>
+              </FormGrid>
+            </div>
+          </div>
+
+          {/* Action Footer */}
+          <div
+            className="card"
+            style={{
+              background: C.surfaceAlt,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 24px",
+            }}
+          >
+            <div style={{ fontSize: 13, color: C.textMuted }}>
+              Review all details carefully before saving.
+            </div>
+            <button
+              className="btn btn-primary"
+              style={{ minWidth: 200, opacity: saving ? 0.7 : 1 }}
+              onClick={handleSaveSchool}
+              disabled={saving}
+            >
+              {saving ? "Updating ERP Core..." : "Save Identity Changes"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────── */}
+      {/* 2. DAILY OPERATIONS TAB */}
+      {/* ──────────────────────────────────────────────────────────── */}
+      {tab === "operations" && (
+        <div>
+          <div
+            className="grid-2"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+              marginBottom: 20,
+            }}
+          >
+          <DailyRoutineBuilder periods={periods} onSaved={fetchSetupData} />
+
+            <div className="card">
+              <h3
+                className="syne"
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  marginBottom: 16,
+                  color: C.green,
+                }}
+              >
+                <Icon name="academic" size={16} /> Academic Session Rules
+              </h3>
+              <FormGrid>
+                <FormRow label="Academic Year Starts">
+                  <select
+                    className="select"
+                    value={schoolData.academic_year_start || 4}
+                    onChange={(e) =>
+                      setSchoolData({
+                        ...schoolData,
+                        academic_year_start: parseInt(e.target.value),
+                      })
+                    }
+                  >
+                    <option value={1}>January</option>
+                    <option value={3}>March</option>
+                    <option value={4}>April</option>
+                    <option value={6}>June</option>
+                    <option value={7}>July</option>
+                  </select>
+                </FormRow>
+                <FormRow label="Academic Year Ends">
+                  <select
+                    className="select"
+                    value={schoolData.academic_year_end || 3}
+                    onChange={(e) =>
+                      setSchoolData({
+                        ...schoolData,
+                        academic_year_end: parseInt(e.target.value),
+                      })
+                    }
+                  >
+                    <option value={2}>February</option>
+                    <option value={3}>March</option>
+                    <option value={4}>April</option>
+                    <option value={5}>May</option>
+                    <option value={12}>December</option>
+                  </select>
+                </FormRow>
+              </FormGrid>
+              <div
+                style={{
+                  padding: 12,
+                  background: `${C.green}11`,
+                  border: `1px solid ${C.green}33`,
+                  borderRadius: 10,
+                  marginTop: 10,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: C.green,
+                    margin: 0,
+                    fontWeight: 600,
+                  }}
+                >
+                  Current Active Session is controlled automatically by these
+                  rules. Financial module will calculate due dates accordingly.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="card"
+            style={{
+              background: C.surfaceAlt,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 24px",
+            }}
+          >
+            <div style={{ fontSize: 13, color: C.textMuted }}>
+              These settings directly impact Timetable & Fee Modules.
+            </div>
+            <button
+              className="btn btn-primary"
+              style={{ minWidth: 200, opacity: saving ? 0.7 : 1 }}
+              onClick={handleSaveSchool}
+              disabled={saving}
+            >
+              {saving ? "Updating..." : "Save Operation Settings"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────── */}
+      {/* 3. GRADES / CLASSES TAB */}
+      {/* ──────────────────────────────────────────────────────────── */}
+      {tab === "classes" && (
+        <div className="card">
+          {grades.length === 0 ? (
+            <EmptyState
+              icon="🏫"
+              title="No Classes Setup Yet"
+              desc="Start your ERP journey by adding the classes/grades (e.g., Class 1, Class 10) that run in your school."
+              btnText="Add First Class"
+              onClick={() => setShowAddGrade(true)}
+            />
+          ) : (
+            <>
+              <SectionHeader
+                title="Class Hierarchy"
+                action={
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => setShowAddGrade(true)}
+                  >
+                    <Icon name="plus" size={14} /> Add New Class
+                  </button>
+                }
+              />
+              <div style={{ overflowX: "auto" }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Grade Name</th>
+                      <th>Stream</th>
+                      <th>Numeric Level</th>
+                      <th>Linked Sections</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {grades.map((g) => (
+                      <tr key={g.id}>
+                        <td>
+                          <span
+                            className="syne"
+                            style={{
+                              fontWeight: 700,
+                              fontSize: 14,
+                              color: C.text,
+                            }}
+                          >
+                            {g.name}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              g.stream === "none"
+                                ? "badge-blue"
+                                : "badge-purple"
+                            }`}
+                          >
+                            {g.stream === "none" ? "General" : g.stream}
+                          </span>
+                        </td>
+                        <td>Level {g.numeric_order}</td>
+                        <td>
+                          <span className="badge badge-blue">
+                            {sections.filter((s) => s.grade_id === g.id).length}{" "}
+                            Sections
+                          </span>
+                        </td>
+                        <td>
+                          {g.is_active !== false ? (
+                            <span className="badge badge-green">Active</span>
+                          ) : (
+                            <span className="badge badge-red">Disabled</span>
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-danger"
+                            style={{ padding: "5px 9px" }}
+                            title="Delete Class"
+                            onClick={() =>
+                              setDeleteTarget({
+                                type: "grade",
+                                id: g.id,
+                                name: g.name,
+                              })
+                            }
+                          >
+                            <Icon name="trash" size={13} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────── */}
+      {/* 4. SECTIONS TAB */}
+      {/* ──────────────────────────────────────────────────────────── */}
+      {tab === "sections" && (
+        <>
+          {grades.length === 0 ? (
+            <div className="card">
+              <EmptyState
+                icon="⚠️"
+                title="Grades Required First"
+                desc="You need to create at least one Class/Grade before you can assign sections to it."
+                btnText="Go to Grades Setup"
+                onClick={() => setTab("classes")}
+              />
+            </div>
+          ) : (
+            <div
+              className="grid-3"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))",
+                gap: 16,
+              }}
+            >
+              {grades.map((g) => {
+                const gradeSections = sections.filter(
+                  (sec) => sec.grade_id === g.id
+                );
+                return (
+                  <div
+                    key={g.id}
+                    className="card"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      borderTop: `4px solid ${C.primary}`,
+                    }}
+                  >
+                    <div
+                      className="syne"
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 800,
+                        marginBottom: 16,
+                        color: C.text,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingBottom: 10,
+                        borderBottom: `1px solid ${C.border}44`,
+                      }}
+                    >
+                      <span>{g.name}</span>
+                      <button
+                        className="btn btn-ghost"
+                        style={{
+                          padding: "4px 10px",
+                          fontSize: 11,
+                          background: `${C.primary}15`,
+                          color: C.primary,
+                          border: "none",
+                        }}
+                        onClick={() => {
+                          setSectionForm({ ...sectionForm, grade_id: g.id });
+                          setShowAddSection({
+                            show: true,
+                            prefillGradeId: g.id,
+                          });
+                        }}
+                      >
+                        + Add Section
+                      </button>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      {gradeSections.length === 0 ? (
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: C.textMuted,
+                            textAlign: "center",
+                            padding: "20px 0",
+                          }}
+                        >
+                          No sections added yet.
+                        </div>
+                      ) : (
+                        gradeSections.map((sec) => (
+                          <div
+                            key={sec.id}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "10px 12px",
+                              background: C.surfaceAlt,
+                              borderRadius: 10,
+                              marginBottom: 8,
+                              border: `1px solid ${C.border}`,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontWeight: 700,
+                                fontSize: 13,
+                                color: C.text,
+                              }}
+                            >
+                              Sec {sec.name}
+                            </span>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                              }}
+                            >
+                              <span
+                                style={{ fontSize: 11, color: C.textMuted }}
+                              >
+                                Cap: {sec.max_strength}
+                              </span>
+                              <button
+                                className="btn btn-danger"
+                                style={{ padding: "3px 7px" }}
+                                title="Delete Section"
+                                onClick={() =>
+                                  setDeleteTarget({
+                                    type: "section",
+                                    id: sec.id,
+                                    name: `${g.name} - Sec ${sec.name}`,
+                                  })
+                                }
+                              >
+                                <Icon name="trash" size={11} />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────── */}
+      {/* 5. SUBJECTS TAB */}
+      {/* ──────────────────────────────────────────────────────────── */}
+      {tab === "school-subjects" && (
+  <SchoolSubjectsTab subjects={subjects} onSubjectsChanged={fetchSetupData} />
+ )}
+ {tab === "subjects" && <SubjectsClassLevelTab grades={grades} subjects={subjects} />}
+
+      {/* ═════════════════════════ MODALS ═════════════════════════ */}
+
+      <Modal
+        open={showAddGrade}
+        onClose={() => setShowAddGrade(false)}
+        title="Create New Class/Grade"
+      >
+        <FormGrid>
+          <FormRow label="Class Name (e.g. Class 10)">
+            <input
+              className="input"
+              placeholder="e.g. Class 10"
+              value={gradeForm.name}
+              onChange={(e) =>
+                setGradeForm({ ...gradeForm, name: e.target.value })
+              }
+            />
+          </FormRow>
+          <FormRow label="Numeric Level (For sorting)">
+            <input
+              className="input"
+              type="number"
+              placeholder="e.g. 10"
+              value={gradeForm.numeric_order}
+              onChange={(e) =>
+                setGradeForm({ ...gradeForm, numeric_order: e.target.value })
+              }
+            />
+          </FormRow>
+        </FormGrid>
+        <FormRow label="Academic Stream">
+          <select
+            className="select"
+            value={gradeForm.stream}
+            onChange={(e) =>
+              setGradeForm({ ...gradeForm, stream: e.target.value })
+            }
+          >
+            <option value="none">General (Up to Class 10)</option>
+            <option value="Science">Science</option>
+            <option value="Commerce">Commerce</option>
+            <option value="Arts">Arts</option>
+          </select>
+        </FormRow>
+        <button
+          className="btn btn-primary"
+          style={{
+            width: "100%",
+            marginTop: 16,
+            opacity: gradeSaving ? 0.7 : 1,
+          }}
+          onClick={handleCreateGrade}
+          disabled={gradeSaving}
+        >
+          {gradeSaving ? "Creating…" : "Create Grade Hierarchy"}
+        </button>
+      </Modal>
+
+      <Modal
+        open={showAddSection.show}
+        onClose={() => setShowAddSection({ show: false, prefillGradeId: "" })}
+        title="Deploy New Section"
+      >
+        <FormRow label="Parent Class">
+          <select
+            className="select"
+            value={sectionForm.grade_id}
+            onChange={(e) =>
+              setSectionForm({ ...sectionForm, grade_id: e.target.value })
+            }
+            disabled={!!showAddSection.prefillGradeId}
+          >
+            <option value="">-- Select Class --</option>
+            {grades.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        </FormRow>
+        <FormGrid>
+          <FormRow label="Section Label (e.g. A, B)">
+            <input
+              className="input"
+              placeholder="e.g. A"
+              value={sectionForm.name}
+              onChange={(e) =>
+                setSectionForm({ ...sectionForm, name: e.target.value })
+              }
+            />
+          </FormRow>
+          <FormRow label="Max Student Capacity">
+            <input
+              className="input"
+              type="number"
+              value={sectionForm.max_strength}
+              onChange={(e) =>
+                setSectionForm({ ...sectionForm, max_strength: e.target.value })
+              }
+            />
+          </FormRow>
+        </FormGrid>
+        <button
+          className="btn btn-primary"
+          style={{
+            width: "100%",
+            marginTop: 16,
+            opacity: sectionSaving ? 0.7 : 1,
+          }}
+          onClick={handleCreateSection}
+          disabled={sectionSaving}
+        >
+          {sectionSaving ? "Saving…" : "Save Section Capacity"}
+        </button>
+      </Modal>
+
+      <Modal
+        open={showAddSubject}
+        onClose={() => setShowAddSubject(false)}
+        title="Register Subject to Curriculum"
+      >
+        <FormRow label="Subject Name">
+          <input
+            className="input"
+            placeholder="e.g. Mathematics"
+            value={subjectForm.name}
+            onChange={(e) =>
+              setSubjectForm({ ...subjectForm, name: e.target.value })
+            }
+          />
+        </FormRow>
+        <FormRow label="Subject Category">
+          <select
+            className="select"
+            value={subjectForm.category}
+            onChange={(e) =>
+              setSubjectForm({ ...subjectForm, category: e.target.value })
+            }
+          >
+            <option value="core">Core / Main Subject</option>
+            <option value="language">Language</option>
+            <option value="elective">Elective / Optional</option>
+            <option value="practical">Lab / Practical</option>
+          </select>
+        </FormRow>
+        <button
+          className="btn btn-primary"
+          style={{
+            width: "100%",
+            marginTop: 16,
+            opacity: subjectSaving ? 0.7 : 1,
+          }}
+          onClick={handleCreateSubject}
+          disabled={subjectSaving}
+        >
+          {subjectSaving ? "Registering…" : "Finalize Subject Registration"}
+        </button>
+      </Modal>
+
+      <Modal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={`Delete ${deleteTarget?.type === "grade" ? "Class" : "Section"}?`}
+        width={420}
+      >
+        {deleteTarget && (
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div>
+            <div
+              className="syne"
+              style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}
+            >
+              Delete "{deleteTarget.name}"?
+            </div>
+            <div
+              style={{
+                color: C.textMuted,
+                fontSize: 13,
+                marginBottom: 22,
+                lineHeight: 1.6,
+              }}
+            >
+              {deleteTarget.type === "grade"
+                ? "This permanently removes the class and its subject mappings. Blocked if any sections still exist under it."
+                : "This permanently removes the section. Blocked if any students are enrolled in it."}
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                style={{ minWidth: 140, opacity: deleting ? 0.7 : 1 }}
+              >
+                {deleting ? "Deleting…" : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+
+  
+ const Avatar = ({ teacher, size = 44 }) => {
+  const [imgErr, setImgErr] = useState(false);
+  const url = teacher?.avatar_url;
+  const initials = (teacher?.full_name || "?")
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const isFemale = teacher?.gender === "Female";
+  const bg = isFemale ? `${C.purple}33` : `${C.blue}33`;
+  const col = isFemale ? C.purple : C.blue;
+
+  if (url && !imgErr) {
+    return (
+      <img
+        src={url}
+        onError={() => setImgErr(true)}
+        alt={teacher?.full_name}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          objectFit: "cover",
+          border: `2px solid ${col}55`,
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        flexShrink: 0,
+        background: bg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: size * 0.34,
+        fontWeight: 700,
+        color: col,
+        border: `2px solid ${col}55`,
+        letterSpacing: "-0.5px",
+      }}
+    >
+      {initials}
+    </div>
+  );
+};
+
+// Teacher card for Grid view — plain function (no hooks of its own),
+// hoisted to module level. Called as TeacherCard({...}) not <TeacherCard/>.
+
+const TeacherCard = ({ t, onView, onEdit, onTerminate, onReactivate }) => (
+  <div
+    key={t.user_id}
+    style={{
+      background: C.surface,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      overflow: "hidden",
+      transition: "transform 0.18s, border-color 0.18s",
+    }}
+  >
+    <div
+      style={{
+        height: 4,
+        background: t.is_active
+          ? `linear-gradient(90deg,${C.primary},${C.primaryDark})`
+          : `linear-gradient(90deg,${C.textMuted},${C.border})`,
+      }}
+    />
+    <div style={{ padding: "16px 16px 12px" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          alignItems: "flex-start",
+          marginBottom: 12,
+        }}
+      >
+        <Avatar teacher={t} size={50} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            className="syne"
+            style={{
+              fontWeight: 700,
+              fontSize: 14,
+              color: C.text,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t.full_name}
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              color: C.primary,
+              fontWeight: 600,
+              marginTop: 2,
+            }}
+          >
+            {t.designation || "Teacher"}
+          </div>
+          {t.department && (
+            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>
+              {t.department}
+            </div>
+          )}
+        </div>
+        {!t.is_active && (
+          <span className="badge badge-red" style={{ fontSize: 10 }}>
+            Terminated
+          </span>
+        )}
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 6,
+          marginBottom: 12,
+        }}
+      >
+        {[
+          ["EMP#", t.employee_code || "—"],
+          [
+            "Exp",
+            t.experience_years != null ? `${t.experience_years} yr` : "—",
+          ],
+          ["Qual", (t.qualification || "—").split(",")[0]],
+          [
+            "Joined",
+            t.join_date
+              ? new Date(t.join_date).toLocaleDateString("en-IN")
+              : "—",
+          ],
+        ].map(([k, v]) => (
+          <div
+            key={k}
+            style={{
+              background: C.surfaceAlt,
+              borderRadius: 7,
+              padding: "5px 8px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 9.5,
+                color: C.textMuted,
+                textTransform: "uppercase",
+                fontWeight: 700,
+              }}
+            >
+              {k}
+            </div>
+            <div
+              style={{
+                fontSize: 11.5,
+                fontWeight: 600,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {v}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          borderTop: `1px solid ${C.border}33`,
+          paddingTop: 10,
+        }}
+      >
+        <button
+          className="btn btn-ghost"
+          onClick={() => onView(t)}
+          style={{
+            flex: 1,
+            fontSize: 11,
+            padding: "6px 4px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+          }}
+        >
+          <Icon name="eye" size={12} /> View
+        </button>
+        <button
+          className="btn btn-ghost"
+          onClick={() => onEdit(t)}
+          style={{
+            flex: 1,
+            fontSize: 11,
+            padding: "6px 4px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+          }}
+        >
+          <Icon name="edit" size={12} /> Edit
+        </button>
+        {t.is_active ? (
+          <button
+            className="btn btn-danger"
+            onClick={() => onTerminate(t)}
+            style={{ fontSize: 11, padding: "6px 8px" }}
+            title="Terminate"
+          >
+            <Icon name="trash" size={12} />
+          </button>
+        ) : (
+          <button
+            className="btn btn-success"
+            onClick={() => onReactivate(t)}
+            style={{ fontSize: 11, padding: "6px 8px" }}
+            title="Reactivate"
+          >
+            <Icon name="check" size={12} />
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+const TeachersModule = () => {
+  // ── Core data ────────────────────────────────────────────────
+  const [teachers, setTeachers] = useState([]);
+  const { academicYears: academicYrs, currentYear } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // ── Filters / view ───────────────────────────────────────────
+  const [search, setSearch] = useState("");
+  const [filterDept, setFilterDept] = useState("");
+  const [filterStatus, setFilterStatus] = useState("active");
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'table'
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
+
+  // ── Modals ───────────────────────────────────────────────────
+  const [modal, setModal] = useState(null); // 'add'|'edit'|'view'|'terminate'|'bulk'
+  const [activeTab, setActiveTab] = useState("personal");
+  const [selected, setSelected] = useState(null);
+  const [viewDetail, setViewDetail] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
+
+  // ── Bulk import ──────────────────────────────────────────────
+  const [bulkRows, setBulkRows] = useState([]);
+  const [bulkProgress, setBulkProgress] = useState(null);
+  const [bulkDone, setBulkDone] = useState(false);
+  const fileRef = useRef(null);
+
+  // ── Blank form ───────────────────────────────────────────────
+  const blankForm = () => ({
+    full_name: "",
+    email: "",
+    phone: "",
+    gender: "",
+    password: "",
+    employee_code: "",
+    join_date: new Date().toISOString().split("T")[0],
+    department: "",
+    designation: "",
+    qualification: "",
+    experience_years: 0,
+    is_active: true,
+    date_of_birth: "",
+    avatar_url: "",
+  });
+  const [form, setForm] = useState(blankForm());
+  const setF = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  // 🔴 Photo Upload State & Handler
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingPhoto(true);
+    try {
+      // Direct cloud pe jayega aur URL laayega
+      const secureUrl = await uploadToCloudinary(file);
+      setF("avatar_url", secureUrl); // Form me URL save kar diya
+    } catch (err) {
+      alert("Failed to upload photo. Check Cloudinary details.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  // ── Load ─────────────────────────────────────────────────────
+  useEffect(() => {
+    loadAll();
+  }, []);
+
+  const loadAll = async () => {
+    setLoading(true);
+    try {
+      const tRes = await apiRequest("/teachers");
+      setTeachers(Array.isArray(tRes?.data) ? tRes.data : []);
+    } catch (e) {
+      console.error("Failed to load teachers", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Derived data ─────────────────────────────────────────────
+  const departments = Array.from(
+    new Set(teachers.map((t) => t.department).filter(Boolean))
+  ).sort();
+  
+
+  const filtered = teachers.filter((t) => {
+    const q = search.trim().toLowerCase();
+    const matchSearch =
+      !q ||
+      t.full_name?.toLowerCase().includes(q) ||
+      t.email?.toLowerCase().includes(q) ||
+      t.employee_code?.toLowerCase().includes(q);
+    const matchDept = !filterDept || t.department === filterDept;
+    const matchStatus =
+      filterStatus === "active"
+        ? t.is_active
+        : filterStatus === "inactive"
+        ? !t.is_active
+        : true;
+    return matchSearch && matchDept && matchStatus;
+  });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 0;
+  const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => setPage(1), [search, filterDept, filterStatus]);
+
+  const statTotal = teachers.length;
+  const statActive = teachers.filter((t) => t.is_active).length;
+  const statDepts = departments.length;
+
+  // ── Open modals ──────────────────────────────────────────────
+  const openAdd = () => {
+    setForm(blankForm());
+    setActiveTab("personal");
+    setModal("add");
+  };
+
+  const openEdit = (t) => {
+    setForm({
+      ...blankForm(),
+      full_name: t.full_name || "",
+      email: t.email || "",
+      phone: t.phone || "",
+      gender: t.gender || "",
+      employee_code: t.employee_code || "",
+      join_date: t.join_date?.split("T")[0] || "",
+      department: t.department || "",
+      designation: t.designation || "",
+      qualification: t.qualification || "",
+      experience_years: t.experience_years || 0,
+      is_active: t.is_active !== undefined ? Boolean(t.is_active) : true,
+      date_of_birth: t.date_of_birth?.split("T")[0] || "",
+      avatar_url: t.avatar_url || "", // 🔴 Purani photo form mein set hogi
+    });
+    setSelected(t);
+    setActiveTab("personal");
+    setModal("edit");
+  };
+
+  const openView = async (t) => {
+    setSelected(t);
+    setViewDetail(null);
+    setModal("view");
+    setViewLoading(true);
+    try {
+      const res = await apiRequest(`/teachers/${t.user_id}`);
+      setViewDetail(res?.data || t);
+    } catch (e) {
+      setViewDetail(t);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const openTerminate = (t) => {
+    setSelected(t);
+    setModal("terminate");
+  };
+
+  // ── Save (create / edit) ────────────────────────────────────
+  const handleSave = async () => {
+    if (!form.full_name?.trim() || !form.email?.trim()) {
+      alert("Full name and email are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      if (modal === "edit" && selected?.user_id) {
+        await apiRequest(`/teachers/${selected.user_id}`, "PUT", {
+          full_name: form.full_name.trim(),
+          phone: form.phone ? String(form.phone).trim() : null,
+          gender: form.gender || null,
+          employee_code: form.employee_code ? String(form.employee_code).trim() : null,
+          department: form.department || null,
+          designation: form.designation || null,
+          is_active: Boolean(form.is_active),
+          date_of_birth: form.date_of_birth || null,
+          avatar_url: form.avatar_url || null,
+          qualification: form.qualification || null,
+          experience_years: Number(form.experience_years) || 0,
+        });
+      } else {
+        await apiRequest("/teachers", "POST", {
+          full_name: form.full_name.trim(),
+          email: form.email.trim(),
+          phone: form.phone ? String(form.phone).trim() : null,
+          gender: form.gender || null,
+          password: form.password?.trim() || undefined,
+          employee_code: form.employee_code ? String(form.employee_code).trim() : null,
+          join_date: form.join_date || null,
+          department: form.department || null,
+          designation: form.designation || null,
+          qualification: form.qualification || null,
+          experience_years: Number(form.experience_years) || 0,
+          date_of_birth: form.date_of_birth || null,
+          avatar_url: form.avatar_url || null, // 🔴 Naye teacher ke liye avatar_url add kiya
+        });
+      }
+      setModal(null);
+      await loadAll();
+    } catch (e) {
+      alert("Save failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Terminate / reactivate ──────────────────────────────────
+  const handleTerminate = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await apiRequest(`/teachers/${selected.user_id}`, "DELETE");
+      setModal(null);
+      await loadAll();
+    } catch (e) {
+      alert("Termination failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReactivate = async (t) => {
+    try {
+      await apiRequest(`/teachers/${t.user_id}`, "PUT", {
+        full_name: t.full_name,
+        phone: t.phone,
+        gender: t.gender,
+        employee_code: t.employee_code,
+        department: t.department,
+        designation: t.designation,
+        is_active: true,
+      });
+      await loadAll();
+    } catch (e) {
+      alert("Reactivation failed: " + e.message);
+    }
+  };
+
+  // ── Bulk CSV import ──────────────────────────────────────────
+  const BULK_COLS = [
+    "full_name",
+    "email",
+    "phone",
+    "gender",
+    "password",
+    "employee_code",
+    "join_date",
+    "department",
+    "designation",
+    "qualification",
+    "experience_years",
+  ];
+
+  const parseBulkCsv = (text) => {
+    const lines = text.trim().split("\n");
+    const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    return lines
+      .slice(1)
+      .map((line, i) => {
+        const vals = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+        const row = {};
+        BULK_COLS.forEach((col, ci) => {
+          const hi = header.indexOf(col);
+          row[col] = hi >= 0 ? vals[hi] : vals[ci] || "";
+        });
+        row._line = i + 2;
+        row._errors = [];
+        if (!row.full_name) row._errors.push("full_name required");
+        if (!row.email || !row.email.includes("@"))
+          row._errors.push("valid email required");
+        return row;
+      })
+      .filter((r) => r.full_name || r.email);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setBulkRows(parseBulkCsv(ev.target.result));
+      setBulkProgress(null);
+      setBulkDone(false);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleBulkImport = async () => {
+    const valid = bulkRows.filter((r) => r._errors.length === 0);
+    if (!valid.length) {
+      alert("No valid rows to import.");
+      return;
+    }
+    setBulkProgress({ done: 0, total: valid.length, failed: [] });
+    setBulkDone(false);
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    for (let i = 0; i < valid.length; i++) {
+      const row = valid[i];
+      try {
+        await apiRequest("/teachers", "POST", {
+          full_name: row.full_name,
+          email: row.email,
+          phone: row.phone || null,
+          gender: row.gender || null,
+          password: row.password || undefined,
+          employee_code: row.employee_code || null,
+          join_date: row.join_date || null,
+          department: row.department || null,
+          designation: row.designation || null,
+          qualification: row.qualification || null,
+          experience_years: Number(row.experience_years) || 0,
+        });
+        setBulkProgress((p) => ({ ...p, done: p.done + 1 }));
+      } catch (e) {
+        setBulkProgress((p) => ({
+          ...p,
+          done: p.done + 1,
+          failed: [...p.failed, { ...row, _err: e.message }],
+        }));
+      }
+      if ((i + 1) % 10 === 0) await sleep(1000);
+    }
+
+    setBulkDone(true);
+    await loadAll();
+  };
+
+  const downloadFailedCsv = (failed) => {
+    const lines = [
+      [...BULK_COLS, "error_reason"].join(","),
+      ...failed.map((r) =>
+        [
+          ...BULK_COLS.map(
+            (c) => `"${(r[c] || "").toString().replace(/"/g, '""')}"`
+          ),
+          `"${r._err}"`,
+        ].join(",")
+      ),
+    ];
+    const a = document.createElement("a");
+    a.href = "data:text/csv," + encodeURIComponent(lines.join("\n"));
+    a.download = "failed_teachers_import.csv";
+    a.click();
+  };
+
+  const downloadTemplate = () => {
+    const lines = [
+      BULK_COLS.join(","),
+      "Ramesh Kumar Sharma,ramesh@school.edu,9876543210,Male,,EMP001,2023-04-01,Mathematics,PGT Mathematics,M.Sc B.Ed,8",
+      "Sunita Devi,sunita@school.edu,9812345678,Female,,EMP002,2023-04-01,Science,TGT Science,B.Sc B.Ed,5",
+    ];
+    const a = document.createElement("a");
+    a.href = "data:text/csv," + encodeURIComponent(lines.join("\n"));
+    a.download = "teacher_import_template.csv";
+    a.click();
+  };
+
+  // ── UI helpers ─────────────────────────────────────────────
+  // 🔴 FIX: TabBtn is a plain function — always call as TabBtn({...}),
+  // never as <TabBtn/>. Prevents input remount on every keystroke.
+  const TabBtn = ({ id, label, icon }) => (
+    <button
+      key={id}
+      onClick={() => setActiveTab(id)}
+      style={{
+        padding: "7px 13px",
+        borderRadius: 8,
+        border: "none",
+        cursor: "pointer",
+        fontFamily: "'DM Sans',sans-serif",
+        fontSize: 12.5,
+        fontWeight: 600,
+        background: activeTab === id ? `${C.primary}22` : "transparent",
+        color: activeTab === id ? C.primary : C.textMuted,
+        borderBottom:
+          activeTab === id ? `2px solid ${C.primary}` : "2px solid transparent",
+        transition: "all 0.15s",
+        display: "flex",
+        alignItems: "center",
+        gap: 5,
+      }}
+    >
+      <Icon name={icon} size={13} />
+      {label}
+    </button>
+  );
+
+  // 🔴 FIX: FormBody is a plain function — always call as {FormBody()},
+  // never as <FormBody/>. This is what stops the cursor from jumping
+  // out of the "Add Teacher" / "Edit Teacher" inputs after one letter.
+  const FormBody = () => (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          marginBottom: 16,
+          borderBottom: `1px solid ${C.border}44`,
+          flexWrap: "wrap",
+        }}
+      >
+        {TabBtn({ id: "personal", label: "Personal", icon: "user" })}
+        {TabBtn({ id: "employment", label: "Employment", icon: "academic" })}
+        {TabBtn({ id: "profile", label: "Photo", icon: "dashboard" })}
+        {modal === "add" &&
+          TabBtn({ id: "security", label: "Password", icon: "setup" })}
+      </div>
+
+      {activeTab === "personal" && (
+        <div>
+          <FormGrid cols={2}>
+            <FormRow label="Full Name *">
+              <input
+                className="input"
+                value={form.full_name}
+                onChange={(e) => setF("full_name", e.target.value)}
+              />
+            </FormRow>
+            <FormRow label="Official Email *">
+              <input
+                className="input"
+                type="email"
+                value={form.email}
+                disabled={modal === "edit"}
+                style={modal === "edit" ? { opacity: 0.6 } : {}}
+                onChange={(e) => setF("email", e.target.value)}
+              />
+            </FormRow>
+          </FormGrid>
+          <FormGrid cols={3}>
+            <FF
+              form={form}
+              setF={setF}
+              label="Phone / WhatsApp"
+              name="phone"
+              type="tel"
+            />
+            <FF
+              form={form}
+              setF={setF}
+              label="Gender"
+              name="gender"
+              options={["", "Male", "Female", "Other"]}
+            />
+            <FF
+              form={form}
+              setF={setF}
+              label="Date of Birth"
+              name="date_of_birth"
+              type="date"
+              hint="Saved once backend adds this to update()"
+            />
+          </FormGrid>
+        </div>
+      )}
+
+      {activeTab === "employment" && (
+        <div>
+          <FormGrid cols={2}>
+            <FF
+              form={form}
+              setF={setF}
+              label="Employee Code"
+              name="employee_code"
+              placeholder="EMP-001"
+            />
+            <FF
+              form={form}
+              setF={setF}
+              label="Date of Joining"
+              name="join_date"
+              type="date"
+            />
+          </FormGrid>
+          <FormGrid cols={2}>
+            <FF
+              form={form}
+              setF={setF}
+              label="Department"
+              name="department"
+              placeholder="Mathematics"
+            />
+            <FF
+              form={form}
+              setF={setF}
+              label="Designation"
+              name="designation"
+              placeholder="PGT Mathematics"
+            />
+          </FormGrid>
+          <FormGrid cols={2}>
+            <FF
+              form={form}
+              setF={setF}
+              label="Qualification"
+              name="qualification"
+              placeholder="M.Sc, B.Ed"
+            />
+            <FF
+              form={form}
+              setF={setF}
+              label="Experience (Years)"
+              name="experience_years"
+              type="number"
+            />
+          </FormGrid>
+          {modal === "edit" && (
+            <FF
+              form={form}
+              setF={setF}
+              label="Active Staff Member"
+              name="is_active"
+              type="checkbox"
+            />
+          )}
+        </div>
+      )}
+
+    {activeTab === "profile" && (
+        <div style={{ padding: "10px 0" }}>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: 24, 
+            background: C.surfaceAlt, 
+            padding: 24, 
+            borderRadius: 16, 
+            border: `1px solid ${C.border}` 
+          }}>
+            {/* Live Preview Avatar */}
+            <Avatar
+              teacher={{
+                avatar_url: form.avatar_url,
+                full_name: form.full_name,
+                gender: form.gender,
+              }}
+              size={80}
+            />
+            
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 8 }}>
+                Profile Photo
+              </div>
+              
+              {/* Hidden File Input */}
+              <input 
+                type="file" 
+                id="photo-upload" 
+                accept="image/*" 
+                style={{ display: "none" }} 
+                onChange={handlePhotoUpload} 
+                disabled={uploadingPhoto}
+              />
+              
+              {/* Styled Upload Button */}
+              <label 
+                htmlFor="photo-upload" 
+                className="btn btn-primary" 
+                style={{ 
+                  cursor: uploadingPhoto ? "wait" : "pointer", 
+                  opacity: uploadingPhoto ? 0.7 : 1,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+              >
+                {uploadingPhoto ? (
+                  <><span className="pulse" style={{ width: 8, height: 8, background: "#fff", borderRadius: "50%" }}/> Uploading...</>
+                ) : (
+                  <><Icon name="plus" size={14} /> Select Photo</>
+                )}
+              </label>
+              
+              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 8 }}>
+                Recommended: Square JPG or PNG, max 2MB.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "security" && modal === "add" && (
+        <div>
+          <div
+            style={{
+              padding: "12px 14px",
+              background: `${C.blue}11`,
+              border: `1px solid ${C.blue}22`,
+              borderRadius: 10,
+              marginBottom: 16,
+              fontSize: 12,
+              color: C.textMuted,
+              lineHeight: 1.7,
+            }}
+          >
+            Leave blank to use the default password (<b>teacher123</b>). Teacher
+            can change it after first login.
+          </div>
+          <FormRow label="Initial Password">
+            <input
+              className="input"
+              type="password"
+              value={form.password}
+              onChange={(e) => setF("password", e.target.value)}
+              placeholder="auto: teacher123"
+            />
+          </FormRow>
+        </div>
+      )}
+    </div>
+  );
+
+  // ── RENDER ───────────────────────────────────────────────────
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Teacher & Staff Directory"
+        sub={`${statTotal} staff on record`}
+        action={
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setBulkRows([]);
+                setBulkProgress(null);
+                setBulkDone(false);
+                setModal("bulk");
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+              }}
+            >
+              <Icon name="download" size={14} /> Bulk Import
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={openAdd}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+              }}
+            >
+              <Icon name="plus" size={14} /> Add Teacher
+            </button>
+          </div>
+        }
+      />
+
+      {/* Stats */}
+      <div
+        className="grid-4"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3,1fr)",
+          gap: 12,
+          marginBottom: 18,
+        }}
+      >
+        {[
+          {
+            label: "Total Staff",
+            value: loading ? "—" : statTotal,
+            color: C.blue,
+            icon: "teachers",
+          },
+          {
+            label: "Active",
+            value: loading ? "—" : statActive,
+            color: C.green,
+            icon: "check",
+          },
+          {
+            label: "Departments",
+            value: loading ? "—" : statDepts,
+            color: C.purple,
+            icon: "academic",
+          },
+        ].map((k, i) => (
+          <div key={i} className="kpi-card" style={{ padding: "14px 16px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: C.textMuted,
+                    textTransform: "uppercase",
+                    fontWeight: 600,
+                    letterSpacing: "0.5px",
+                    marginBottom: 4,
+                  }}
+                >
+                  {k.label}
+                </div>
+                <div
+                  className="syne"
+                  style={{ fontSize: 26, fontWeight: 800, color: C.text }}
+                >
+                  {k.value}
+                </div>
+              </div>
+              <div
+                style={{
+                  background: `${k.color}22`,
+                  padding: 10,
+                  borderRadius: 10,
+                  color: k.color,
+                }}
+              >
+                <Icon name={k.icon} size={18} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter bar */}
+      <div className="card" style={{ marginBottom: 14, padding: "12px 16px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+            <div
+              style={{
+                position: "absolute",
+                left: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+              }}
+            >
+              <Icon name="search" size={14} color={C.textMuted} />
+            </div>
+            <input
+              className="input"
+              placeholder="Search by name, email, employee code…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ paddingLeft: 32 }}
+            />
+          </div>
+          <select
+            className="select"
+            style={{ width: 160 }}
+            value={filterDept}
+            onChange={(e) => setFilterDept(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {departments.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+          <select
+            className="select"
+            style={{ width: 130 }}
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="active">Active</option>
+            <option value="inactive">Terminated</option>
+            <option value="">All</option>
+          </select>
+          <div
+            style={{
+              display: "flex",
+              background: C.surfaceAlt,
+              borderRadius: 8,
+              border: `1px solid ${C.border}`,
+              overflow: "hidden",
+              marginLeft: "auto",
+            }}
+          >
+            {[
+              ["grid", "chart"],
+              ["table", "result"],
+            ].map(([m, icon]) => (
+              <button
+                key={m}
+                onClick={() => setViewMode(m)}
+                style={{
+                  padding: "7px 11px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans',sans-serif",
+                  background: viewMode === m ? `${C.primary}22` : "transparent",
+                  color: viewMode === m ? C.primary : C.textMuted,
+                }}
+              >
+                <Icon name={icon} size={14} />
+              </button>
+            ))}
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              color: C.textMuted,
+              fontWeight: 600,
+              minWidth: 70,
+            }}
+          >
+            {filtered.length} found
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div
+          style={{
+            padding: 60,
+            textAlign: "center",
+            color: C.primary,
+            fontWeight: 600,
+          }}
+        >
+          <div className="pulse">Loading staff records…</div>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="card" style={{ padding: 50, textAlign: "center" }}>
+          <div style={{ fontSize: 44, marginBottom: 10 }}>👨‍🏫</div>
+          <div
+            className="syne"
+            style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}
+          >
+            No staff found
+          </div>
+          <div style={{ color: C.textMuted, fontSize: 13, marginBottom: 18 }}>
+            {teachers.length === 0
+              ? "Add your first teacher to get started."
+              : "Adjust filters to see results."}
+          </div>
+          {teachers.length === 0 && (
+            <button className="btn btn-primary" onClick={openAdd}>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="plus" size={14} /> Add Teacher
+              </span>
+            </button>
+          )}
+        </div>
+      ) : viewMode === "grid" ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))",
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          {pageData.map((t) =>
+            TeacherCard({
+              t,
+              onView: openView,
+              onEdit: openEdit,
+              onTerminate: openTerminate,
+              onReactivate: handleReactivate,
+            })
+          )}
+        </div>
+      ) : (
+        <div
+          className="card"
+          style={{ padding: 0, overflow: "hidden", marginBottom: 16 }}
+        >
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ width: 44 }}></th>
+                  <th>Name</th>
+                  <th>Department</th>
+                  <th>Designation</th>
+                  <th>Qualification</th>
+                  <th>Exp</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: "center" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageData.map((t) => (
+                  <tr key={t.user_id}>
+                    <td>
+                      <Avatar teacher={t} size={32} />
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>
+                        {t.full_name}
+                      </div>
+                      <div style={{ fontSize: 11, color: C.textMuted }}>
+                        {t.email}
+                      </div>
+                    </td>
+                    <td style={{ fontSize: 12 }}>{t.department || "—"}</td>
+                    <td style={{ fontSize: 12 }}>{t.designation || "—"}</td>
+                    <td
+                      style={{
+                        fontSize: 12,
+                        maxWidth: 140,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {t.qualification || "—"}
+                    </td>
+                    <td style={{ fontSize: 12 }}>
+                      {t.experience_years != null
+                        ? `${t.experience_years}y`
+                        : "—"}
+                    </td>
+                    <td style={{ fontSize: 12, fontFamily: "monospace" }}>
+                      {t.phone || "—"}
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          t.is_active ? "badge-green" : "badge-red"
+                        }`}
+                      >
+                        {t.is_active ? "Active" : "Terminated"}
+                      </span>
+                    </td>
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 4,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <button
+                          className="btn btn-ghost"
+                          style={{ padding: "4px 7px" }}
+                          onClick={() => openView(t)}
+                        >
+                          <Icon name="eye" size={12} />
+                        </button>
+                        <button
+                          className="btn btn-ghost"
+                          style={{ padding: "4px 7px" }}
+                          onClick={() => openEdit(t)}
+                        >
+                          <Icon name="edit" size={12} />
+                        </button>
+                        {t.is_active ? (
+                          <button
+                            className="btn btn-danger"
+                            style={{ padding: "4px 7px" }}
+                            onClick={() => openTerminate(t)}
+                          >
+                            <Icon name="trash" size={12} />
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn-success"
+                            style={{ padding: "4px 7px" }}
+                            onClick={() => handleReactivate(t)}
+                          >
+                            <Icon name="check" size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 4px",
+            marginBottom: 8,
+          }}
+        >
+          <div style={{ fontSize: 12, color: C.textMuted }}>
+            Showing {(page - 1) * PAGE_SIZE + 1}–
+            {Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              className="btn btn-ghost"
+              style={{ padding: "5px 12px", fontSize: 12 }}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              ← Prev
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pg = page <= 3 ? i + 1 : page + i - 2;
+              if (pg < 1 || pg > totalPages) return null;
+              return (
+                <button
+                  key={pg}
+                  className="btn btn-ghost"
+                  onClick={() => setPage(pg)}
+                  style={{
+                    padding: "5px 10px",
+                    fontSize: 12,
+                    background: pg === page ? `${C.primary}22` : "transparent",
+                    color: pg === page ? C.primary : C.textMuted,
+                  }}
+                >
+                  {pg}
+                </button>
+              );
+            })}
+            <button
+              className="btn btn-ghost"
+              style={{ padding: "5px 12px", fontSize: 12 }}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ════ MODAL: ADD / EDIT ════ */}
+      <Modal
+        open={modal === "add" || modal === "edit"}
+        onClose={() => setModal(null)}
+        title={
+          modal === "edit" ? `Edit: ${selected?.full_name}` : "Add New Teacher"
+        }
+        width={680}
+      >
+        {FormBody()}
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            marginTop: 20,
+            justifyContent: "flex-end",
+            borderTop: `1px solid ${C.border}33`,
+            paddingTop: 16,
+          }}
+        >
+          <button
+            className="btn btn-ghost"
+            onClick={() => setModal(null)}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+            style={{ minWidth: 150, opacity: saving ? 0.7 : 1 }}
+          >
+            {saving
+              ? "Saving…"
+              : modal === "edit"
+              ? "Update Profile"
+              : "Create Staff Account"}
+          </button>
+        </div>
+      </Modal>
+
+      {/* ════ MODAL: VIEW ════ */}
+      <Modal
+        open={modal === "view"}
+        onClose={() => setModal(null)}
+        title="Staff Profile"
+        width={700}
+      >
+        {viewLoading ? (
+          <div
+            style={{ padding: 40, textAlign: "center", color: C.primary }}
+            className="pulse"
+          >
+            Loading profile…
+          </div>
+        ) : (
+          viewDetail &&
+          (() => {
+            const t = viewDetail;
+            return (
+              <div>
+                <div
+                  style={{
+                    background: `linear-gradient(135deg,${C.surfaceAlt},${C.surface})`,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 16,
+                    padding: 20,
+                    marginBottom: 16,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 18,
+                      alignItems: "flex-start",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Avatar teacher={t} size={72} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        className="syne"
+                        style={{ fontSize: 20, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      >
+                        {t.full_name}
+                      </div>
+                      <div
+                        style={{
+                          color: C.primary,
+                          fontWeight: 600,
+                          fontSize: 14,
+                          marginTop: 2,
+                        }}
+                      >
+                        {t.designation || "Teacher"}
+                        {t.department && (
+                          <span style={{ color: C.textMuted, fontWeight: 400 }}>
+                            {" "}
+                            · {t.department}
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          color: C.textMuted,
+                          fontSize: 12,
+                          marginTop: 4,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {t.email}
+                        {t.phone && <span> · {t.phone}</span>}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          marginTop: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {t.is_active ? (
+                          <span className="badge badge-green">Active</span>
+                        ) : (
+                          <span className="badge badge-red">Terminated</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: 10,
+                    marginBottom: 14,
+                  }}
+                >
+                  {[
+                    ["Employee Code", t.employee_code || "—"],
+                    [
+                      "Experience",
+                      t.experience_years != null
+                        ? `${t.experience_years} years`
+                        : "—",
+                    ],
+                    ["Qualification", t.qualification || "—"],
+                    ["Gender", t.gender || "—"],
+                    [
+                      "Joined",
+                      t.join_date
+                        ? new Date(t.join_date).toLocaleDateString("en-IN")
+                        : "—",
+                    ],
+                    [
+                      "Date of Birth",
+                      t.date_of_birth
+                        ? new Date(t.date_of_birth).toLocaleDateString("en-IN")
+                        : "Not set",
+                    ],
+                  ].map(([k, v]) => (
+                    <div
+                      key={k}
+                      style={{
+                        background: C.surfaceAlt,
+                        borderRadius: 8,
+                        padding: "8px 12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: C.textMuted,
+                          textTransform: "uppercase",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {k}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          marginTop: 2,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {v}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Read-only viewer — subjects/timetable already assigned elsewhere.
+                    This is informational only, NOT part of the assignment system,
+                    so it stays. */}
+                <TeacherSubjectsAndTimetable
+                  teacher={t}
+                  academicYearId={currentYear?.id}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    justifyContent: "flex-end",
+                    marginTop: 8,
+                  }}
+                >
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => setModal(null)}
+                  >
+                    Close
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setModal(null);
+                      openEdit(t);
+                    }}
+                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                  >
+                    <Icon name="edit" size={13} /> Edit Profile
+                  </button>
+                </div>
+              </div>
+            );
+          })()
+        )}
+      </Modal>
+
+      {/* ════ MODAL: TERMINATE ════ */}
+      <Modal
+        open={modal === "terminate"}
+        onClose={() => setModal(null)}
+        title="Terminate Staff Member"
+        width={460}
+      >
+        {selected && (
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{ marginBottom: 16 }}>
+              <Avatar teacher={selected} size={60} />
+            </div>
+            <div
+              className="syne"
+              style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}
+            >
+              {selected.full_name}
+            </div>
+            <div style={{ color: C.textMuted, fontSize: 13, marginBottom: 6 }}>
+              {selected.designation || "Teacher"} · {selected.department || ""}
+            </div>
+            <div
+              style={{
+                padding: "12px 16px",
+                background: `${C.red}11`,
+                border: `1px solid ${C.red}22`,
+                borderRadius: 10,
+                marginBottom: 20,
+                textAlign: "left",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  color: C.red,
+                  fontWeight: 700,
+                  marginBottom: 6,
+                }}
+              >
+                ⚠ This will:
+              </div>
+              <div
+                style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.8 }}
+              >
+                • Mark the staff member inactive (soft delete — record is kept)
+                <br />
+                • Block their login to the ERP
+                <br />• They can be reactivated later from this same screen
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setModal(null)}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleTerminate}
+                disabled={saving}
+                style={{ minWidth: 160, opacity: saving ? 0.7 : 1 }}
+              >
+                {saving ? "Processing…" : "Confirm Termination"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ════ MODAL: BULK IMPORT ════ */}
+      <Modal
+        open={modal === "bulk"}
+        onClose={() => setModal(null)}
+        title="Bulk CSV Import — Staff Onboarding"
+        width={780}
+      >
+        <div>
+          <div
+            style={{
+              padding: "10px 14px",
+              background: `${C.blue}11`,
+              border: `1px solid ${C.blue}22`,
+              borderRadius: 10,
+              marginBottom: 14,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11.5,
+                fontWeight: 700,
+                color: C.blue,
+                marginBottom: 6,
+              }}
+            >
+              Required CSV Columns:
+            </div>
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+              {BULK_COLS.map((c, i) => (
+                <span
+                  key={c}
+                  style={{
+                    fontSize: 10.5,
+                    fontFamily: "monospace",
+                    background: `${C.blue}22`,
+                    color: C.blue,
+                    padding: "2px 7px",
+                    borderRadius: 4,
+                  }}
+                >
+                  {i + 1}. {c}
+                </span>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>
+              * full_name and email are mandatory. Leave <code>password</code>{" "}
+              blank to default to <b>teacher123</b>.
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              marginBottom: 16,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <button
+              className="btn btn-ghost"
+              onClick={downloadTemplate}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+              }}
+            >
+              <Icon name="download" size={13} /> Download Template
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv,.txt"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+            <button
+              className="btn btn-primary"
+              onClick={() => fileRef.current?.click()}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+              }}
+            >
+              <Icon name="plus" size={13} /> Upload CSV File
+            </button>
+            {bulkRows.length > 0 && !bulkProgress && (
+              <button
+                className="btn btn-primary"
+                onClick={handleBulkImport}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12.5,
+                  background: C.green,
+                  marginLeft: "auto",
+                }}
+              >
+                <Icon name="check" size={13} /> Import{" "}
+                {bulkRows.filter((r) => r._errors.length === 0).length} Valid
+              </button>
+            )}
+          </div>
+
+          {bulkProgress && (
+            <div style={{ marginBottom: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: 6,
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 600 }}>
+                  Importing: {bulkProgress.done} / {bulkProgress.total}
+                  {bulkProgress.failed.length > 0 && (
+                    <span style={{ color: C.red }}>
+                      {" "}
+                      ({bulkProgress.failed.length} failed)
+                    </span>
+                  )}
+                </span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: bulkDone ? C.green : C.primary,
+                    fontWeight: 600,
+                  }}
+                >
+                  {bulkDone
+                    ? "✓ Done"
+                    : `${Math.round(
+                        (bulkProgress.done / bulkProgress.total) * 100
+                      )}%`}
+                </span>
+              </div>
+              <div className="progress-bar" style={{ height: 8 }}>
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${Math.round(
+                      (bulkProgress.done / bulkProgress.total) * 100
+                    )}%`,
+                    background: bulkDone
+                      ? bulkProgress.failed.length > 0
+                        ? C.yellow
+                        : C.green
+                      : C.primary,
+                  }}
+                />
+              </div>
+              {bulkDone && bulkProgress.failed.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 13, color: C.red, fontWeight: 700 }}
+                    >
+                      ⚠ {bulkProgress.failed.length} records failed
+                    </span>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => downloadFailedCsv(bulkProgress.failed)}
+                      style={{
+                        fontSize: 12,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                      }}
+                    >
+                      <Icon name="download" size={12} /> Download Failed CSV
+                    </button>
+                  </div>
+                  <div
+                    style={{
+                      maxHeight: 140,
+                      overflowY: "auto",
+                      border: `1px solid ${C.red}33`,
+                      borderRadius: 8,
+                    }}
+                  >
+                    {bulkProgress.failed.map((r, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "6px 10px",
+                          borderBottom: `1px solid ${C.border}22`,
+                          fontSize: 12,
+                        }}
+                      >
+                        <span style={{ fontWeight: 600 }}>
+                          {r.full_name} ({r.email})
+                        </span>
+                        <span style={{ color: C.red, fontSize: 11 }}>
+                          {r._err}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {bulkDone && bulkProgress.failed.length === 0 && (
+                <div
+                  style={{
+                    marginTop: 10,
+                    padding: "10px 14px",
+                    background: `${C.green}11`,
+                    border: `1px solid ${C.green}22`,
+                    borderRadius: 8,
+                    fontSize: 13,
+                    color: C.green,
+                    fontWeight: 600,
+                  }}
+                >
+                  ✓ All {bulkProgress.total} staff members imported
+                  successfully!
+                </div>
+              )}
+            </div>
+          )}
+
+          {bulkRows.length > 0 && !bulkProgress && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 600 }}>
+                  Preview —{" "}
+                  <span style={{ color: C.green }}>
+                    {bulkRows.filter((r) => r._errors.length === 0).length}{" "}
+                    valid
+                  </span>
+                  {bulkRows.filter((r) => r._errors.length > 0).length > 0 && (
+                    <span style={{ color: C.red }}>
+                      , {bulkRows.filter((r) => r._errors.length > 0).length}{" "}
+                      errors
+                    </span>
+                  )}
+                </div>
+                <button
+                  className="btn btn-ghost"
+                  style={{ fontSize: 12 }}
+                  onClick={() => setBulkRows([])}
+                >
+                  Clear
+                </button>
+              </div>
+              <div
+                style={{
+                  overflowX: "auto",
+                  maxHeight: 280,
+                  overflowY: "auto",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 10,
+                }}
+              >
+                <table className="table" style={{ fontSize: 11 }}>
+                  <thead>
+                    <tr>
+                      <th>Line</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Dept</th>
+                      <th>Designation</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkRows.map((row, i) => (
+                      <tr
+                        key={i}
+                        style={{
+                          background: row._errors.length
+                            ? `${C.red}08`
+                            : "transparent",
+                        }}
+                      >
+                        <td style={{ color: C.textMuted }}>{row._line}</td>
+                        <td style={{ fontWeight: 600 }}>{row.full_name}</td>
+                        <td style={{ fontFamily: "monospace", fontSize: 10.5 }}>
+                          {row.email}
+                        </td>
+                        <td>{row.department || "—"}</td>
+                        <td>{row.designation || "—"}</td>
+                        <td>
+                          {row._errors.length === 0 ? (
+                            <span
+                              className="badge badge-green"
+                              style={{ fontSize: 10 }}
+                            >
+                              ✓ Valid
+                            </span>
+                          ) : (
+                            <span
+                              className="badge badge-red"
+                              style={{ fontSize: 10, cursor: "help" }}
+                              title={row._errors.join(", ")}
+                            >
+                              ⚠ {row._errors[0]}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {bulkRows.length === 0 && !bulkProgress && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "28px 0",
+                color: C.textMuted,
+                fontSize: 13,
+              }}
+            >
+              Upload a CSV file to preview and validate before importing.
+            </div>
+          )}
+
+          {bulkDone && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: 14,
+              }}
+            >
+              <button
+                className="btn btn-primary"
+                onClick={() => setModal(null)}
+              >
+                Close
+              </button>
+            </div>
+          )}
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+// end TeachersModule
+
+
+
+
+
+// MODULE: TIMETABLE MANAGEMENT — VISUAL REBUILD
+// Replaces the old DAYS / TimetableModule / BuildTimetableTab.
+// PeriodStructureTab and TeacherWeeklyViewTab stay unchanged from before.
+// ═══════════════════════════════════════════════════════════════
+
+const DAYS = [
+  { num: 1, label: "Mon" },
+  { num: 2, label: "Tue" },
+  { num: 3, label: "Wed" },
+  { num: 4, label: "Thu" },
+  { num: 5, label: "Fri" },
+  { num: 6, label: "Sat" },
+];
+
+// Deterministic color per subject name — same subject always gets same color,
+// so the grid visually groups subjects at a glance across the whole week.
+const SUBJECT_PALETTE = [
+  C.blue,
+  C.green,
+  C.purple,
+  C.cyan,
+  C.yellow,
+  C.red,
+  "#EC4899",
+  "#14B8A6",
+  "#F97316",
+  "#8B5CF6",
+];
+
+const subjectColor = (name) => {
+  if (!name) return C.border;
+  let hash = 0;
+  for (let i = 0; i < name.length; i++)
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return SUBJECT_PALETTE[Math.abs(hash) % SUBJECT_PALETTE.length];
+};
+
+const TimetableModule = () => {
+  const [tab, setTab] = useState("build"); // 'build' | 'teacherview'
+  const { academicYears, currentYear } = useSession(); // 🔴 global list, no duplicate fetch
+  const [academicYearId, setAcademicYearId] = useState(""); // local override — module apna session switch kar sake
+
+  useEffect(() => {
+    if (currentYear && !academicYearId) setAcademicYearId(currentYear.id);
+  }, [currentYear]); // eslint-disable-line
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Timetable Management"
+        sub="Build weekly schedules, assign teachers, and prevent double-booking automatically"
+        action={
+          academicYears.length > 0 && (
+            <select
+              className="select"
+              style={{ width: 180 }}
+              value={academicYearId}
+              onChange={(e) => setAcademicYearId(e.target.value)}
+            >
+              {academicYears.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.name}
+                  {y.is_current ? " (Current)" : ""}
+                </option>
+              ))}
+            </select>
+          )
+        }
+      />
+
+      <div
+        style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}
+      >
+      {[
+          { id: "build", label: "Class-wise Timetable" },
+          { id: "teacherview", label: "Teacher-wise View" },
+        ].map((t) => (
+          <button
+            key={t.id}
+            className={`tab ${tab === t.id ? "active" : ""}`}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {!academicYearId ? (
+        <div
+          className="card"
+          style={{ padding: 40, textAlign: "center", color: C.textMuted }}
+        >
+          No academic year found. Please create one in Setup first.
+        </div>
+      ) : (
+        <>
+
+        {tab === "build" && (
+            <BuildTimetableTab academicYearId={academicYearId} />
+          )}
+          {tab === "teacherview" && (
+            <TeacherWeeklyViewTab academicYearId={academicYearId} />
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 1: PERIOD STRUCTURE
+// ═══════════════════════════════════════════════════════════════
+const PeriodStructureTab = () => {
+  const { dialogConfirm } = useDialog();
+  const [periods, setPeriods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({
+    period_number: "",
+    label: "",
+    start_time: "",
+    end_time: "",
+    is_break: false,
+  });
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest("/timetable/periods");
+      setPeriods(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    load();
+  }, []);
+
+  const handleGenerate = async () => {
+    if (
+      periods.length > 0 &&
+      !(await dialogConfirm("This will replace your existing period structure. Continue?", "Regenerate Periods?"))
+    )
+      return;
+    setGenerating(true);
+    try {
+      await apiRequest("/timetable/periods/generate-defaults", "POST");
+      await load();
+    } catch (e) {
+      alert("Failed: " + e.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleAdd = async () => {
+    if (
+      !form.period_number ||
+      !form.label ||
+      !form.start_time ||
+      !form.end_time
+    ) {
+      alert("All fields are required.");
+      return;
+    }
+    try {
+      await apiRequest("/timetable/periods", "POST", form);
+      setShowAdd(false);
+      setForm({
+        period_number: "",
+        label: "",
+        start_time: "",
+        end_time: "",
+        is_break: false,
+      });
+      await load();
+    } catch (e) {
+      alert("Failed: " + e.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!(await dialogConfirm("Remove this period slot?", "Remove Period"))) return;
+    try {
+      await apiRequest(`/timetable/periods/${id}`, "DELETE");
+      await load();
+    } catch (e) {
+      alert("Failed: " + e.message);
+    }
+  };
+
+  return (
+    <div>
+      {periods.length === 0 && !loading ? (
+        <div
+          className="card"
+          style={{
+            textAlign: "center",
+            padding: 40,
+            border: `2px dashed ${C.border}`,
+          }}
+        >
+          <div style={{ fontSize: 44, marginBottom: 12 }}>🕐</div>
+          <h3
+            className="syne"
+            style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}
+          >
+            No Period Structure Yet
+          </h3>
+          <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 20 }}>
+            Auto-generate periods from your School Setup timings, or add them
+            manually.
+          </p>
+          <button
+            className="btn btn-primary"
+            onClick={handleGenerate}
+            disabled={generating}
+          >
+            {generating ? "Generating…" : "Auto-Generate from School Settings"}
+          </button>
+        </div>
+      ) : (
+        <>
+          <SectionHeader
+            title="Daily Period Structure"
+            sub="These periods repeat every day and define your timetable grid"
+            action={
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className="btn btn-ghost"
+                  onClick={handleGenerate}
+                  disabled={generating}
+                >
+                  {generating ? "Regenerating…" : "Regenerate Defaults"}
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowAdd(true)}
+                >
+                  <Icon name="plus" size={13} /> Add Period
+                </button>
+              </div>
+            }
+          />
+          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Label</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Type</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {periods.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.period_number}</td>
+                    <td style={{ fontWeight: 600 }}>{p.label}</td>
+                    <td>{p.start_time}</td>
+                    <td>{p.end_time}</td>
+                    <td>
+                      {p.is_break ? (
+                        <span className="badge badge-yellow">Break</span>
+                      ) : (
+                        <span className="badge badge-blue">Class</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-danger"
+                        style={{ padding: "4px 8px" }}
+                        onClick={() => handleDelete(p.id)}
+                      >
+                        <Icon name="trash" size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      <Modal
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        title="Add Period Slot"
+      >
+        <FormGrid cols={2}>
+          <FormRow label="Period Number">
+            <input
+              className="input"
+              type="number"
+              value={form.period_number}
+              onChange={(e) =>
+                setForm({ ...form, period_number: e.target.value })
+              }
+            />
+          </FormRow>
+          <FormRow label="Label">
+            <input
+              className="input"
+              placeholder="e.g. Period 9 / Lunch"
+              value={form.label}
+              onChange={(e) => setForm({ ...form, label: e.target.value })}
+            />
+          </FormRow>
+        </FormGrid>
+        <FormGrid cols={2}>
+          <FormRow label="Start Time">
+            <input
+              className="input"
+              type="time"
+              value={form.start_time}
+              onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+            />
+          </FormRow>
+          <FormRow label="End Time">
+            <input
+              className="input"
+              type="time"
+              value={form.end_time}
+              onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+            />
+          </FormRow>
+        </FormGrid>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+            marginTop: 8,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={form.is_break}
+            onChange={(e) => setForm({ ...form, is_break: e.target.checked })}
+          />
+          This is a break (Lunch/Assembly) — not assignable to subjects
+        </label>
+        <button
+          className="btn btn-primary"
+          style={{ width: "100%", marginTop: 16 }}
+          onClick={handleAdd}
+        >
+          Add Period
+        </button>
+      </Modal>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// BUILD TIMETABLE — the main visual grid, class-chip driven
+// ═══════════════════════════════════════════════════════════════
+const BuildTimetableTab = ({ academicYearId }) => {
+  const [grades, setGrades] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [gradeId, setGradeId] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [periods, setPeriods] = useState([]);
+  const [grid, setGrid] = useState({}); // grid[day][period_slot_id] = { subject_id, teacher_id, room_no, ...names }
+  const [subjectTeacherMap, setSubjectTeacherMap] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [conflicts, setConflicts] = useState([]);
+  const [dirty, setDirty] = useState(false);
+  const [allTeachers, setAllTeachers] = useState([]);
+  const [checkingCell, setCheckingCell] = useState(null);
+
+  const { subjects: classSubjects } = useGradeSubjects(gradeId);
+
+  // Flat, sorted class list for the chip selector: 6A, 6B, 7A, 7B, 11-Science...
+  const classList = grades
+    .flatMap((g) =>
+      sections
+        .filter((s) => s.grade_id === g.id)
+        .map((s) => ({
+          ...s,
+          gradeName: g.name,
+          numeric_order: g.numeric_order,
+          stream: g.stream,
+        }))
+    )
+    .sort(
+      (a, b) =>
+        a.numeric_order - b.numeric_order || a.name.localeCompare(b.name)
+    );
+
+    useEffect(() => {
+      (async () => {
+        try {
+          const [gRes, sRes, pRes, tRes, stRes] = await Promise.all([
+            apiRequest("/setup/grades"),
+            apiRequest("/setup/sections"),
+            apiRequest("/timetable/periods"),
+            apiRequest("/teachers"),
+            apiRequest("/teachers/subject-teachers/all"),
+          ]);
+          setGrades(Array.isArray(gRes?.data) ? gRes.data : []);
+          setSections(Array.isArray(sRes?.data) ? sRes.data : []);
+          setPeriods(Array.isArray(pRes?.data) ? pRes.data : []);
+          setAllTeachers(Array.isArray(tRes?.data) ? tRes.data : []);
+          const rows = Array.isArray(stRes?.data) ? stRes.data : [];
+          const map = {};
+          rows.forEach((r) => {
+            if (!map[r.subject_id]) map[r.subject_id] = [];
+            map[r.subject_id].push(r);
+          });
+          setSubjectTeacherMap(map);
+        } catch (e) {
+          console.error(e);
+        }
+      })();
+    }, []);
+    
+
+  useEffect(() => {
+    if (classList.length && !sectionId) {
+      setGradeId(classList[0].grade_id);
+      setSectionId(classList[0].id);
+    }
+  }, [classList]); // eslint-disable-line
+
+  const selectClass = (cls) => {
+    if (dirty && !confirm("You have unsaved changes. Switch class anyway?"))
+      return;
+    setGradeId(cls.grade_id);
+    setSectionId(cls.id);
+  };
+
+  const loadGrid = async () => {
+    if (!sectionId || !academicYearId) return;
+    setLoading(true);
+    setConflicts([]);
+    setDirty(false);
+    try {
+      const ttRes = await apiRequest(
+        `/timetable/section/${sectionId}?academic_year_id=${academicYearId}`
+      );
+      const entries = Array.isArray(ttRes?.data) ? ttRes.data : [];
+      const g = {};
+      entries.forEach((e) => {
+        if (!g[e.day_of_week]) g[e.day_of_week] = {};
+        g[e.day_of_week][e.period_slot_id] = {
+          subject_id: e.subject_id,
+          teacher_id: e.teacher_id,
+          teacher_name: e.teacher_name,
+          subject_name: e.subject_name,
+          room_no: e.room_no,
+        };
+      });
+      setGrid(g);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
+    loadGrid();
+  }, [sectionId, academicYearId]); // eslint-disable-line
+
+  const setCell = (day, slotId, patch) => {
+    setGrid((prev) => {
+      const next = { ...prev, [day]: { ...(prev[day] || {}) } };
+      next[day][slotId] = { ...(next[day][slotId] || {}), ...patch };
+      return next;
+    });
+    setDirty(true);
+  };
+
+  const clearCell = (day, slotId) => {
+    setGrid((prev) => {
+      const next = { ...prev, [day]: { ...(prev[day] || {}) } };
+      delete next[day][slotId];
+      return next;
+    });
+    setDirty(true);
+  };
+
+  const handleSubjectSelect = (day, slotId, subjectId) => {
+    if (!subjectId) {
+      clearCell(day, slotId);
+      return;
+    }
+    const subjectName = classSubjects.find((s) => s.id === subjectId)?.name || "";
+    const matches = subjectTeacherMap[subjectId] || [];
+    const autoFill = matches.length === 1 ? matches[0] : null;
+    setCell(day, slotId, {
+      subject_id: subjectId,
+      subject_name: subjectName,
+      teacher_id: autoFill ? autoFill.teacher_user_id : "",
+      teacher_name: autoFill ? autoFill.teacher_name : "",
+    });
+  };
+
+
+  const handleTeacherSelect = (day, slotId, teacherId, teacherName) => {
+    setCell(day, slotId, {
+      teacher_id: teacherId,
+      teacher_name: teacherName,
+    });
+  };
+
+
+  const handleSave = async () => {
+    const entries = [];
+    Object.entries(grid).forEach(([day, slots]) => {
+      Object.entries(slots).forEach(([slotId, cell]) => {
+        if (cell?.subject_id || cell?.teacher_id) {
+          entries.push({
+            day_of_week: Number(day),
+            period_slot_id: slotId,
+            subject_id: cell.subject_id || null,
+            teacher_id: cell.teacher_id || null,
+            room_no: cell.room_no || null,
+          });
+        }
+      });
+    });
+
+    setSaving(true);
+    setConflicts([]);
+    try {
+      await apiRequest("/timetable/section", "PUT", {
+        section_id: sectionId,
+        academic_year_id: academicYearId,
+        entries,
+      });
+      alert("✅ Timetable saved successfully!");
+      setDirty(false);
+      await loadGrid();
+    } catch (e) {
+      if (e?.response?.data?.conflicts) setConflicts(e.response.data.conflicts);
+      else alert("❌ Save failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const currentClass = classList.find((c) => c.id === sectionId);
+  const totalCells = periods.filter((p) => !p.is_break).length * DAYS.length;
+  const filledCells = Object.values(grid).reduce(
+    (sum, day) => sum + Object.values(day).filter((c) => c.subject_id).length,
+    0
+  );
+
+  return (
+    <div>
+      {/* ── Class Chip Selector ── */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: C.textMuted,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            marginBottom: 10,
+            letterSpacing: "0.5px",
+          }}
+        >
+          Select a Class to Build Its Timetable
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {classList.map((cls) => (
+            <button
+              key={cls.id}
+              onClick={() => selectClass(cls)}
+              style={{
+                padding: "10px 16px",
+                borderRadius: 12,
+                cursor: "pointer",
+                border: `1.5px solid ${
+                  sectionId === cls.id ? C.primary : C.border
+                }`,
+                background:
+                  sectionId === cls.id ? `${C.primary}22` : C.surfaceAlt,
+                color: sectionId === cls.id ? C.primary : C.text,
+                fontWeight: 700,
+                fontSize: 13,
+                fontFamily: "'DM Sans',sans-serif",
+                transition: "all 0.15s",
+              }}
+            >
+              {cls.gradeName.replace("Class ", "")}
+              {cls.stream && cls.stream !== "none"
+                ? `-${cls.stream.slice(0, 3)}`
+                : cls.name}
+            </button>
+          ))}
+          {classList.length === 0 && (
+            <span style={{ color: C.textMuted, fontSize: 13 }}>
+              No classes/sections found. Set them up in School Setup first.
+            </span>
+          )}
+        </div>
+      </div>
+
+      {currentClass && (
+        <div
+          className="card"
+          style={{
+            marginBottom: 16,
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <div className="syne" style={{ fontSize: 18, fontWeight: 800 }}>
+              {currentClass.gradeName} — Section {currentClass.name}
+            </div>
+            <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
+              {filledCells} of {totalCells} periods filled
+              {dirty && (
+                <span style={{ color: C.yellow, fontWeight: 700 }}>
+                  {" "}
+                  · Unsaved changes
+                </span>
+              )}
+            </div>
+          </div>
+          <div
+            className="progress-bar"
+            style={{ flex: 1, minWidth: 120, maxWidth: 240 }}
+          >
+            <div
+              className="progress-fill"
+              style={{
+                width: `${
+                  totalCells > 0 ? (filledCells / totalCells) * 100 : 0
+                }%`,
+                background: C.primary,
+              }}
+            />
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ marginLeft: "auto" }}
+            onClick={handleSave}
+            disabled={saving || loading || periods.length === 0}
+          >
+            {saving ? "Saving…" : "Save Timetable"}
+          </button>
+        </div>
+      )}
+
+      {periods.length === 0 && (
+        <div
+          className="card"
+          style={{
+            padding: 20,
+            textAlign: "center",
+            color: C.yellow,
+            border: `1px solid ${C.yellow}44`,
+            marginBottom: 16,
+          }}
+        >
+          ⚠ No period structure set up yet. Go to "Period Structure" tab first.
+        </div>
+      )}
+
+      {conflicts.length > 0 && (
+        <div
+          className="card"
+          style={{
+            marginBottom: 16,
+            border: `1px solid ${C.red}44`,
+            background: `${C.red}0d`,
+          }}
+        >
+          <h4
+            style={{
+              color: C.red,
+              fontWeight: 700,
+              fontSize: 13,
+              marginBottom: 10,
+            }}
+          >
+            ⚠ Scheduling Conflicts — Nothing Saved
+          </h4>
+          {conflicts.map((c, i) => (
+            <div
+              key={i}
+              style={{ fontSize: 12.5, color: C.textMuted, padding: "4px 0" }}
+            >
+              <b style={{ color: C.text }}>{c.day}</b> — this teacher is already
+              teaching <b style={{ color: C.text }}>{c.conflicting_with}</b> at
+              this period.
+            </div>
+          ))}
+        </div>
+      )}
+
+      {loading ? (
+        <div
+          className="card pulse"
+          style={{ padding: 60, textAlign: "center", color: C.primary }}
+        >
+          Loading timetable…
+        </div>
+      ) : !sectionId ? (
+        <div
+          className="card"
+          style={{ padding: 60, textAlign: "center", color: C.textMuted }}
+        >
+          Pick a class above to begin.
+        </div>
+      ) : (
+        <div className="card" style={{ overflowX: "auto", padding: 12 }}>
+          <table
+            className="table"
+            style={{
+              minWidth: 950,
+              borderCollapse: "separate",
+              borderSpacing: "4px",
+            }}
+          >
+            <thead>
+              <tr>
+                <th style={{ width: 110 }}>Period</th>
+                {DAYS.map((d) => (
+                  <th key={d.num} style={{ textAlign: "center" }}>
+                    {d.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {periods.map((p) => (
+                <tr key={p.id}>
+                  <td style={{ background: C.surfaceAlt, borderRadius: 8 }}>
+                    <div style={{ fontWeight: 700, fontSize: 12 }}>
+                      {p.label}
+                    </div>
+                    <div style={{ fontSize: 10, color: C.textMuted }}>
+                      {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                    </div>
+                  </td>
+                  {p.is_break ? (
+                    <td
+                      colSpan={DAYS.length}
+                      style={{
+                        textAlign: "center",
+                        background: `${C.yellow}11`,
+                        color: C.yellow,
+                        fontWeight: 700,
+                        fontSize: 12,
+                        borderRadius: 8,
+                      }}
+                    >
+                      {p.label}
+                    </td>
+                  ) : (
+                    DAYS.map((d) => {
+                      const cell = grid[d.num]?.[p.id] || {};
+                      const color = subjectColor(cell.subject_name);
+                      const isChecking = checkingCell === `${d.num}-${p.id}`;
+                      return (
+                        <td
+                          key={d.num}
+                          style={{
+                            minWidth: 150,
+                            verticalAlign: "top",
+                            padding: 8,
+                            borderRadius: 10,
+                            background: cell.subject_id
+                              ? `${color}14`
+                              : C.surfaceAlt,
+                            borderLeft: cell.subject_id
+                              ? `3px solid ${color}`
+                              : `3px solid transparent`,
+                          }}
+                        >
+                          <select
+                            className="select"
+                            style={{
+                              fontSize: 11,
+                              padding: "5px 6px",
+                              marginBottom: 4,
+                            }}
+                            value={cell.subject_id || ""}
+                            onChange={(e) =>
+                              handleSubjectSelect(d.num, p.id, e.target.value)
+                            }
+                          >
+                            <option value="">-- Free --</option>
+                            {classSubjects.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name}
+                              </option>
+                            ))}
+                          </select>
+                          {cell.subject_id && (() => {
+                           const assigned = subjectTeacherMap[cell.subject_id] || [];
+                           const assignedIds = new Set(assigned.map((a) => a.teacher_user_id));
+                            const others = allTeachers.filter((t) => !assignedIds.has(t.user_id));
+                             return (
+                              <select
+                                className="select"
+                                style={{
+                                  fontSize: 10.5,
+                                  padding: "4px 6px",
+                                  opacity: isChecking ? 0.5 : 1,
+                                }}
+                                value={cell.teacher_id || ""}
+                                disabled={isChecking}
+                                onChange={(e) => {
+                                  const opt = e.target.selectedOptions[0];
+                                  handleTeacherSelect(
+                                    d.num,
+                                    p.id,
+                                    e.target.value,
+                                    opt?.text || ""
+                                  );
+                                }}
+                              >
+                                <option value="">
+                                  {isChecking ? "Checking…" : "-- Teacher --"}
+                                </option>
+                                {assigned.length > 0 && (
+                                  <optgroup label="Assigned to this subject">
+                                    {assigned.map((a) => (
+                                      <option key={a.teacher_user_id} value={a.teacher_user_id}>
+                                        {a.teacher_name}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                )}
+                                {others.length > 0 && (
+                                  <optgroup label="Other Teachers (override)">
+                                    {others.map((t) => (
+                                      <option key={t.user_id} value={t.user_id}>
+                                        {t.full_name}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                )}
+                              </select>
+                            );
+                          })()}
+                        </td>
+                      );
+                    })
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+     <div style={{ marginTop: 10, fontSize: 11.5, color: C.textMuted }}>
+        💡 Teacher dropdown auto-fills when exactly one teacher is assigned
+        (School Setup → Subject Assignment). Multiple assigned teachers show
+        as options; picking one who's already busy at that exact day+period
+        pops up a warning immediately.
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 3: TEACHER WEEKLY VIEW (admin preview of any teacher's 7-day grid)
+// ═══════════════════════════════════════════════════════════════
+const DAY_LABELS_FULL = {
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+  7: "Sunday",
+};
+
+const TeacherWeeklyViewTab = ({ academicYearId }) => {
+  const [teachers, setTeachers] = useState([]);
+  const [teacherId, setTeacherId] = useState("");
+  const [data, setData] = useState({ days: {} });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest("/teachers");
+        setTeachers(Array.isArray(res?.data) ? res.data : []);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
+
+  const load = async () => {
+    if (!teacherId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/timetable/teacher/${teacherId}?academic_year_id=${academicYearId}`
+      );
+      setData(res?.data || { days: {} });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    load();
+  }, [teacherId, academicYearId]); // eslint-disable-line
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <select
+          className="select"
+          style={{ width: 240 }}
+          value={teacherId}
+          onChange={(e) => setTeacherId(e.target.value)}
+        >
+          <option value="">-- Select Teacher --</option>
+          {teachers.map((t) => (
+            <option key={t.user_id} value={t.user_id}>
+              {t.full_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {!teacherId ? (
+        <div
+          className="card"
+          style={{ padding: 40, textAlign: "center", color: C.textMuted }}
+        >
+          Select a teacher to view their weekly schedule.
+        </div>
+      ) : loading ? (
+        <div
+          className="card pulse"
+          style={{ padding: 40, textAlign: "center", color: C.primary }}
+        >
+          Loading…
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))",
+            gap: 14,
+          }}
+        >
+          {[1, 2, 3, 4, 5, 6].map((day) => {
+            const periods = data.days?.[day] || [];
+            return (
+              <div key={day} className="card">
+                <h4
+                  className="syne"
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    marginBottom: 10,
+                    color: C.primary,
+                  }}
+                >
+                  {DAY_LABELS_FULL[day]}
+                </h4>
+                {periods.length === 0 ? (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.textMuted,
+                      padding: "10px 0",
+                    }}
+                  >
+                    No classes
+                  </div>
+                ) : (
+                  periods.map((p, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        padding: "8px 0",
+                        borderBottom: `1px solid ${C.border}22`,
+                      }}
+                    >
+                      <div style={{ fontSize: 11, color: C.textMuted }}>
+                        {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                      </div>
+                      <div style={{ fontSize: 12.5, fontWeight: 700 }}>
+                        {p.subject_name || "—"}
+                      </div>
+                      <div style={{ fontSize: 11, color: C.textMuted }}>
+                        {p.grade_name} - {p.section_name}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+// ═══════════════════════════════════════════════════════════════
+// MODULE: ATTENDANCE
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// MODULE: ATTENDANCE — FULL REBUILD (Students + Teachers, real API)
+// ═══════════════════════════════════════════════════════════════
+// Replaces the old mock AttendanceModule. Uses the same helper
+// components/colors already defined at the top of App.jsx:
+// C, Icon, KpiCard, SectionHeader, Modal, FormRow, FormGrid, apiRequest
+// and recharts imports (BarChart, LineChart, AreaChart, PieChart, Cell,
+// XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area)
+// ═══════════════════════════════════════════════════════════════
+
+// Small segmented control used in every "mark" row
+const StatusPicker = ({ value, onChange, size = "md" }) => (
+  <div style={{ display: "flex", gap: 4 }}>
+    {STATUS_KEYS.map((s) => {
+      const active = value === s;
+      const meta = STATUS_META[s];
+      return (
+        <button
+          key={s}
+          onClick={() => onChange(s)}
+          style={{
+            padding: size === "sm" ? "3px 7px" : "5px 10px",
+            borderRadius: 7,
+            border: `1.5px solid ${active ? meta.color : C.border}`,
+            background: active ? `${meta.color}22` : "transparent",
+            color: active ? meta.color : C.textMuted,
+            fontSize: size === "sm" ? 10.5 : 12,
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 0.15s",
+            minWidth: size === "sm" ? 28 : 34,
+          }}
+          title={meta.label}
+        >
+          {s}
+        </button>
+      );
+    })}
+  </div>
+);
+
+const AttendanceModule = () => {
+  // ── Top-level switch ──
+  const [mode, setMode] = useState("students"); // 'students' | 'teachers'
+  const [tab, setTab] = useState("overview"); // 'overview' is default; 'mark' stays hidden until opened
+
+  useEffect(() => {
+    setTab("overview");
+  }, [mode]);
+
+  const TABS = {
+    students: [
+      { id: "overview", label: "Student Overview" },
+      { id: "class", label: "Class Analysis" },
+      { id: "individual", label: "Individual Student" },
+    ],
+    teachers: [
+      { id: "overview", label: "Staff Overview" },
+      { id: "individual", label: "Individual Teacher" },
+    ],
+  };
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Attendance Management"
+        sub="Mark, track and analyze attendance — students and staff"
+        action={
+          <div
+            style={{
+              display: "flex",
+              background: C.surfaceAlt,
+              borderRadius: 10,
+              border: `1px solid ${C.border}`,
+              overflow: "hidden",
+            }}
+          >
+            {[
+              { id: "students", label: "Students", icon: "students" },
+              { id: "teachers", label: "Teachers", icon: "teachers" },
+            ].map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "9px 16px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans',sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  background: mode === m.id ? C.primary : "transparent",
+                  color: mode === m.id ? "white" : C.textMuted,
+                  transition: "all 0.2s",
+                }}
+              >
+                <Icon name={m.icon} size={14} /> {m.label}
+              </button>
+            ))}
+          </div>
+        }
+      />
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 20,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {TABS[mode].map((t) => (
+            <button
+              key={t.id}
+              className={`tab ${tab === t.id ? "active" : ""}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "overview" && (
+          <button
+            className="btn btn-primary"
+            onClick={() => setTab("mark")}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <Icon name="attendance" size={14} /> Mark Attendance
+          </button>
+        )}
+        {tab === "mark" && (
+          <button
+            className="btn btn-ghost"
+            onClick={() => setTab("overview")}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <Icon
+              name="arrow_right"
+              size={14}
+              style={{ transform: "rotate(180deg)" }}
+            />
+            Back to Overview
+          </button>
+        )}
+      </div>
+
+      {mode === "students" ? (
+        <>
+          {tab === "overview" && <StudentSchoolOverviewTab />}
+          {tab === "class" && <StudentClassAnalysisTab />}
+          {tab === "individual" && <StudentIndividualTab />}
+          {tab === "mark" && <StudentMarkTab />}
+        </>
+      ) : (
+        <>
+          {tab === "overview" && <StaffAnalysisTab />}
+          {tab === "individual" && <StaffIndividualTab />}
+          {tab === "mark" && <StaffMarkTab />}
+        </>
+      )}
+    </div>
+  );
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// ARRANGEMENT / SUBSTITUTION MANAGEMENT MODULE
+// Reuses global components (KpiCard, Modal, FormRow, Icon, useDialog,
+// C palette, apiRequest, recharts). All gap-finding + suggestion
+// ranking computed CLIENT-SIDE from raw backend data.
+// ═══════════════════════════════════════════════════════════════
+
+const DOW_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const STATUS_LABEL_MAP = { A: "Absent", L: "On Leave", OD: "On Duty" };
+
+ // ── CORE ENGINE: build today's gaps + free-teacher suggestions from raw data ──
+function buildArrangementPlan(draft) {
+  if (!draft) return { gaps: [], teacherMap: {} };
+
+  const teacherMap = {};
+  draft.teachers.forEach((t) => { teacherMap[t.teacher_id] = t; });
+
+  // Teachers unavailable today (anything other than Present)
+  const unavailable = {};
+  draft.attendance.forEach((a) => {
+    if (a.status !== "P") unavailable[a.teacher_id] = a.status;
+  });
+
+  // subject_id -> Set(teacher_id) qualified to teach it
+  const subjectQualified = {};
+  draft.subject_teachers.forEach((st) => {
+    if (!subjectQualified[st.subject_id]) subjectQualified[st.subject_id] = new Set();
+    subjectQualified[st.subject_id].add(st.teacher_id);
+  });
+
+  // period_slot_id -> Set(teacher_id) already teaching somewhere that period
+  const busyByPeriod = {};
+  draft.timetable.forEach((te) => {
+    if (!te.teacher_id) return;
+    if (!busyByPeriod[te.period_slot_id]) busyByPeriod[te.period_slot_id] = new Set();
+    busyByPeriod[te.period_slot_id].add(te.teacher_id);
+  });
+
+  // Already-confirmed substitutions today (so we don't double-book a substitute)
+  const alreadyAssignedByPeriod = {};
+  draft.existing_substitutions.forEach((s) => {
+    if (!alreadyAssignedByPeriod[s.period_slot_id]) alreadyAssignedByPeriod[s.period_slot_id] = new Set();
+    alreadyAssignedByPeriod[s.period_slot_id].add(s.substitute_teacher_id);
+  });
+
+  const existingMap = {};
+  draft.existing_substitutions.forEach((s) => { existingMap[`${s.period_slot_id}_${s.section_id}`] = s; });
+
+  // GAPS: every timetable entry whose teacher is unavailable today
+  const gaps = draft.timetable
+    .filter((te) => te.teacher_id && unavailable[te.teacher_id])
+    .map((te) => {
+      const busy = busyByPeriod[te.period_slot_id] || new Set();
+      const takenBySubst = alreadyAssignedByPeriod[te.period_slot_id] || new Set();
+
+      const freeTeachers = draft.teachers.filter((t) =>
+        t.teacher_id !== te.teacher_id &&
+        !unavailable[t.teacher_id] &&
+        !busy.has(t.teacher_id) &&
+        !takenBySubst.has(t.teacher_id)
+      );
+
+      const qualifiedSet = subjectQualified[te.subject_id] || new Set();
+      const suggested = freeTeachers.filter((t) => qualifiedSet.has(t.teacher_id));
+      const others = freeTeachers.filter((t) => !qualifiedSet.has(t.teacher_id));
+
+      const existing = existingMap[`${te.period_slot_id}_${te.section_id}`];
+
+      return {
+        key: `${te.period_slot_id}_${te.section_id}`,
+        period_slot_id: te.period_slot_id, section_id: te.section_id, subject_id: te.subject_id,
+        section_name: te.section_name, class_name: te.class_name, subject_name: te.subject_name || "Free Period",
+        room_no: te.room_no, original_teacher_id: te.teacher_id, original_teacher_name: teacherMap[te.teacher_id]?.full_name,
+        original_status: unavailable[te.teacher_id],
+        suggested, others,
+        confirmed_substitute_id: existing?.substitute_teacher_id || null,
+        confirmed_id: existing?.id || null,
+        notified: !!existing?.notified_at,
+      };
+    });
+
+  return { gaps, teacherMap, unavailableCount: Object.keys(unavailable).length };
+}
+
+ // ═══════════════════════════════════════════════════════════════
+ // AUTO-ASSIGN — seeds initial selections with top suggested match per gap,
+ // respecting "one substitute can't cover two classes in the same period"
+ // ═══════════════════════════════════════════════════════════════
+function autoAssignSuggested(gaps) {
+  const takenPerPeriod = {};
+  const seeded = {};
+  gaps.forEach((g) => {
+    if (g.confirmed_substitute_id) return; // already saved — leave as-is
+    const taken = takenPerPeriod[g.period_slot_id] || new Set();
+    const pick = g.suggested.find((t) => !taken.has(t.teacher_id));
+    if (pick) {
+      seeded[g.key] = pick.teacher_id;
+      if (!takenPerPeriod[g.period_slot_id]) takenPerPeriod[g.period_slot_id] = new Set();
+      takenPerPeriod[g.period_slot_id].add(pick.teacher_id);
+    }
+  });
+  return seeded;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEACHER ARRANGEMENT CARD — one absent teacher, all their periods as rows
+// ═══════════════════════════════════════════════════════════════
+const TeacherArrangementCard = ({ teacherName, status, periods, periodLabelOf, selections, onSelect }) => {
+  const filledInCard = periods.filter((g) => selections[g.key] || g.confirmed_substitute_id).length;
+  const initials = (teacherName || "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  return (
+    <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: C.surfaceAlt, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: `${C.red}15`, color: C.red, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+          {initials}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{teacherName}</div>
+          <div style={{ fontSize: 11, color: C.textMuted }}>
+            <span style={{ color: C.red, fontWeight: 700 }}>{STATUS_LABEL_MAP[status] || status}</span> today • {periods.length} period{periods.length > 1 ? "s" : ""}
+          </div>
+        </div>
+        <span style={{ fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: filledInCard === periods.length ? `${C.green}15` : `${C.yellow}15`, color: filledInCard === periods.length ? C.green : C.yellow, whiteSpace: "nowrap" }}>
+          {filledInCard}/{periods.length} covered
+        </span>
+      </div>
+
+      <div>
+        {periods.map((g, i) => {
+          const isFilled = !!selections[g.key] || !!g.confirmed_substitute_id;
+          const currentValue = selections[g.key] || g.confirmed_substitute_id || "";
+          const allOptions = [...g.suggested, ...g.others];
+          return (
+            <div key={g.key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderTop: i === 0 ? "none" : `1px solid ${C.border}`, background: isFilled ? "transparent" : `${C.red}05` }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text }}>{periodLabelOf(g.period_slot_id)}</div>
+                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>{g.class_name} {g.section_name} — {g.subject_name}{g.room_no ? ` • Room ${g.room_no}` : ""}</div>
+              </div>
+              <div style={{ width: 210, flexShrink: 0 }}>
+                {allOptions.length === 0 && !g.confirmed_substitute_id ? (
+                  <span style={{ fontSize: 11, color: C.red, fontWeight: 700 }}>⚠ No teacher free</span>
+                ) : (
+                  <select
+                    className="select"
+                    style={{ fontSize: 12, width: "100%", borderColor: isFilled ? C.green : C.border, color: isFilled ? C.text : C.textMuted }}
+                    value={currentValue}
+                    onChange={(e) => onSelect(g.key, e.target.value || undefined)}
+                  >
+                    <option value="">— Select substitute —</option>
+                    {g.suggested.length > 0 && (
+                      <optgroup label="Suggested (same subject)">
+                        {g.suggested.map((t) => <option key={t.teacher_id} value={t.teacher_id}>{t.full_name}</option>)}
+                      </optgroup>
+                    )}
+                    {g.others.length > 0 && (
+                      <optgroup label="Other available">
+                        {g.others.map((t) => <option key={t.teacher_id} value={t.teacher_id}>{t.full_name}</option>)}
+                      </optgroup>
+                    )}
+                  </select>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TODAY'S ARRANGEMENT TAB — grouped by absent teacher
+// ═══════════════════════════════════════════════════════════════
+const TodayArrangementTab = ({ onSaved }) => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+  const [date, setDate] = useState(todayISO());
+  const [draft, setDraft] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [selections, setSelections] = useState({}); // { [gapKey]: substitute_teacher_id }
+  const [saving, setSaving] = useState(false);
+
+  const loadDraft = React.useCallback(async () => {
+    setLoading(true);
+    setSelections({});
+    try {
+      const res = await apiRequest(`/arrangement/draft?date=${date}`);
+      setDraft(res.data);
+      // Seed default selections with top suggested match, right away
+      const rawPlan = buildArrangementPlan(res.data);
+      setSelections(autoAssignSuggested(rawPlan.gaps));
+    } catch (e) {
+      dialogAlert("Failed to load arrangement draft: " + e.message, "Error");
+    } finally {
+      setLoading(false);
+    }
+  }, [date, dialogAlert]);
+
+  useEffect(() => { loadDraft(); }, [loadDraft]);
+
+  const plan = useMemo(() => buildArrangementPlan(draft), [draft]);
+
+  // Re-rank live: once a selection is made for one gap, remove that teacher from other gaps' dropdowns in the SAME period
+  const gapsWithLiveSelections = useMemo(() => {
+    const takenPerPeriod = {};
+    plan.gaps.forEach((g) => {
+      const chosen = selections[g.key] || g.confirmed_substitute_id;
+      if (chosen) {
+        if (!takenPerPeriod[g.period_slot_id]) takenPerPeriod[g.period_slot_id] = new Set();
+        takenPerPeriod[g.period_slot_id].add(chosen);
+      }
+    });
+    return plan.gaps.map((g) => {
+      const taken = takenPerPeriod[g.period_slot_id] || new Set();
+      const currentChoice = selections[g.key] || g.confirmed_substitute_id;
+      return {
+        ...g,
+        suggested: g.suggested.filter((t) => !taken.has(t.teacher_id) || t.teacher_id === currentChoice),
+        others: g.others.filter((t) => !taken.has(t.teacher_id) || t.teacher_id === currentChoice),
+      };
+    });
+  }, [plan, selections]);
+
+  // Group periods by original (absent) teacher — this is the core structural change
+  const groupedByTeacher = useMemo(() => {
+    const groups = {};
+    gapsWithLiveSelections.forEach((g) => {
+      if (!groups[g.original_teacher_id]) {
+        groups[g.original_teacher_id] = { teacher_id: g.original_teacher_id, teacher_name: g.original_teacher_name, status: g.original_status, periods: [] };
+      }
+      groups[g.original_teacher_id].periods.push(g);
+    });
+    return Object.values(groups).sort((a, b) => a.teacher_name.localeCompare(b.teacher_name));
+  }, [gapsWithLiveSelections]);
+
+  const filledCount = gapsWithLiveSelections.filter((g) => selections[g.key] || g.confirmed_substitute_id).length;
+  const pendingCount = gapsWithLiveSelections.length - filledCount;
+
+  const handleSelect = (gapKey, teacherId) => {
+    setSelections((prev) => ({ ...prev, [gapKey]: teacherId }));
+  };
+
+  const handleResetToSuggested = () => {
+    setSelections(autoAssignSuggested(plan.gaps));
+  };
+
+  const handleConfirm = async () => {
+    const entries = gapsWithLiveSelections
+      .filter((g) => selections[g.key])
+      .map((g) => ({
+        period_slot_id: g.period_slot_id, section_id: g.section_id, subject_id: g.subject_id,
+        original_teacher_id: g.original_teacher_id, substitute_teacher_id: selections[g.key],
+        original_status: g.original_status,
+        is_suggested_match: g.suggested.some((t) => t.teacher_id === selections[g.key]),
+      }));
+    if (entries.length === 0) return dialogAlert("Select at least one substitute before confirming.", "Nothing to Save");
+
+    const ok = await dialogConfirm(`Confirm arrangement for ${entries.length} period(s) on ${date}?`, "Confirm Arrangement");
+    if (!ok) return;
+    setSaving(true);
+    try {
+      await apiRequest("/arrangement/confirm", "POST", { date, entries });
+      await dialogAlert("Arrangement saved. Notification sending will be wired next.", "Saved");
+      loadDraft();
+      onSaved();
+    } catch (e) {
+      dialogAlert("Save failed: " + e.message, "Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const periodLabel = (id) => {
+    const p = draft?.period_slots.find((x) => x.id === id);
+    return p ? `${p.label} • ${p.start_time?.slice(0, 5)}–${p.end_time?.slice(0, 5)}` : "Period";
+  };
+
+  return (
+    <div className="slide-in">
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <FormRow label="Arrangement Date">
+          <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </FormRow>
+        <button className="btn btn-ghost" onClick={loadDraft} disabled={loading} style={{ height: 42, display: "flex", alignItems: "center", gap: 8 }}>
+          <Icon name="refresh" size={14} /> Refresh
+        </button>
+        {plan.gaps.length > 0 && (
+          <button className="btn btn-ghost" onClick={handleResetToSuggested} style={{ height: 42, display: "flex", alignItems: "center", gap: 8, color: C.primary }}>
+            <Icon name="check" size={14} /> Reset to Suggested
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="card pulse" style={{ padding: 40, textAlign: "center" }}>Scanning timetable for {DOW_NAMES[new Date(date).getDay()]}...</div>
+      ) : plan.gaps.length === 0 ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.green }}>
+          <Icon name="check" size={28} color={C.green} />
+          <p style={{ marginTop: 10, fontWeight: 700 }}>No arrangement needed — all teachers present, or no periods affected.</p>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 20 }}>
+            <KpiCard label="Teachers Unavailable" value={plan.unavailableCount} icon="alert" color={C.red} />
+            <KpiCard label="Periods Needing Cover" value={plan.gaps.length} icon="calendar" color={C.yellow} />
+            <KpiCard label="Filled" value={`${filledCount} / ${plan.gaps.length}`} sub={pendingCount > 0 ? `${pendingCount} pending` : "All covered"} icon="check" color={pendingCount === 0 ? C.green : C.blue} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
+            {groupedByTeacher.map((grp) => (
+              <TeacherArrangementCard
+                key={grp.teacher_id}
+                teacherName={grp.teacher_name}
+                status={grp.status}
+                periods={grp.periods}
+                periodLabelOf={periodLabel}
+                selections={selections}
+                onSelect={handleSelect}
+              />
+            ))}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button className="btn btn-primary" onClick={handleConfirm} disabled={saving} style={{ padding: "12px 28px", fontSize: 14 }}>
+              {saving ? "Saving..." : `Confirm Arrangement (${filledCount})`}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// HISTORY TAB
+// ═══════════════════════════════════════════════════════════════
+const ArrangementHistoryTab = ({ history, onRefresh }) => {
+  const { dialogConfirm, dialogAlert } = useDialog();
+  const [dateFrom, setDateFrom] = useState(daysAgoISO(30));
+  const [dateTo, setDateTo] = useState(todayISO());
+
+  const filtered = history.filter((h) => h.substitution_date >= dateFrom && h.substitution_date <= dateTo);
+
+  const handleCancel = async (row) => {
+    const ok = await dialogConfirm(`Cancel this substitution for ${row.substitute_teacher_name}?`, "Cancel Substitution");
+    if (!ok) return;
+    try {
+      await apiRequest(`/arrangement/${row.id}`, "DELETE");
+      onRefresh();
+    } catch (e) {
+      dialogAlert("Cancel failed: " + e.message, "Error");
+    }
+  };
+
+  return (
+    <div className="slide-in">
+      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+        <FormRow label="From"><input className="input" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></FormRow>
+        <FormRow label="To"><input className="input" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></FormRow>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>No substitutions in this range.</div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+            <thead>
+              <tr style={{ background: C.surfaceAlt, textAlign: "left" }}>
+                {["Date", "Period", "Class", "Subject", "Original", "Substitute", "Notified", ""].map((h) => (
+                  <th key={h} style={{ padding: "10px 14px", fontSize: 10.5, fontWeight: 800, color: C.textMuted, textTransform: "uppercase" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r) => (
+                <tr key={r.id} style={{ borderTop: `1px solid ${C.border}` }}>
+                  <td style={{ padding: "10px 14px" }}>{r.substitution_date?.slice(0, 10)}</td>
+                  <td style={{ padding: "10px 14px" }}>{r.period_label}</td>
+                  <td style={{ padding: "10px 14px" }}>{r.class_name} {r.section_name}</td>
+                  <td style={{ padding: "10px 14px" }}>{r.subject_name || "—"}</td>
+                  <td style={{ padding: "10px 14px", color: C.textMuted }}>{r.original_teacher_name}</td>
+                  <td style={{ padding: "10px 14px", fontWeight: 700 }}>{r.substitute_teacher_name}</td>
+                  <td style={{ padding: "10px 14px" }}>
+                    {r.notified_at ? <span style={{ color: C.green, fontSize: 11, fontWeight: 700 }}>✓ Sent</span> : <span style={{ color: C.textFaint, fontSize: 11 }}>—</span>}
+                  </td>
+                  <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                    <button className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 10px", color: C.red }} onClick={() => handleCancel(r)}>
+                      <Icon name="close" size={11} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN MODULE
+// ═══════════════════════════════════════════════════════════════
+const ArrangementModule = ({ school }) => {
+  const { dialogAlert } = useDialog();
+  const [tab, setTab] = useState("overview");
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadHistory = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest(`/arrangement/history?from=${daysAgoISO(90)}&to=${todayISO()}`);
+      setHistory(res?.data || []);
+    } catch (e) {
+      dialogAlert("Failed to load history: " + e.message, "Error");
+    } finally {
+      setLoading(false);
+    }
+  }, [dialogAlert]);
+
+  useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  const overview = useMemo(() => {
+    const today = todayISO();
+    const todayCount = history.filter((h) => h.substitution_date?.slice(0, 10) === today).length;
+    const last30 = history.filter((h) => h.substitution_date >= daysAgoISO(30));
+
+    const byTeacher = {};
+    last30.forEach((h) => { byTeacher[h.substitute_teacher_name] = (byTeacher[h.substitute_teacher_name] || 0) + 1; });
+    const workload = Object.entries(byTeacher).sort(([, a], [, b]) => b - a).slice(0, 8).map(([name, count]) => ({ name, count }));
+
+    const byDate = {};
+    last30.forEach((h) => { const d = h.substitution_date?.slice(0, 10); byDate[d] = (byDate[d] || 0) + 1; });
+    const trend = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b))
+      .map(([d, count]) => ({ date: d.slice(5), count }));
+
+    const bySubject = {};
+    last30.forEach((h) => { const s = h.subject_name || "General"; bySubject[s] = (bySubject[s] || 0) + 1; });
+    const subjectChart = Object.entries(bySubject).map(([name, value]) => ({ name, value }));
+
+    return { todayCount, last30Count: last30.length, workload, trend, subjectChart };
+  }, [history]);
+
+  const PIE_COLORS = [C.primary, C.blue, C.green, C.yellow, C.red, "#8b5cf6"];
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 className="syne" style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: 0 }}>Substitution & Arrangement</h1>
+          <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Auto-detects gaps from absent teachers and suggests the best-fit substitute.</p>
+        </div>
+        <div style={{ display: "flex", gap: 8, background: C.surfaceAlt, padding: 4, borderRadius: 12, border: `1px solid ${C.border}` }}>
+          {[{ id: "overview", label: "Overview" }, { id: "today", label: "Today's Arrangement" }, { id: "history", label: "History" }].map((t) => (
+            <button key={t.id} className="btn" onClick={() => setTab(t.id)}
+              style={{ padding: "8px 14px", fontSize: 12.5, fontWeight: 700, borderRadius: 9, background: tab === t.id ? C.surface : "transparent", color: tab === t.id ? C.primary : C.textMuted, boxShadow: tab === t.id ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {tab === "overview" && (
+        <div className="slide-in">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
+            <KpiCard label="Substitutions Today" value={overview.todayCount} icon="calendar" color={C.primary} />
+            <KpiCard label="Last 30 Days" value={overview.last30Count} icon="refresh" color={C.blue} />
+            <KpiCard label="Most Loaded Teacher" value={overview.workload[0]?.name || "—"} sub={overview.workload[0] ? `${overview.workload[0].count} periods` : ""} icon="users" color={C.yellow} />
+            <KpiCard label="Top Affected Subject" value={overview.subjectChart.sort((a, b) => b.value - a.value)[0]?.name || "—"} icon="book" color={C.green} />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div className="card" style={{ padding: 20 }}>
+              <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>Substitution Trend (Last 30 Days)</h4>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={overview.trend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="count" stroke={C.primary} strokeWidth={3} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="card" style={{ padding: 20 }}>
+              <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>Gaps by Subject</h4>
+              {overview.subjectChart.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 40, color: C.textMuted, fontSize: 13 }}>No data yet.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie data={overview.subjectChart} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={(e) => e.name}>
+                      {overview.subjectChart.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: 20 }}>
+            <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>Substitution Workload — Top Teachers (Last 30 Days)</h4>
+            {overview.workload.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 30, color: C.textMuted, fontSize: 13 }}>No substitutions recorded yet.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={overview.workload} layout="vertical" margin={{ left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.border} horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill={C.primary} radius={[0, 6, 6, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "today" && <TodayArrangementTab onSaved={loadHistory} />}
+      {tab === "history" && <ArrangementHistoryTab history={history} onRefresh={loadHistory} />}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 🔴 GLOBAL DIALOG SYSTEM — replaces native alert()/confirm() with
+// the app's own themed Modal. Promise-based so call sites just
+// `await dialogAlert("msg")` or `if (await dialogConfirm("msg"))`.
+// ═══════════════════════════════════════════════════════════════
+const DialogContext = createContext(null);
+
+const DialogProvider = ({ children }) => {
+  const [state, setState] = useState(null); // { type, title, message, resolve }
+
+  const dialogAlert = (message, title = "Notice") =>
+    new Promise((resolve) => {
+      setState({ type: "alert", title, message, resolve });
+    });
+
+  const dialogConfirm = (message, title = "Please Confirm") =>
+    new Promise((resolve) => {
+      setState({ type: "confirm", title, message, resolve });
+    });
+
+    const close = (result) => {
+      state?.resolve(result);
+      setState(null);
+    };
+  
+    // 🔴 Global override: har window.alert(...) call (chahe kahin bhi ho) ab
+    // isi styled dialog se dikhega — har module ko manually edit karne ki zaroorat nahi.
+    useEffect(() => {
+      const originalAlert = window.alert;
+      window.alert = (message) => {
+        const msg = String(message ?? "");
+        const isError = /❌|error|failed/i.test(msg);
+        dialogAlert(msg, isError ? "⚠ Error" : "Notice");
+      };
+      return () => { window.alert = originalAlert; };
+    }, []); // eslint-disable-line
+  
+    return (
+      <DialogContext.Provider value={{ dialogAlert, dialogConfirm }}>
+      {children}
+      <Modal
+        open={!!state}
+        onClose={() => close(state?.type === "confirm" ? false : undefined)}
+        title={state?.title || ""}
+        width={420}
+        zIndex={10000} /* 🔴 FIX: Wizard (9999) के ऊपर दिखने के लिए Z-Index 10000 कर दिया */
+      >
+
+        {state && (
+          <div style={{ textAlign: "center", padding: "6px 0" }}>
+            <div
+              style={{
+                fontSize: 14,
+                color: C.text,
+                lineHeight: 1.6,
+                marginBottom: 22,
+                whiteSpace: "pre-line",
+              }}
+            >
+              {state.message}
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              {state.type === "confirm" && (
+                <button className="btn btn-ghost" onClick={() => close(false)}>
+                  Cancel
+                </button>
+              )}
+              <button
+                className={state.type === "confirm" ? "btn btn-danger" : "btn btn-primary"}
+                style={{ minWidth: 100 }}
+                onClick={() => close(true)}
+              >
+                {state.type === "confirm" ? "Confirm" : "OK"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </DialogContext.Provider>
+  );
+};
+
+const useDialog = () => useContext(DialogContext);
+
+// ═══════════════════════════════════════════════════════════════
+// SHARED: Grade/Section selector (students side)
+// ═══════════════════════════════════════════════════════════════
+const useGradesAndSections = () => {
+  const [grades, setGrades] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [gRes, sRes] = await Promise.all([
+          apiRequest("/setup/grades"),
+          apiRequest("/setup/sections"),
+        ]);
+        setGrades(Array.isArray(gRes?.data) ? gRes.data : []);
+        setSections(Array.isArray(sRes?.data) ? sRes.data : []);
+      } catch (e) {
+        console.error("Failed to load grades/sections", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  return { grades, sections, loading };
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STUDENTS — TAB 1: MARK ATTENDANCE
+// ═══════════════════════════════════════════════════════════════
+const StudentMarkTab = () => {
+  const { grades, sections } = useGradesAndSections();
+  const [gradeId, setGradeId] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [date, setDate] = useState(todayISO());
+  const [roster, setRoster] = useState([]);
+  const [counts, setCounts] = useState({ P: 0, A: 0, L: 0, OD: 0 });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  
+  const [uploadingStudentPhoto, setUploadingStudentPhoto] = useState(false);
+
+  
+
+  const filteredSections = sections.filter((s) => s.grade_id === gradeId);
+
+  useEffect(() => {
+    if (grades.length && !gradeId) setGradeId(grades[0].id);
+  }, [grades]); // eslint-disable-line
+
+  useEffect(() => {
+    if (gradeId && filteredSections.length && !sectionId) {
+      setSectionId(filteredSections[0].id);
+    }
+  }, [gradeId, sections]); // eslint-disable-line
+
+  const loadRoster = async () => {
+    if (!sectionId || !date) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/attendance/students/roster?section_id=${sectionId}&date=${date}`
+      );
+      setRoster(res?.data?.students || []);
+      setCounts(res?.data?.counts || { P: 0, A: 0, L: 0, OD: 0 });
+    } catch (e) {
+      console.error("Roster load failed", e);
+      setRoster([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRoster();
+  }, [sectionId, date]); // eslint-disable-line
+
+  const setStatus = (studentId, status) => {
+    setRoster((prev) => {
+      const next = prev.map((r) =>
+        r.student_id === studentId ? { ...r, status } : r
+      );
+      const c = { P: 0, A: 0, L: 0, OD: 0 };
+      next.forEach((r) => {
+        c[r.status] = (c[r.status] || 0) + 1;
+      });
+      setCounts(c);
+      return next;
+    });
+  };
+
+  const markAll = (status) => {
+    setRoster((prev) => prev.map((r) => ({ ...r, status })));
+    const c = { P: 0, A: 0, L: 0, OD: 0 };
+    c[status] = roster.length;
+    setCounts(c);
+  };
+
+  const handleSave = async () => {
+    if (!roster.length) return;
+    setSaving(true);
+    try {
+      await apiRequest("/attendance/students/mark", "POST", {
+        section_id: sectionId,
+        date,
+        entries: roster.map((r) => ({
+          student_id: r.student_id,
+          status: r.status,
+          remarks: r.remarks || null,
+        })),
+      });
+      alert("✅ Attendance saved successfully!");
+    } catch (e) {
+      alert("❌ Save failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const total = roster.length || 1;
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "flex-end",
+          }}
+        >
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              CLASS
+            </label>
+            <select
+              className="select"
+              style={{ width: 150 }}
+              value={gradeId}
+              onChange={(e) => {
+                setGradeId(e.target.value);
+                setSectionId("");
+              }}
+            >
+              <option value="">-- Select --</option>
+              {grades.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              SECTION
+            </label>
+            <select
+              className="select"
+              style={{ width: 120 }}
+              value={sectionId}
+              onChange={(e) => setSectionId(e.target.value)}
+              disabled={!gradeId}
+            >
+              <option value="">-- Select --</option>
+              {filteredSections.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              DATE
+            </label>
+            <input
+              className="input"
+              type="date"
+              style={{ width: 150 }}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              max={todayISO()}
+            />
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 16,
+              marginLeft: "auto",
+              flexWrap: "wrap",
+            }}
+          >
+            {STATUS_KEYS.map((s) => (
+              <div key={s} style={{ textAlign: "center" }}>
+                <div
+                  className="syne"
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color: STATUS_META[s].color,
+                  }}
+                >
+                  {counts[s] || 0}
+                </div>
+                <div style={{ fontSize: 10, color: C.textMuted }}>
+                  {STATUS_META[s].label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}
+      >
+        <button className="btn btn-success" onClick={() => markAll("P")}>
+          Mark All Present
+        </button>
+        <button className="btn btn-danger" onClick={() => markAll("A")}>
+          Mark All Absent
+        </button>
+        <button className="btn btn-ghost" onClick={() => markAll("L")}>
+          Mark All Leave
+        </button>
+        <button
+          className="btn btn-primary"
+          style={{ marginLeft: "auto" }}
+          onClick={handleSave}
+          disabled={saving || loading}
+        >
+          {saving ? "Saving…" : "Save Attendance"}
+        </button>
+      </div>
+
+      {roster.length > 0 && (
+        <div
+          className="progress-bar"
+          style={{ marginBottom: 16, display: "flex" }}
+        >
+          {STATUS_KEYS.map((s) => (
+            <div
+              key={s}
+              style={{
+                width: `${((counts[s] || 0) / total) * 100}%`,
+                background: STATUS_META[s].color,
+                height: "100%",
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {loading ? (
+          <div
+            style={{ padding: 40, textAlign: "center", color: C.primary }}
+            className="pulse"
+          >
+            Loading roster…
+          </div>
+        ) : roster.length === 0 ? (
+          <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+            No students found for this class/section.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Roll</th>
+                  <th>Student</th>
+                  <th style={{ textAlign: "center" }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roster.map((r) => (
+                  <tr key={r.student_id}>
+                    <td style={{ color: C.textMuted, fontSize: 12 }}>
+                      {r.roll_no || "—"}
+                    </td>
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: "50%",
+                            background:
+                              r.gender === "GIRL"
+                                ? `${C.purple}33`
+                                : `${C.blue}33`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: r.gender === "GIRL" ? C.purple : C.blue,
+                          }}
+                        >
+                          {(r.first_name?.[0] || "?").toUpperCase()}
+                        </div>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>
+                          {[r.first_name, r.middle_name, r.last_name]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      <StatusPicker
+                        value={r.status}
+                        onChange={(s) => setStatus(r.student_id, s)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STUDENTS — TAB 2: CLASS ANALYSIS
+// ═══════════════════════════════════════════════════════════════
+const StudentClassAnalysisTab = () => {
+  const { grades, sections } = useGradesAndSections();
+  const [gradeId, setGradeId] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [from, setFrom] = useState(daysAgoISO(29));
+  const [to, setTo] = useState(todayISO());
+  const [data, setData] = useState({ students: [], trend: [] });
+  const [loading, setLoading] = useState(false);
+
+  const filteredSections = sections.filter((s) => s.grade_id === gradeId);
+
+  useEffect(() => {
+    if (grades.length && !gradeId) setGradeId(grades[0].id);
+  }, [grades]); // eslint-disable-line
+  useEffect(() => {
+    if (gradeId && filteredSections.length && !sectionId)
+      setSectionId(filteredSections[0].id);
+  }, [gradeId, sections]); // eslint-disable-line
+
+  const load = async () => {
+    if (!sectionId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/attendance/students/analysis?section_id=${sectionId}&from=${from}&to=${to}`
+      );
+      setData(res?.data || { students: [], trend: [] });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, [sectionId, from, to]); // eslint-disable-line
+
+  const defaulters = data.students.filter((s) => s.percentage < 75);
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <select
+            className="select"
+            style={{ width: 150 }}
+            value={gradeId}
+            onChange={(e) => {
+              setGradeId(e.target.value);
+              setSectionId("");
+            }}
+          >
+            {grades.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="select"
+            style={{ width: 120 }}
+            value={sectionId}
+            onChange={(e) => setSectionId(e.target.value)}
+          >
+            {filteredSections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <input
+            className="input"
+            type="date"
+            style={{ width: 150 }}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+          <span style={{ alignSelf: "center", color: C.textMuted }}>to</span>
+          <input
+            className="input"
+            type="date"
+            style={{ width: 150 }}
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            max={todayISO()}
+          />
+        </div>
+      </div>
+
+      <div
+        className="grid-2"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 20,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+          >
+            Attendance % Trend
+          </h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={data.trend}>
+              <defs>
+                <linearGradient id="attTrendGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={C.primary} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.primary} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis dataKey="date" tick={{ fill: C.textMuted, fontSize: 9 }} />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fill: C.textMuted, fontSize: 10 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  color: C.text,
+                }}
+                formatter={(v) => `${v}%`}
+              />
+              <Area
+                type="monotone"
+                dataKey="percentage"
+                stroke={C.primary}
+                fill="url(#attTrendGrad)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card">
+          <h3
+            className="syne"
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              marginBottom: 14,
+              color: C.red,
+            }}
+          >
+            ⚠ Defaulters (Below 75%)
+          </h3>
+          {defaulters.length === 0 ? (
+            <div
+              style={{
+                color: C.textMuted,
+                fontSize: 13,
+                padding: "20px 0",
+                textAlign: "center",
+              }}
+            >
+              No defaulters — great attendance! ✓
+            </div>
+          ) : (
+            <div style={{ maxHeight: 200, overflowY: "auto" }}>
+              {defaulters.map((s) => (
+                <div
+                  key={s.student_id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "8px 0",
+                    borderBottom: `1px solid ${C.border}22`,
+                    fontSize: 13,
+                  }}
+                >
+                  <span>
+                    {[s.first_name, s.last_name].filter(Boolean).join(" ")}
+                  </span>
+                  <span style={{ color: C.red, fontWeight: 700 }}>
+                    {s.percentage}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3
+          className="syne"
+          style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+        >
+          Student-wise Breakdown
+        </h3>
+        {loading ? (
+          <div
+            className="pulse"
+            style={{ textAlign: "center", color: C.primary, padding: 20 }}
+          >
+            Loading…
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Roll</th>
+                  <th>Student</th>
+                  <th>P</th>
+                  <th>A</th>
+                  <th>L</th>
+                  <th>OD</th>
+                  <th>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.students.map((s) => (
+                  <tr key={s.student_id}>
+                    <td style={{ color: C.textMuted }}>{s.roll_no || "—"}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      {[s.first_name, s.last_name].filter(Boolean).join(" ")}
+                    </td>
+                    <td style={{ color: C.green }}>{s.present_days}</td>
+                    <td style={{ color: C.red }}>{s.absent_days}</td>
+                    <td style={{ color: C.yellow }}>{s.leave_days}</td>
+                    <td style={{ color: C.blue }}>{s.od_days}</td>
+                    <td>
+                      <span
+                        className="syne"
+                        style={{
+                          fontWeight: 700,
+                          color:
+                            s.percentage >= 90
+                              ? C.green
+                              : s.percentage >= 75
+                              ? C.yellow
+                              : C.red,
+                        }}
+                      >
+                        {s.percentage}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STUDENTS — TAB 3: SCHOOL OVERVIEW
+// ═══════════════════════════════════════════════════════════════
+const StudentSchoolOverviewTab = () => {
+  const [date, setDate] = useState(todayISO());
+  const [from, setFrom] = useState(daysAgoISO(6));
+  const [to, setTo] = useState(todayISO());
+  const [data, setData] = useState({ today: {}, gradeWise: [], trend: [] });
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/attendance/students/school-overview?date=${date}&from=${from}&to=${to}`
+      );
+      setData(res?.data || { today: {}, gradeWise: [], trend: [] });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    load();
+  }, [date, from, to]); // eslint-disable-line
+
+  const t = data.today || {};
+  const pieData = STATUS_KEYS.map((s) => ({
+    name: STATUS_META[s].label,
+    value:
+      t[
+        s === "P"
+          ? "present"
+          : s === "A"
+          ? "absent"
+          : s === "L"
+          ? "leave"
+          : "od"
+      ] || 0,
+    key: s,
+  }));
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "flex-end",
+          }}
+        >
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              TODAY'S DATE
+            </label>
+            <input
+              className="input"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              max={todayISO()}
+            />
+          </div>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              TREND FROM
+            </label>
+            <input
+              className="input"
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </div>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              TO
+            </label>
+            <input
+              className="input"
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              max={todayISO()}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="grid-4"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4,1fr)",
+          gap: 16,
+          marginBottom: 20,
+        }}
+      >
+        {STATUS_KEYS.map((s) => (
+          <KpiCard
+            key={s}
+            label={STATUS_META[s].label + " Today"}
+            value={
+              loading
+                ? "—"
+                : t[
+                    s === "P"
+                      ? "present"
+                      : s === "A"
+                      ? "absent"
+                      : s === "L"
+                      ? "leave"
+                      : "od"
+                  ] || 0
+            }
+            icon={s === "P" ? "check" : s === "A" ? "warning" : "attendance"}
+            color={STATUS_META[s].color}
+          />
+        ))}
+      </div>
+
+      <div
+        className="grid-2"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr",
+          gap: 20,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+          >
+            School-wide Attendance Trend
+          </h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={data.trend}>
+              <defs>
+                <linearGradient id="studentTrendGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={C.primary} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.primary} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis dataKey="day" tick={{ fill: C.textMuted, fontSize: 11 }} />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fill: C.textMuted, fontSize: 10 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  color: C.text,
+                }}
+                formatter={(v) => `${v}%`}
+              />
+              <Area
+                type="monotone"
+                dataKey="percentage"
+                stroke={C.primary}
+                fill="url(#studentTrendGrad)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+          >
+            Today's Mix
+          </h3>
+          {loading ? (
+            <div
+              className="pulse"
+              style={{
+                height: 220,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: C.primary,
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              Loading today's mix…
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={45}
+                  outerRadius={75}
+                  paddingAngle={3}
+                  dataKey="value"
+                >
+                  {pieData.map((d, i) => (
+                    <Cell key={i} fill={STATUS_META[d.key].color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    color: C.text,
+                  }}
+                />
+                <Legend
+                  wrapperStyle={{ paddingTop: 8 }}
+                  formatter={(v) => (
+                    <span style={{ color: C.textMuted, fontSize: 11 }}>{v}</span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3
+          className="syne"
+          style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+        >
+          Class-wise Average Attendance
+        </h3>
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={data.gradeWise} barSize={22}>
+            <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+            <XAxis
+              dataKey="grade_name"
+              tick={{ fill: C.textMuted, fontSize: 10 }}
+            />
+            <YAxis
+              domain={[0, 100]}
+              tick={{ fill: C.textMuted, fontSize: 10 }}
+            />
+            <Tooltip
+              contentStyle={{
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                color: C.text,
+              }}
+              formatter={(v) => `${v}%`}
+            />
+            <Bar dataKey="percentage" fill={C.primary} radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STUDENTS — TAB 4: INDIVIDUAL STUDENT
+// ═══════════════════════════════════════════════════════════════
+const StudentIndividualTab = () => {
+  const { grades, sections } = useGradesAndSections();
+  const [gradeId, setGradeId] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [studentsList, setStudentsList] = useState([]);
+  const [studentId, setStudentId] = useState("");
+  const [from, setFrom] = useState(daysAgoISO(29));
+  const [to, setTo] = useState(todayISO());
+  const [history, setHistory] = useState({
+    records: [],
+    counts: {},
+    percentage: 0,
+    totalMarked: 0,
+  });
+  const [loading, setLoading] = useState(false);
+
+  const filteredSections = sections.filter((s) => s.grade_id === gradeId);
+
+  useEffect(() => {
+    if (!sectionId) {
+      setStudentsList([]);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await apiRequest(
+          `/students?section_id=${sectionId}&limit=200`
+        );
+        setStudentsList(Array.isArray(res?.data) ? res.data : []);
+      } catch (e) {
+        setStudentsList([]);
+      }
+    })();
+  }, [sectionId]);
+
+  const loadHistory = async () => {
+    if (!studentId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/attendance/students/${studentId}/history?from=${from}&to=${to}`
+      );
+      setHistory(
+        res?.data || { records: [], counts: {}, percentage: 0, totalMarked: 0 }
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadHistory();
+  }, [studentId, from, to]); // eslint-disable-line
+
+  const recordMap = {};
+  history.records.forEach((r) => {
+    recordMap[r.attendance_date?.split("T")[0]] = r.status;
+  });
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <select
+            className="select"
+            style={{ width: 150 }}
+            value={gradeId}
+            onChange={(e) => {
+              setGradeId(e.target.value);
+              setSectionId("");
+              setStudentId("");
+            }}
+          >
+            <option value="">-- Class --</option>
+            {grades.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="select"
+            style={{ width: 120 }}
+            value={sectionId}
+            onChange={(e) => {
+              setSectionId(e.target.value);
+              setStudentId("");
+            }}
+            disabled={!gradeId}
+          >
+            <option value="">-- Section --</option>
+            {filteredSections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="select"
+            style={{ width: 220 }}
+            value={studentId}
+            onChange={(e) => setStudentId(e.target.value)}
+            disabled={!sectionId}
+          >
+            <option value="">-- Select Student --</option>
+            {studentsList.map((s) => (
+              <option key={s.id} value={s.id}>
+                {[s.first_name, s.last_name].filter(Boolean).join(" ")}
+              </option>
+            ))}
+          </select>
+          <input
+            className="input"
+            type="date"
+            style={{ width: 150 }}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+          <span style={{ alignSelf: "center", color: C.textMuted }}>to</span>
+          <input
+            className="input"
+            type="date"
+            style={{ width: 150 }}
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            max={todayISO()}
+          />
+        </div>
+      </div>
+
+      {!studentId ? (
+        <div
+          className="card"
+          style={{ padding: 40, textAlign: "center", color: C.textMuted }}
+        >
+          Select a class, section and student to view their attendance record.
+        </div>
+      ) : loading ? (
+        <div
+          className="card pulse"
+          style={{ padding: 40, textAlign: "center", color: C.primary }}
+        >
+          Loading history…
+        </div>
+      ) : (
+        <>
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 20,
+                flexWrap: "wrap",
+                justifyContent: "space-around",
+              }}
+            >
+              {STATUS_KEYS.map((s) => (
+                <div key={s} style={{ textAlign: "center" }}>
+                  <div
+                    className="syne"
+                    style={{
+                      fontSize: 26,
+                      fontWeight: 800,
+                      color: STATUS_META[s].color,
+                    }}
+                  >
+                    {history.counts[s] || 0}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.textMuted }}>
+                    {STATUS_META[s].label}
+                  </div>
+                </div>
+              ))}
+              <div style={{ textAlign: "center" }}>
+                <div
+                  className="syne"
+                  style={{
+                    fontSize: 26,
+                    fontWeight: 800,
+                    color: history.percentage >= 75 ? C.primary : C.red,
+                  }}
+                >
+                  {history.percentage}%
+                </div>
+                <div style={{ fontSize: 11, color: C.textMuted }}>Overall</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3
+              className="syne"
+              style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+            >
+              Day-by-Day Calendar
+            </h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7,1fr)",
+                gap: 6,
+                maxWidth: 460,
+              }}
+            >
+              {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                <div
+                  key={i}
+                  style={{
+                    textAlign: "center",
+                    fontSize: 11,
+                    color: C.textMuted,
+                    fontWeight: 600,
+                    padding: "4px 0",
+                  }}
+                >
+                  {d}
+                </div>
+              ))}
+              {(() => {
+                const start = new Date(from);
+                const days = [];
+                const startPad = start.getDay();
+                for (let i = 0; i < startPad; i++) days.push(null);
+                const cur = new Date(from);
+                const end = new Date(to);
+                while (cur <= end) {
+                  days.push(cur.toISOString().split("T")[0]);
+                  cur.setDate(cur.getDate() + 1);
+                }
+                return days.map((d, i) => {
+                  const status = d ? recordMap[d] : null;
+                  const meta = status ? STATUS_META[status] : null;
+                  return (
+                    <div
+                      key={i}
+                      title={d || ""}
+                      style={{
+                        aspectRatio: "1",
+                        borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        background: !d
+                          ? "transparent"
+                          : meta
+                          ? `${meta.color}33`
+                          : C.surfaceAlt,
+                        color: !d
+                          ? "transparent"
+                          : meta
+                          ? meta.color
+                          : C.textMuted,
+                        border: `1px solid ${
+                          !d
+                            ? "transparent"
+                            : meta
+                            ? meta.color + "55"
+                            : C.border
+                        }`,
+                      }}
+                    >
+                      {d ? new Date(d).getDate() : ""}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TEACHERS — TAB 1: MARK ATTENDANCE
+// ═══════════════════════════════════════════════════════════════
+const StaffMarkTab = () => {
+  const [date, setDate] = useState(todayISO());
+  const [roster, setRoster] = useState([]);
+  const [counts, setCounts] = useState({ P: 0, A: 0, L: 0, OD: 0 });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const loadRoster = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest(`/attendance/staff/roster?date=${date}`);
+      setRoster(res?.data?.teachers || []);
+      setCounts(res?.data?.counts || { P: 0, A: 0, L: 0, OD: 0 });
+    } catch (e) {
+      console.error(e);
+      setRoster([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadRoster();
+  }, [date]); // eslint-disable-line
+
+  const setStatus = (userId, status) => {
+    setRoster((prev) => {
+      const next = prev.map((r) =>
+        r.user_id === userId ? { ...r, status } : r
+      );
+      const c = { P: 0, A: 0, L: 0, OD: 0 };
+      next.forEach((r) => {
+        c[r.status] = (c[r.status] || 0) + 1;
+      });
+      setCounts(c);
+      return next;
+    });
+  };
+
+  const markAll = (status) => {
+    setRoster((prev) => prev.map((r) => ({ ...r, status })));
+    const c = { P: 0, A: 0, L: 0, OD: 0 };
+    c[status] = roster.length;
+    setCounts(c);
+  };
+
+  const handleSave = async () => {
+    if (!roster.length) return;
+    setSaving(true);
+    try {
+      await apiRequest("/attendance/staff/mark", "POST", {
+        date,
+        entries: roster.map((r) => ({
+          user_id: r.user_id,
+          status: r.status,
+          remarks: r.remarks || null,
+        })),
+      });
+      alert("✅ Staff attendance saved successfully!");
+    } catch (e) {
+      alert("❌ Save failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const total = roster.length || 1;
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "flex-end",
+          }}
+        >
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              DATE
+            </label>
+            <input
+              className="input"
+              type="date"
+              style={{ width: 170 }}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              max={todayISO()}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 16,
+              marginLeft: "auto",
+              flexWrap: "wrap",
+            }}
+          >
+            {STATUS_KEYS.map((s) => (
+              <div key={s} style={{ textAlign: "center" }}>
+                <div
+                  className="syne"
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color: STATUS_META[s].color,
+                  }}
+                >
+                  {counts[s] || 0}
+                </div>
+                <div style={{ fontSize: 10, color: C.textMuted }}>
+                  {STATUS_META[s].label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}
+      >
+        <button className="btn btn-success" onClick={() => markAll("P")}>
+          Mark All Present
+        </button>
+        <button className="btn btn-danger" onClick={() => markAll("A")}>
+          Mark All Absent
+        </button>
+        <button className="btn btn-ghost" onClick={() => markAll("L")}>
+          Mark All Leave
+        </button>
+        <button
+          className="btn btn-primary"
+          style={{ marginLeft: "auto" }}
+          onClick={handleSave}
+          disabled={saving || loading}
+        >
+          {saving ? "Saving…" : "Save Attendance"}
+        </button>
+      </div>
+
+      {roster.length > 0 && (
+        <div
+          className="progress-bar"
+          style={{ marginBottom: 16, display: "flex" }}
+        >
+          {STATUS_KEYS.map((s) => (
+            <div
+              key={s}
+              style={{
+                width: `${((counts[s] || 0) / total) * 100}%`,
+                background: STATUS_META[s].color,
+                height: "100%",
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {loading ? (
+          <div
+            style={{ padding: 40, textAlign: "center", color: C.primary }}
+            className="pulse"
+          >
+            Loading staff list…
+          </div>
+        ) : roster.length === 0 ? (
+          <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+            No teachers found.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Teacher</th>
+                  <th>Department</th>
+                  <th style={{ textAlign: "center" }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roster.map((r) => (
+                  <tr key={r.user_id}>
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: "50%",
+                            background:
+                              r.gender === "Female"
+                                ? `${C.purple}33`
+                                : `${C.blue}33`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: r.gender === "Female" ? C.purple : C.blue,
+                          }}
+                        >
+                          {(r.full_name?.[0] || "?").toUpperCase()}
+                        </div>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>
+                          {r.full_name}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ fontSize: 12, color: C.textMuted }}>
+                      {r.department || "—"}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      <StatusPicker
+                        value={r.status}
+                        onChange={(s) => setStatus(r.user_id, s)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TEACHERS — TAB 2: STAFF ANALYSIS
+// ═══════════════════════════════════════════════════════════════
+const StaffAnalysisTab = () => {
+  const [from, setFrom] = useState(daysAgoISO(29));
+  const [to, setTo] = useState(todayISO());
+  const [data, setData] = useState({ teachers: [], trend: [] });
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/attendance/staff/analysis?from=${from}&to=${to}`
+      );
+      setData(res?.data || { teachers: [], trend: [] });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    load();
+  }, [from, to]); // eslint-disable-line
+
+  const defaulters = data.teachers.filter((t) => t.percentage < 85);
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <input
+            className="input"
+            type="date"
+            style={{ width: 150 }}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+          <span style={{ alignSelf: "center", color: C.textMuted }}>to</span>
+          <input
+            className="input"
+            type="date"
+            style={{ width: 150 }}
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            max={todayISO()}
+          />
+        </div>
+      </div>
+
+      <div
+        className="grid-2"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr",
+          gap: 20,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+          >
+            Staff Attendance Trend
+          </h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={data.trend}>
+              <defs>
+                <linearGradient id="staffTrendGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={C.blue} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.blue} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis dataKey="day" tick={{ fill: C.textMuted, fontSize: 11 }} />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fill: C.textMuted, fontSize: 10 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  color: C.text,
+                }}
+                formatter={(v) => `${v}%`}
+              />
+              <Area
+                type="monotone"
+                dataKey="percentage"
+                stroke={C.blue}
+                fill="url(#staffTrendGrad)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card">
+          <h3
+            className="syne"
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              marginBottom: 14,
+              color: C.red,
+            }}
+          >
+            ⚠ Frequently Absent (Below 85%)
+          </h3>
+          {defaulters.length === 0 ? (
+            <div
+              style={{
+                color: C.textMuted,
+                fontSize: 13,
+                padding: "20px 0",
+                textAlign: "center",
+              }}
+            >
+              All staff regular ✓
+            </div>
+          ) : (
+            <div style={{ maxHeight: 200, overflowY: "auto" }}>
+              {defaulters.map((t) => (
+                <div
+                  key={t.user_id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "8px 0",
+                    borderBottom: `1px solid ${C.border}22`,
+                    fontSize: 13,
+                  }}
+                >
+                  <span>{t.full_name}</span>
+                  <span style={{ color: C.red, fontWeight: 700 }}>
+                    {t.percentage}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3
+          className="syne"
+          style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+        >
+          Teacher-wise Breakdown
+        </h3>
+        {loading ? (
+          <div
+            className="pulse"
+            style={{ textAlign: "center", color: C.primary, padding: 20 }}
+          >
+            Loading…
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Teacher</th>
+                  <th>Department</th>
+                  <th>P</th>
+                  <th>A</th>
+                  <th>L</th>
+                  <th>OD</th>
+                  <th>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.teachers.map((t) => (
+                  <tr key={t.user_id}>
+                    <td style={{ fontWeight: 600 }}>{t.full_name}</td>
+                    <td style={{ fontSize: 12, color: C.textMuted }}>
+                      {t.department || "—"}
+                    </td>
+                    <td style={{ color: C.green }}>{t.present_days}</td>
+                    <td style={{ color: C.red }}>{t.absent_days}</td>
+                    <td style={{ color: C.yellow }}>{t.leave_days}</td>
+                    <td style={{ color: C.blue }}>{t.od_days}</td>
+                    <td>
+                      <span
+                        className="syne"
+                        style={{
+                          fontWeight: 700,
+                          color:
+                            t.percentage >= 90
+                              ? C.green
+                              : t.percentage >= 75
+                              ? C.yellow
+                              : C.red,
+                        }}
+                      >
+                        {t.percentage}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TEACHERS — TAB 3: INDIVIDUAL TEACHER
+// ═══════════════════════════════════════════════════════════════
+const StaffIndividualTab = () => {
+  const [teachersList, setTeachersList] = useState([]);
+  const [userId, setUserId] = useState("");
+  const [from, setFrom] = useState(daysAgoISO(29));
+  const [to, setTo] = useState(todayISO());
+  const [history, setHistory] = useState({
+    records: [],
+    counts: {},
+    percentage: 0,
+    totalMarked: 0,
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest("/teachers");
+        setTeachersList(Array.isArray(res?.data) ? res.data : []);
+      } catch (e) {
+        setTeachersList([]);
+      }
+    })();
+  }, []);
+
+  const loadHistory = async () => {
+    if (!userId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/attendance/staff/${userId}/history?from=${from}&to=${to}`
+      );
+      setHistory(
+        res?.data || { records: [], counts: {}, percentage: 0, totalMarked: 0 }
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadHistory();
+  }, [userId, from, to]); // eslint-disable-line
+
+  const recordMap = {};
+  history.records.forEach((r) => {
+    recordMap[r.attendance_date?.split("T")[0]] = r.status;
+  });
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <select
+            className="select"
+            style={{ width: 220 }}
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+          >
+            <option value="">-- Select Teacher --</option>
+            {teachersList.map((t) => (
+              <option key={t.user_id} value={t.user_id}>
+                {t.full_name}
+              </option>
+            ))}
+          </select>
+          <input
+            className="input"
+            type="date"
+            style={{ width: 150 }}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+          <span style={{ alignSelf: "center", color: C.textMuted }}>to</span>
+          <input
+            className="input"
+            type="date"
+            style={{ width: 150 }}
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            max={todayISO()}
+          />
+        </div>
+      </div>
+
+      {!userId ? (
+        <div
+          className="card"
+          style={{ padding: 40, textAlign: "center", color: C.textMuted }}
+        >
+          Select a teacher to view their attendance record.
+        </div>
+      ) : loading ? (
+        <div
+          className="card pulse"
+          style={{ padding: 40, textAlign: "center", color: C.primary }}
+        >
+          Loading history…
+        </div>
+      ) : (
+        <>
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 20,
+                flexWrap: "wrap",
+                justifyContent: "space-around",
+              }}
+            >
+              {STATUS_KEYS.map((s) => (
+                <div key={s} style={{ textAlign: "center" }}>
+                  <div
+                    className="syne"
+                    style={{
+                      fontSize: 26,
+                      fontWeight: 800,
+                      color: STATUS_META[s].color,
+                    }}
+                  >
+                    {history.counts[s] || 0}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.textMuted }}>
+                    {STATUS_META[s].label}
+                  </div>
+                </div>
+              ))}
+              <div style={{ textAlign: "center" }}>
+                <div
+                  className="syne"
+                  style={{
+                    fontSize: 26,
+                    fontWeight: 800,
+                    color: history.percentage >= 85 ? C.primary : C.red,
+                  }}
+                >
+                  {history.percentage}%
+                </div>
+                <div style={{ fontSize: 11, color: C.textMuted }}>Overall</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3
+              className="syne"
+              style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+            >
+              Day-by-Day Calendar
+            </h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7,1fr)",
+                gap: 6,
+                maxWidth: 460,
+              }}
+            >
+              {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                <div
+                  key={i}
+                  style={{
+                    textAlign: "center",
+                    fontSize: 11,
+                    color: C.textMuted,
+                    fontWeight: 600,
+                    padding: "4px 0",
+                  }}
+                >
+                  {d}
+                </div>
+              ))}
+              {(() => {
+                const start = new Date(from);
+                const days = [];
+                const startPad = start.getDay();
+                for (let i = 0; i < startPad; i++) days.push(null);
+                const cur = new Date(from);
+                const end = new Date(to);
+                while (cur <= end) {
+                  days.push(cur.toISOString().split("T")[0]);
+                  cur.setDate(cur.getDate() + 1);
+                }
+                return days.map((d, i) => {
+                  const status = d ? recordMap[d] : null;
+                  const meta = status ? STATUS_META[status] : null;
+                  return (
+                    <div
+                      key={i}
+                      title={d || ""}
+                      style={{
+                        aspectRatio: "1",
+                        borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        background: !d
+                          ? "transparent"
+                          : meta
+                          ? `${meta.color}33`
+                          : C.surfaceAlt,
+                        color: !d
+                          ? "transparent"
+                          : meta
+                          ? meta.color
+                          : C.textMuted,
+                        border: `1px solid ${
+                          !d
+                            ? "transparent"
+                            : meta
+                            ? meta.color + "55"
+                            : C.border
+                        }`,
+                      }}
+                    >
+                      {d ? new Date(d).getDate() : ""}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MODULE: FEE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+const rupees = (paise) => `₹${((paise || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+const toPaise = (rupeeStr) => Math.round((parseFloat(rupeeStr) || 0) * 100);
+
+const PAYMENT_METHODS = ["Cash", "UPI", "Card", "Bank Transfer", "Cheque"];
+const RAZORPAY_METHODS = ["UPI", "Card"];
+
+const loadRazorpayScript = () => new Promise((resolve) => {
+  if (window.Razorpay) return resolve(true);
+  const script = document.createElement("script");
+  script.src = "https://checkout.razorpay.com/v1/checkout.js";
+  script.onload = () => resolve(true);
+  script.onerror = () => resolve(false);
+  document.body.appendChild(script);
+});
+
+
+
+// ── COLLECT PAYMENT MODAL (ITEMIZED & DISCOUNT SUPPORT) ──
+const CollectPaymentModal = ({ account, onClose, onSuccess }) => {
+  const [method, setMethod] = useState("Cash");
+  const [ref, setRef] = useState("");
+  const [bank, setBank] = useState("");
+  const [date, setDate] = useState(todayISO());
+  const [remarks, setRemarks] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [rzpLoading, setRzpLoading] = useState(false);
+
+  // Naye Itemized States
+  const [pendingItems, setPendingItems] = useState([]);
+  const [inputs, setInputs] = useState({}); // { category_id: { pay: 0, discount: 0 } }
+  const [loadingItems, setLoadingItems] = useState(false);
+
+  useEffect(() => {
+    setMethod("Cash"); setRef(""); setBank(""); setDate(todayISO()); setRemarks(""); setError("");
+    setInputs({}); setPendingItems([]);
+    
+    if (account) {
+      // Load student's category-wise pending dues from backend
+      setLoadingItems(true);
+      apiRequest(`/fees/accounts/${account.student_id}`)
+        .then(res => {
+          const items = res?.data?.pending_items || [];
+          setPendingItems(items);
+          
+          // Initialize inputs with zero
+          const initInputs = {};
+          items.forEach(it => {
+            initInputs[it.fee_category_id] = { pay: "", discount: "" };
+          });
+          setInputs(initInputs);
+        })
+        .catch(e => setError("Failed to load fee breakdown: " + e.message))
+        .finally(() => setLoadingItems(false));
+    }
+  }, [account]);
+
+  const isOnlineMethod = RAZORPAY_METHODS.includes(method);
+
+  // Auto Calculate Grand Totals
+  let totalPayingPaise = 0;
+  let totalDiscountPaise = 0;
+  Object.values(inputs).forEach(val => {
+    totalPayingPaise += toPaise(val.pay);
+    totalDiscountPaise += toPaise(val.discount);
+  });
+  const grandTotalAmount = (totalPayingPaise / 100).toFixed(0);
+
+  // UI Handlers for Item Inputs
+  const updateInput = (catId, field, val) => {
+    setInputs(prev => ({
+      ...prev,
+      [catId]: { ...prev[catId], [field]: val }
+    }));
+  };
+
+  const handleManualSubmit = async () => {
+    if (totalPayingPaise <= 0 && totalDiscountPaise <= 0) { 
+      setError("Enter amount or discount for at least one category"); 
+      return; 
+    }
+    setSaving(true); setError("");
+    
+    // Build Breakdown Array for Backend
+    const breakdown = Object.entries(inputs)
+      .filter(([cid, vals]) => toPaise(vals.pay) > 0 || toPaise(vals.discount) > 0)
+      .map(([cid, vals]) => ({
+        category_id: cid,
+        pay_amount: toPaise(vals.pay),
+        discount_amount: toPaise(vals.discount)
+      }));
+
+    try {
+      await apiRequest("/fees/payments", "POST", {
+        student_id: account.student_id,
+        amount_paise: totalPayingPaise,
+        payment_method: method,
+        transaction_ref: ref || null,
+        bank_name: bank || null,
+        payment_date: date,
+        remarks: remarks || null,
+        breakdown: breakdown // 🔴 Naya array backend ke liye
+      });
+      onSuccess();
+    } catch (e) {
+      setError(e.message || "Payment failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRazorpayPay = async () => {
+    if (totalPayingPaise <= 0) { setError("Enter a valid paying amount to proceed online"); return; }
+    setError(""); setRzpLoading(true);
+
+    const breakdown = Object.entries(inputs)
+      .filter(([cid, vals]) => toPaise(vals.pay) > 0 || toPaise(vals.discount) > 0)
+      .map(([cid, vals]) => ({
+        category_id: cid,
+        pay_amount: toPaise(vals.pay),
+        discount_amount: toPaise(vals.discount)
+      }));
+
+    try {
+      const scriptOk = await loadRazorpayScript();
+      if (!scriptOk) throw new Error("Failed to load payment gateway. Check your internet connection.");
+
+      const orderRes = await apiRequest("/payments/razorpay/create-order", "POST", {
+        student_id: account.student_id,
+        amount_paise: totalPayingPaise,
+      });
+      const order = orderRes?.data;
+      if (!order?.order_id) throw new Error("Could not create payment order");
+
+      const rzp = new window.Razorpay({
+        key: order.key_id, 
+        amount: order.amount,
+        currency: order.currency,
+        name: account.school_name || "School Fee Payment",
+        description: `Fee collection — ${account.student_name}`,
+        order_id: order.order_id,
+        prefill: { name: account.student_name },
+        theme: { color: C.primary },
+        handler: async (response) => {
+          setSaving(true);
+          try {
+            await apiRequest("/payments/razorpay/verify", "POST", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              student_id: account.student_id,
+              amount_paise: totalPayingPaise,
+              remarks: remarks || null,
+              breakdown: breakdown // 🔴 Breakdown pass to verify API
+            });
+            onSuccess();
+          } catch (e) {
+            setError("Payment captured but verification failed: " + e.message);
+          } finally {
+            setSaving(false);
+          }
+        },
+        modal: { ondismiss: () => setRzpLoading(false) },
+      });
+      rzp.on("payment.failed", (resp) => {
+        setError(`Payment failed: ${resp.error.description || "Try again"}`);
+        setRzpLoading(false);
+      });
+      rzp.open();
+    } catch (e) {
+      setError(e.message || "Could not start payment");
+    } finally {
+      setRzpLoading(false);
+    }
+  };
+
+  return (
+    <Modal open={!!account} onClose={onClose} title="Collect Fee Payment" width={600}>
+      {account && (
+        <div>
+          {/* Header Info */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
+            background: `linear-gradient(135deg,${C.surfaceAlt},${C.surface})`,
+            borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 16,
+          }}>
+            {account.photo_url ? (
+              <img src={account.photo_url} alt="" style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: `${C.primary}22`, color: C.primary, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 18 }}>
+                {(account.student_name?.[0] || "?").toUpperCase()}
+              </div>
+            )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="syne" style={{ fontWeight: 700, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{account.student_name}</div>
+              <div style={{ fontSize: 12, color: C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{account.class_name} {account.section_name} · Adm# {account.admission_no}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 10, color: C.textMuted, textTransform: "uppercase", fontWeight: 700 }}>Total Due</div>
+              <div className="syne" style={{ fontWeight: 800, fontSize: 18, color: C.red }}>{rupees(account.pending_paise)}</div>
+            </div>
+          </div>
+
+          {/* 🔴 NAYA: Itemized Fee Breakdown Table */}
+          <div style={{ marginBottom: 20, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 14px" }}>
+            <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 10 }}>Pending Items Breakdown</div>
+            
+            {loadingItems ? (
+              <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: "20px 0", fontSize: 12 }}>Fetching dues...</div>
+            ) : pendingItems.length === 0 ? (
+              <div style={{ textAlign: "center", color: C.green, padding: "20px 0", fontSize: 13, fontWeight: 600 }}>All dues cleared! 🎉</div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+              <table className="table" style={{ fontSize: 12, minWidth: 480 }}>
+                <thead>
+                  <tr>
+                    <th>Fee Head</th>
+                    <th style={{ textAlign: "right" }}>Due Amount</th>
+                    <th style={{ width: 100 }}>Discount (₹)</th>
+                    <th style={{ width: 110 }}>Paying Now (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingItems.map(item => {
+                    // Smart Validation: Cannot exceed pending
+                    const pendingRupees = item.pending_paise / 100;
+                    const inp = inputs[item.fee_category_id] || { pay: "", discount: "" };
+                    const isExceeding = (parseFloat(inp.pay || 0) + parseFloat(inp.discount || 0)) > pendingRupees;
+                    
+                    return (
+                      <tr key={item.fee_category_id}>
+                        <td style={{ fontWeight: 600 }}>{item.category_name}</td>
+                        <td style={{ textAlign: "right", color: C.red, fontWeight: 600 }}>{rupees(item.pending_paise)}</td>
+                        <td>
+                          <input className="input" type="number" min={0} 
+                            style={{ padding: "4px 8px", fontSize: 12, borderColor: isExceeding ? C.red : C.border }} 
+                            placeholder="0" value={inp.discount} onChange={e => updateInput(item.fee_category_id, 'discount', e.target.value)} 
+                          />
+                        </td>
+                        <td>
+                          <input className="input" type="number" min={0} 
+                            style={{ padding: "4px 8px", fontSize: 12, fontWeight: 700, color: C.green, borderColor: isExceeding ? C.red : C.border }} 
+                            placeholder="0" value={inp.pay} onChange={e => updateInput(item.fee_category_id, 'pay', e.target.value)} 
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* Grand Total Row */}
+                  <tr>
+                    <td colSpan={3} style={{ textAlign: "right", fontWeight: 700, fontSize: 13 }}>Total Payable:</td>
+                    <td style={{ fontSize: 16, fontWeight: 800, color: C.primary, background: `${C.primary}11`, borderRadius: 8, textAlign: "center" }}>₹{grandTotalAmount}</td>
+                  </tr>
+                  </tbody>
+              </table>
+              </div>
+            )}
+          </div>
+
+          {/* Payment Method Selector */}
+          <FormRow label="Payment Method">
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {PAYMENT_METHODS.map((m) => (
+                <button key={m} onClick={() => setMethod(m)} disabled={rzpLoading} style={{
+                  padding: "7px 14px", borderRadius: 8, cursor: "pointer", fontSize: 12.5, fontWeight: 700,
+                  border: `1.5px solid ${method === m ? C.primary : C.border}`,
+                  background: method === m ? `${C.primary}22` : C.surfaceAlt,
+                  color: method === m ? C.primary : C.textMuted,
+                }}>
+                  {RAZORPAY_METHODS.includes(m) && "⚡ "}{m}
+                </button>
+              ))}
+            </div>
+          </FormRow>
+
+          {isOnlineMethod ? (
+            <div style={{
+              padding: 16, background: `${C.blue}11`, border: `1px solid ${C.blue}33`, borderRadius: 12, marginBottom: 16,
+              display: "flex", alignItems: "center", gap: 12,
+            }}>
+              <div style={{ fontSize: 28 }}>🔒</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>Secure Razorpay Checkout</div>
+                <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 2 }}>Payment gateway opens here. Grand total ₹{grandTotalAmount} will be processed.</div>
+              </div>
+            </div>
+          ) : (
+            <FormGrid cols={2}>
+              <FormRow label="Payment Date">
+                <input className="input" type="date" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} />
+              </FormRow>
+              {method !== "Cash" && (
+                <FormRow label="Bank Name">
+                  <input className="input" value={bank} onChange={(e) => setBank(e.target.value)} placeholder="Optional" />
+                </FormRow>
+              )}
+            </FormGrid>
+          )}
+
+          {!isOnlineMethod && method !== "Cash" && (
+            <FormRow label="Transaction Ref / Cheque No.">
+              <input className="input" value={ref} onChange={(e) => setRef(e.target.value)} placeholder="Optional" />
+            </FormRow>
+          )}
+
+          <FormRow label="Remarks">
+            <input className="input" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional" disabled={rzpLoading} />
+          </FormRow>
+
+          {error && (
+            <div style={{ padding: "10px 14px", background: `${C.red}15`, border: `1px solid ${C.red}33`, borderRadius: 8, color: C.red, fontSize: 13, marginBottom: 12 }}>
+              ⚠ {error}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", borderTop: `1px solid ${C.border}33`, paddingTop: 16 }}>
+            <button className="btn btn-ghost" onClick={onClose} disabled={saving || rzpLoading}>Cancel</button>
+            {isOnlineMethod ? (
+              <button className="btn btn-primary" onClick={handleRazorpayPay} disabled={saving || rzpLoading || grandTotalAmount <= 0} style={{ minWidth: 180, opacity: (saving || rzpLoading || grandTotalAmount <= 0) ? 0.7 : 1 }}>
+                {rzpLoading || saving ? "Processing…" : `🔒 Pay ₹${grandTotalAmount} Securely`}
+              </button>
+            ) : (
+              <button className="btn btn-primary" onClick={handleManualSubmit} disabled={saving || (totalPayingPaise <= 0 && totalDiscountPaise <= 0)} style={{ minWidth: 160, opacity: (saving || (totalPayingPaise <= 0 && totalDiscountPaise <= 0)) ? 0.7 : 1 }}>
+                {saving ? "Processing…" : `Confirm Collection`}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+};
+
+// ── PDF VIEWER MODAL ──
+// ── IN-APP PDF VIEWER MODAL (dynamic page-size aware, no external tab) ──
+const PAGE_SIZE_RATIOS = {
+  A4: { w: 595, h: 842 },
+  A5: { w: 420, h: 595 },
+  Legal: { w: 612, h: 1008 },
+  Letter: { w: 612, h: 792 },
+};
+
+const PdfViewerModal = ({ url, onClose, title = "Document Viewer", pageSize = "A4" }) => {
+  const [downloading, setDownloading] = useState(false);
+
+  const ratio = PAGE_SIZE_RATIOS[pageSize] || PAGE_SIZE_RATIOS.A4;
+  const maxViewportH = typeof window !== "undefined" ? window.innerHeight * 0.75 : 700;
+  const aspectW = ratio.w / ratio.h;
+  const viewerHeight = Math.min(maxViewportH, 780);
+  const viewerWidth = viewerHeight * aspectW;
+
+  const handleDownload = async () => {
+    if (!url) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = url.split("/").pop() || "document.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+      window.open(url, "_blank"); // fallback only if fetch/CORS fails
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <Modal open={!!url} onClose={onClose} title={title} width={Math.min(viewerWidth + 40, 900)}>
+      <div style={{
+        width: "100%", height: viewerHeight, background: C.surfaceAlt,
+        borderRadius: 10, overflow: "hidden", border: `1px solid ${C.border}`,
+        display: "flex", justifyContent: "center", alignItems: "center",
+      }}>
+        {url && (
+          <iframe
+            src={`${url}#toolbar=0&navpanes=0`}
+            title={title}
+            style={{ width: "100%", height: "100%", border: "none" }}
+          />
+        )}
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
+        <button className="btn btn-ghost" onClick={onClose}>Close</button>
+        <button className="btn btn-primary" onClick={handleDownload} disabled={downloading} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon name="download" size={14} />
+          {downloading ? "Downloading…" : "Download PDF"}
+        </button>
+      </div>
+    </Modal>
+  );
+};
+    
+// ── STUDENT PASSBOOK MODAL ──
+const StudentPassbookModal = ({ studentId, onClose, onVoided }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [voidTarget, setVoidTarget] = useState(null);
+  const [voidReason, setVoidReason] = useState("");
+  const [voiding, setVoiding] = useState(false);
+
+  const load = async () => {
+    if (!studentId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(`/fees/accounts/${studentId}`);
+      setData(res?.data || null);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, [studentId]); // eslint-disable-line
+
+  const handleVoid = async () => {
+    if (!voidReason.trim()) return;
+    setVoiding(true);
+    try {
+      await apiRequest(`/fees/payments/${voidTarget.id}`, "DELETE", { void_reason: voidReason });
+      setVoidTarget(null); setVoidReason("");
+      await load();
+      onVoided?.();
+    } catch (e) {
+      alert("Void failed: " + e.message);
+    } finally { setVoiding(false); }
+  };
+
+  return (
+    <Modal open={!!studentId} onClose={onClose} title="Student Fee Passbook" width={680}>
+      {loading ? (
+        <div className="pulse" style={{ padding: 40, textAlign: "center", color: C.primary }}>Loading passbook…</div>
+      ) : !data ? (
+        <div style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No records found.</div>
+      ) : (
+        <div>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 16, padding: 18, marginBottom: 18,
+            borderRadius: 16, background: `linear-gradient(135deg,${C.surfaceAlt},${C.surface})`, border: `1px solid ${C.border}`,
+          }}>
+             <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="syne" style={{ fontSize: 17, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{data.account.student_name}</div>
+              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{data.account.class_name} {data.account.section_name} · Adm# {data.account.admission_no}</div>
+            </div>
+            <div style={{ display: "flex", gap: 20 }}>
+              {[
+                ["Total", data.account.total_fee_paise, C.text],
+                ["Paid", data.account.paid_paise, C.green],
+                ["Due", data.account.pending_paise, C.red],
+              ].map(([l, v, c]) => (
+                <div key={l} style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 10, color: C.textMuted, textTransform: "uppercase", fontWeight: 700 }}>{l}</div>
+                  <div className="syne" style={{ fontWeight: 800, fontSize: 16, color: c }}>{rupees(v)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <h4 className="syne" style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: C.primary }}>Invoices</h4>
+          {data.invoices.length === 0 ? (
+            <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 18 }}>No invoices generated yet.</div>
+          ) : (
+            <div style={{ marginBottom: 20 }}>
+              {data.invoices.map((inv) => (
+                <div key={inv.id} style={{ background: C.surfaceAlt, borderRadius: 10, padding: "10px 14px", marginBottom: 8, border: `1px solid ${C.border}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: inv.items?.length ? 8 : 0 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{inv.title}</div>
+                      <div style={{ fontSize: 10.5, color: C.textMuted }}>{inv.invoice_no} · Due {new Date(inv.due_date).toLocaleDateString("en-IN")}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span className={`badge ${inv.status === "paid" ? "badge-green" : inv.status === "partial" ? "badge-yellow" : "badge-red"}`}>{inv.status}</span>
+                      <div className="syne" style={{ fontWeight: 700, fontSize: 13, marginTop: 3 }}>{rupees(inv.total_paise)}</div>
+                    </div>
+                  </div>
+                  {inv.items?.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                      {inv.items.map((it, i) => (
+                        <span key={i} style={{ fontSize: 10.5, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "2px 8px" }}>
+                          {it.category_name}: {rupees(it.amount_paise)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <h4 className="syne" style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: C.green }}>Payment History</h4>
+          {data.payments.length === 0 ? (
+            <div style={{ fontSize: 12, color: C.textMuted }}>No payments recorded yet.</div>
+          ) : (
+            <table className="table">
+              <thead><tr><th>Receipt</th><th>Date</th><th>Amount</th><th>Method</th><th>Collected By</th><th></th></tr></thead>
+              <tbody>
+                {data.payments.map((p) => (
+                  <tr key={p.id} style={{ opacity: p.is_void ? 0.45 : 1 }}>
+                    <td style={{ fontFamily: "monospace", fontSize: 11 }}>{p.receipt_no}</td>
+                    <td style={{ fontSize: 12 }}>{new Date(p.payment_date).toLocaleDateString("en-IN")}</td>
+                    <td className="syne" style={{ fontWeight: 700 }}>{rupees(p.amount_paise)}</td>
+                    <td style={{ fontSize: 12 }}>{p.payment_method}</td>
+                    <td style={{ fontSize: 11, color: C.textMuted }}>{p.collected_by_name || "—"}</td>
+                    <td>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {!p.is_void && (
+                          <button className="btn btn-ghost" style={{ padding: "3px 8px", fontSize: 10 }} onClick={async () => {
+                            try {
+                              const res = await apiRequest(`/fees/payments/${p.id}/receipt`);
+                              if (res?.data?.receipt_url) window.open(res.data.receipt_url, "_blank");
+                            } catch (e) { alert("Failed: " + e.message); }
+                          }}>
+                            <Icon name="download" size={11} /> Receipt
+                          </button>
+                        )}
+                        {p.is_void ? (
+                          <span className="badge badge-red" style={{ fontSize: 10 }}>Voided</span>
+                        ) : (
+                          <button className="btn btn-danger" style={{ padding: "3px 8px", fontSize: 10 }} onClick={() => setVoidTarget(p)}>Void</button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          <Modal open={!!voidTarget} onClose={() => setVoidTarget(null)} title="Void Payment Receipt" width={420}>
+            {voidTarget && (
+              <div>
+                <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 14 }}>
+                  Voiding receipt <b style={{ color: C.text }}>{voidTarget.receipt_no}</b> of {rupees(voidTarget.amount_paise)} will restore this amount to the student's pending balance.
+                </div>
+                <FormRow label="Reason for Voiding *">
+                  <textarea className="input" rows={3} value={voidReason} onChange={(e) => setVoidReason(e.target.value)} style={{ resize: "vertical" }} />
+                </FormRow>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <button className="btn btn-ghost" onClick={() => setVoidTarget(null)} disabled={voiding}>Cancel</button>
+                  <button className="btn btn-danger" onClick={handleVoid} disabled={voiding || !voidReason.trim()}>{voiding ? "Voiding…" : "Confirm Void"}</button>
+                </div>
+              </div>
+            )}
+          </Modal>
+        </div>
+      )}
+    </Modal>
+  );
+};
+
+// ── STRUCTURES TAB ──
+const FeeStructuresTab = () => {
+  const [grades, setGrades] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const { academicYears: academicYrs, currentYear } = useSession();
+  const [gradeId, setGradeId] = useState("");
+  const [rows, setRows] = useState({}); // category_id -> {amount, frequency, due_day_of_month, late_fee, grace_days}
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [newCat, setNewCat] = useState({ name: "", is_recurring: true });
+  const [genModal, setGenModal] = useState(false);
+  const [genForm, setGenForm] = useState({ scope: "all", title: "", due_date: "", month_index: "" });
+  const [generating, setGenerating] = useState(false);
+
+  
+  const selectedGrade = grades.find((g) => g.id === gradeId);
+
+  const loadBase = async () => {
+    setLoading(true);
+    try {
+      const [gRes, cRes] = await Promise.all([
+        apiRequest("/setup/grades"),
+        apiRequest("/fees/categories"),
+      ]);
+      setGrades(gRes?.data || []);
+      setCategories(cRes?.data || []);
+      if (gRes?.data?.length) setGradeId((p) => p || gRes.data[0].id);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+  useEffect(() => { loadBase(); }, []);
+
+  const loadStructures = async () => {
+    if (!currentYear) return;
+    try {
+      const res = await apiRequest(`/fees/structures?academic_year_id=${currentYear.id}`);
+      const list = res?.data || [];
+      const byGrade = {};
+      list.forEach((s) => {
+        if (!byGrade[s.grade_id]) byGrade[s.grade_id] = {};
+        byGrade[s.grade_id][s.fee_category_id] = s;
+      });
+      window.__feeStructAll = byGrade; // cache across grade switches
+      applyGradeRows(gradeId, byGrade);
+    } catch (e) { console.error(e); }
+  };
+  useEffect(() => { if (currentYear) loadStructures(); }, [currentYear?.id]); // eslint-disable-line
+
+  const applyGradeRows = (gid, byGradeOverride) => {
+    const byGrade = byGradeOverride || window.__feeStructAll || {};
+    const existing = byGrade[gid] || {};
+    const next = {};
+    categories.forEach((c) => {
+      const ex = existing[c.id];
+      next[c.id] = {
+        amount: ex ? (ex.amount_paise / 100).toFixed(0) : "",
+        frequency: ex?.frequency || "monthly",
+        due_day_of_month: ex?.due_day_of_month || 10,
+        late_fee: ex ? (ex.late_fee_paise / 100).toFixed(0) : "0",
+        grace_days: ex?.grace_days || 0,
+      };
+    });
+    setRows(next);
+  };
+  useEffect(() => { if (gradeId && categories.length) applyGradeRows(gradeId); }, [gradeId, categories.length]); // eslint-disable-line
+
+  const updateRow = (catId, field, value) => setRows((prev) => ({ ...prev, [catId]: { ...prev[catId], [field]: value } }));
+
+  const handleAddCategory = async () => {
+    if (!newCat.name.trim()) return;
+    try {
+      await apiRequest("/fees/categories", "POST", newCat);
+      setNewCat({ name: "", is_recurring: true });
+      setShowAddCat(false);
+      const cRes = await apiRequest("/fees/categories");
+      setCategories(cRes?.data || []);
+    } catch (e) { alert("Failed: " + e.message); }
+  };
+
+  const buildEntries = (gid) => categories
+    .filter((c) => rows[c.id]?.amount && parseFloat(rows[c.id].amount) > 0)
+    .map((c) => ({
+      grade_id: gid,
+      fee_category_id: c.id,
+      amount_paise: toPaise(rows[c.id].amount),
+      frequency: rows[c.id].frequency,
+      due_day_of_month: Number(rows[c.id].due_day_of_month) || 10,
+      late_fee_paise: toPaise(rows[c.id].late_fee || 0),
+      grace_days: Number(rows[c.id].grace_days) || 0,
+    }));
+
+  const handleSave = async (copyToAll = false) => {
+    if (!currentYear) return alert("No active academic year found.");
+    setSaving(true);
+    try {
+      let entries = buildEntries(gradeId);
+      if (copyToAll) {
+        entries = grades.flatMap((g) => buildEntries(g.id).map((e) => ({ ...e, grade_id: g.id })));
+      }
+      if (!entries.length) { alert("Enter at least one amount before saving."); setSaving(false); return; }
+      await apiRequest("/fees/structures/bulk", "PUT", { academic_year_id: currentYear.id, entries });
+      alert(copyToAll ? "✅ Applied to all classes!" : `✅ Fee structure saved for ${selectedGrade?.name}`);
+      await loadStructures();
+    } catch (e) { alert("Save failed: " + e.message); } finally { setSaving(false); }
+  };
+
+  const handleGenerate = async () => {
+    if (!genForm.title || !genForm.due_date) return alert("Title and due date are required.");
+    setGenerating(true);
+    try {
+      const res = await apiRequest("/fees/generate-invoices", "POST", {
+        grade_id: genForm.scope === "grade" ? gradeId : null,
+        academic_year_id: currentYear.id,
+        month_index: genForm.month_index || null,
+        title: genForm.title,
+        due_date: genForm.due_date,
+      });
+      alert(`✅ ${res?.data?.generated || 0} invoices generated successfully!`);
+      setGenModal(false);
+      setGenForm({ scope: "all", title: "", due_date: "", month_index: "" });
+    } catch (e) { alert("Failed: " + e.message); } finally { setGenerating(false); }
+  };
+
+  if (loading) return <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 40 }}>Loading fee structures…</div>;
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", flex: 1 }}>
+          {grades.map((g) => (
+            <button key={g.id} onClick={() => setGradeId(g.id)} style={{
+              padding: "8px 16px", borderRadius: 10, cursor: "pointer",
+              border: `1.5px solid ${gradeId === g.id ? C.primary : C.border}`,
+              background: gradeId === g.id ? `${C.primary}22` : C.surfaceAlt,
+              color: gradeId === g.id ? C.primary : C.text, fontWeight: 700, fontSize: 12.5,
+            }}>
+              {g.name}
+            </button>
+          ))}
+        </div>
+        <button className="btn btn-primary" onClick={() => setGenModal(true)} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon name="fee" size={14} /> Generate Invoices
+        </button>
+      </div>
+
+      <div className="card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h3 className="syne" style={{ fontSize: 15, fontWeight: 700 }}>{selectedGrade?.name} — Fee Breakdown</h3>
+          <button className="btn btn-ghost" onClick={() => setShowAddCat(true)} style={{ fontSize: 12 }}><Icon name="plus" size={12} /> New Category</button>
+        </div>
+
+        {categories.length === 0 ? (
+          <div style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No fee categories yet — add Tuition, Transport, Exam Fee, etc.</div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead><tr><th>Category</th><th>Amount (₹)</th><th>Frequency</th><th>Due Day</th><th>Late Fee (₹)</th><th>Grace Days</th></tr></thead>
+              <tbody>
+                {categories.map((c) => (
+                  <tr key={c.id}>
+                    <td style={{ fontWeight: 700 }}>{c.name}</td>
+                    <td><input className="input" type="number" style={{ width: 110 }} value={rows[c.id]?.amount || ""} onChange={(e) => updateRow(c.id, "amount", e.target.value)} placeholder="0" /></td>
+                    <td>
+                      <select className="select" style={{ width: 110 }} value={rows[c.id]?.frequency || "monthly"} onChange={(e) => updateRow(c.id, "frequency", e.target.value)}>
+                        <option value="monthly">Monthly</option><option value="quarterly">Quarterly</option>
+                        <option value="half_yearly">Half-Yearly</option><option value="annual">Annual</option><option value="one_time">One-Time</option>
+                      </select>
+                    </td>
+                    <td><input className="input" type="number" style={{ width: 70 }} min={1} max={28} value={rows[c.id]?.due_day_of_month || 10} onChange={(e) => updateRow(c.id, "due_day_of_month", e.target.value)} /></td>
+                    <td><input className="input" type="number" style={{ width: 90 }} value={rows[c.id]?.late_fee || "0"} onChange={(e) => updateRow(c.id, "late_fee", e.target.value)} /></td>
+                    <td><input className="input" type="number" style={{ width: 70 }} value={rows[c.id]?.grace_days || 0} onChange={(e) => updateRow(c.id, "grace_days", e.target.value)} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18, borderTop: `1px solid ${C.border}33`, paddingTop: 16 }}>
+          <button className="btn btn-ghost" onClick={() => handleSave(true)} disabled={saving}>Apply to All Classes</button>
+          <button className="btn btn-primary" onClick={() => handleSave(false)} disabled={saving} style={{ minWidth: 160, opacity: saving ? 0.7 : 1 }}>
+            {saving ? "Saving…" : `Save for ${selectedGrade?.name || "..."}`}
+          </button>
+        </div>
+      </div>
+
+      <Modal open={showAddCat} onClose={() => setShowAddCat(false)} title="New Fee Category" width={380}>
+        <FormRow label="Category Name">
+          <input className="input" placeholder="e.g. Tuition Fee, Transport" value={newCat.name} onChange={(e) => setNewCat({ ...newCat, name: e.target.value })} />
+        </FormRow>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginBottom: 16 }}>
+          <input type="checkbox" checked={newCat.is_recurring} onChange={(e) => setNewCat({ ...newCat, is_recurring: e.target.checked })} />
+          Recurring charge (vs one-time)
+        </label>
+        <button className="btn btn-primary" style={{ width: "100%" }} onClick={handleAddCategory}>Add Category</button>
+      </Modal>
+
+      <Modal open={genModal} onClose={() => setGenModal(false)} title="Generate Invoices" width={440}>
+        <FormRow label="Scope">
+          <select className="select" value={genForm.scope} onChange={(e) => setGenForm({ ...genForm, scope: e.target.value })}>
+            <option value="all">All Classes</option>
+            <option value="grade">Only {selectedGrade?.name}</option>
+          </select>
+        </FormRow>
+        <FormRow label="Invoice Title">
+          <input className="input" placeholder="e.g. November Fee 2024" value={genForm.title} onChange={(e) => setGenForm({ ...genForm, title: e.target.value })} />
+        </FormRow>
+        <FormGrid cols={2}>
+          <FormRow label="Due Date"><input className="input" type="date" value={genForm.due_date} onChange={(e) => setGenForm({ ...genForm, due_date: e.target.value })} /></FormRow>
+          <FormRow label="Month (Optional)">
+            <select className="select" value={genForm.month_index} onChange={(e) => setGenForm({ ...genForm, month_index: e.target.value })}>
+              <option value="">—</option>
+              {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            </select>
+          </FormRow>
+        </FormGrid>
+        <div style={{ padding: 12, background: `${C.yellow}11`, border: `1px solid ${C.yellow}33`, borderRadius: 10, fontSize: 12, color: C.yellow, marginBottom: 16 }}>
+          This creates one invoice per student, summing all category amounts set in the fee structure above.
+        </div>
+        <button className="btn btn-primary" style={{ width: "100%" }} onClick={handleGenerate} disabled={generating}>
+          {generating ? "Generating…" : "Generate Now"}
+        </button>
+      </Modal>
+    </div>
+  );
+};
+
+// ── RECEIPTS TAB ──
+const FeeReceiptsTab = ({ setReceiptViewerUrl }) => {
+  const [rows, setRows] = useState([]);
+  const [search, setSearch] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [voidTarget, setVoidTarget] = useState(null);
+  const [voidReason, setVoidReason] = useState("");
+  const [voiding, setVoiding] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  const downloadReceipt = async (paymentId) => {
+    setDownloadingId(paymentId);
+    try {
+      const res = await apiRequest(`/fees/payments/${paymentId}/receipt`);
+      if (res?.data?.receipt_url) setReceiptViewerUrl(res.data.receipt_url);
+    } catch (e) {
+      alert("Failed to generate receipt: " + e.message);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ search, from, to, limit: 50 });
+      const res = await apiRequest(`/fees/payments?${params.toString()}`);
+      setRows(res?.data || []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, [search, from, to]); // eslint-disable-line
+
+  const handleVoid = async () => {
+    if (!voidReason.trim()) return;
+    setVoiding(true);
+    try {
+      await apiRequest(`/fees/payments/${voidTarget.id}`, "DELETE", { void_reason: voidReason });
+      setVoidTarget(null); setVoidReason("");
+      await load();
+    } catch (e) { alert("Void failed: " + e.message); } finally { setVoiding(false); }
+  };
+
+  const totalShown = rows.filter((r) => !r.is_void).reduce((s, r) => s + Number(r.amount_paise), 0);
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <input className="input" style={{ flex: 1, minWidth: 200 }} placeholder="Search receipt no. or student…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input className="input" type="date" style={{ width: 150 }} value={from} onChange={(e) => setFrom(e.target.value)} />
+        <span style={{ color: C.textMuted }}>to</span>
+        <input className="input" type="date" style={{ width: 150 }} value={to} onChange={(e) => setTo(e.target.value)} max={todayISO()} />
+        <div className="syne" style={{ fontWeight: 800, color: C.green, fontSize: 15 }}>{rupees(totalShown)} collected</div>
+      </div>
+
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {loading ? (
+          <div className="pulse" style={{ padding: 40, textAlign: "center", color: C.primary }}>Loading transactions…</div>
+        ) : rows.length === 0 ? (
+          <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>No transactions found.</div>
+        ) : (
+          <table className="table">
+            <thead><tr><th>Receipt</th><th>Student</th><th>Date</th><th>Amount</th><th>Method</th><th>Collected By</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              {rows.map((p) => (
+                <tr key={p.id} style={{ opacity: p.is_void ? 0.45 : 1 }}>
+                  <td style={{ fontFamily: "monospace", fontSize: 11 }}>{p.receipt_no}</td>
+                  <td style={{ fontWeight: 600 }}>{p.student_name}</td>
+                  <td style={{ fontSize: 12 }}>{new Date(p.payment_date).toLocaleDateString("en-IN")}</td>
+                  <td className="syne" style={{ fontWeight: 700 }}>{rupees(p.amount_paise)}</td>
+                  <td style={{ fontSize: 12 }}>{p.payment_method}</td>
+                  <td style={{ fontSize: 11, color: C.textMuted }}>{p.collected_by_name || "—"}</td>
+                  <td>{p.is_void ? <span className="badge badge-red">Void</span> : <span className="badge badge-green">Active</span>}</td>
+                  <td>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button className="btn btn-ghost" style={{ padding: "3px 8px", fontSize: 10 }} onClick={() => downloadReceipt(p.id)} disabled={p.is_void}>
+                        <Icon name="download" size={11} /> Receipt
+                      </button>
+                      {!p.is_void && <button className="btn btn-danger" style={{ padding: "3px 8px", fontSize: 10 }} onClick={() => setVoidTarget(p)}>Void</button>}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <Modal open={!!voidTarget} onClose={() => setVoidTarget(null)} title="Void Payment Receipt" width={420}>
+        {voidTarget && (
+          <div>
+            <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 14 }}>
+              Voiding <b style={{ color: C.text }}>{voidTarget.receipt_no}</b> ({rupees(voidTarget.amount_paise)}) will restore the amount to pending balance.
+            </div>
+            <FormRow label="Reason for Voiding *">
+              <textarea className="input" rows={3} value={voidReason} onChange={(e) => setVoidReason(e.target.value)} style={{ resize: "vertical" }} />
+            </FormRow>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button className="btn btn-ghost" onClick={() => setVoidTarget(null)} disabled={voiding}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleVoid} disabled={voiding || !voidReason.trim()}>{voiding ? "Voiding…" : "Confirm Void"}</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+// ═══════════════════════════════════════════════════════════════
+// MODULE: FEE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+const FeesModule = ({ school }) => {
+  const [tab, setTab] = useState("overview");
+  const [filterClass, setFilterClass] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [passbookStudentId, setPassbookStudentId] = useState(null);
+  const [collectAccount, setCollectAccount] = useState(null);
+  const [receiptViewerUrl, setReceiptViewerUrl] = useState(null);
+
+  const [feeAccounts, setFeeAccounts] = useState([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [overviewData, setOverviewData] = useState(null);
+  const [overviewLoading, setOverviewLoading] = useState(true);
+  const [grades, setGrades] = useState([]);
+
+  const loadFeeOverview = async () => {
+    setOverviewLoading(true);
+    try {
+      const res = await apiRequest("/fees/overview", "GET");
+      if (res?.data) setOverviewData(res.data);
+    } catch (err) {
+      console.error("Failed to load fee overview", err);
+    } finally {
+      setOverviewLoading(false);
+    }
+  };
+
+  const loadFeeAccounts = async () => {
+    setLoadingAccounts(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterClass) params.set("grade_id", filterClass);
+      if (filterStatus) params.set("status", filterStatus);
+      const res = await apiRequest(`/fees/accounts?limit=200&${params.toString()}`, "GET");
+      if (res?.data) setFeeAccounts(res.data);
+    } catch (err) { console.error("Failed to load fee accounts", err); }
+    finally { setLoadingAccounts(false); }
+  };
+
+  useEffect(() => {
+    apiRequest("/setup/grades").then((r) => setGrades(r?.data || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (tab === "overview") loadFeeOverview();
+    if (tab === "ledger") loadFeeAccounts();
+  }, [tab, filterClass, filterStatus]); // eslint-disable-line
+
+  const refreshAll = () => { loadFeeOverview(); loadFeeAccounts(); };
+
+  const monthlyData = (overviewData?.weekly || []).map((w) => ({
+    month: `Wk ${new Date(w.week_start).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`,
+    collected: w.collected_paise / 100,
+  }));
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Fee Management"
+        sub="Track collections, pending dues and payment history"
+      />
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16 }}>
+        {[
+          { id: "overview", label: "Overview", icon: "chart" },
+          { id: "ledger", label: "Fee Ledger & Collect", icon: "students" },
+          { id: "receipts", label: "Transactions & Receipts", icon: "result" },
+          { id: "structures", label: "Fee Structures", icon: "setup" },
+        ].map((t) => (
+          <button
+            key={t.id}
+            className="btn"
+            onClick={() => setTab(t.id)}
+            style={{
+              background: tab === t.id ? C.primary : C.surfaceAlt,
+              color: tab === t.id ? "#fff" : C.text,
+              border: "none", display: "flex", alignItems: "center", gap: 6,
+              padding: "8px 16px", borderRadius: 20, cursor: "pointer", fontWeight: 700, fontSize: 12.5,
+            }}
+          >
+            <Icon name={t.icon} size={14} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "overview" && (
+        <div>
+          {overviewData?.recentPayers?.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>
+                💰 Recent Fee Payers
+              </div>
+              <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6 }}>
+                {overviewData.recentPayers.map((p) => {
+                  const isToday = new Date(p.payment_date).toDateString() === new Date().toDateString();
+                  return (
+                    <div key={p.student_id + p.payment_date} style={{
+                      minWidth: 190, background: `linear-gradient(135deg,${C.surfaceAlt},${C.surface})`,
+                      border: `1px solid ${isToday ? C.green + "55" : C.border}`, borderRadius: 14,
+                      padding: "12px 14px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0,
+                      position: "relative", overflow: "hidden",
+                    }}>
+                      {isToday && (
+                        <span style={{
+                          position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: "50%",
+                          background: C.green, boxShadow: `0 0 0 3px ${C.green}22`,
+                        }} className="pulse" />
+                      )}
+                      {p.photo_url ? (
+                        <img src={p.photo_url} alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: `2px solid ${C.green}55` }} />
+                      ) : (
+                        <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${C.green}22`, color: C.green, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 14 }}>
+                          {(p.student_name?.[0] || "?").toUpperCase()}
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.student_name}</div>
+                        <div style={{ fontSize: 10.5, color: C.textMuted }}>{p.class_name} {p.section_name}</div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 3 }}>
+                          <span className="syne" style={{ fontWeight: 800, fontSize: 13, color: C.green }}>{rupees(p.amount_paise)}</span>
+                          <span style={{ fontSize: 9.5, color: isToday ? C.green : C.textMuted, fontWeight: 700 }}>
+                            {isToday ? "Today" : new Date(p.payment_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div
+            style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}
+            className="grid-4"
+          >
+            <KpiCard
+              label="Total Collected"
+              value={`₹${((overviewData?.summary?.total_paid_paise || 0) / 10000000).toFixed(2)}L`}
+              icon="fee"
+              color={C.green}
+            />
+            <KpiCard
+              label="Total Pending"
+              value={`₹${((overviewData?.summary?.total_pending_paise || 0) / 10000000).toFixed(2)}L`}
+              icon="warning"
+              color={C.red}
+            />
+            <KpiCard
+              label="Collection Rate"
+              value={`${overviewData?.summary?.total_fee_paise > 0
+                ? Math.round((overviewData.summary.total_paid_paise / overviewData.summary.total_fee_paise) * 100)
+                : 0}%`}
+              icon="chart"
+              color={C.primary}
+            />
+            <KpiCard
+              label="Defaulters"
+              value={overviewData?.summary?.pending_count || 0}
+              icon="students"
+              color={C.yellow}
+            />
+          </div>
+
+          {/* ROW 2: Collection Trend + Fee Status Donut */}
+          <div
+            className="grid-2"
+            style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 20, marginBottom: 20 }}
+          >
+            <div className="card">
+              <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>
+                Collection Trend (Last 10 Weeks)
+              </h3>
+              <ResponsiveContainer width="100%" height={240}>
+                <AreaChart data={monthlyData}>
+                  <defs>
+                    <linearGradient id="feeCollectGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.green} stopOpacity={0.35} />
+                      <stop offset="95%" stopColor={C.green} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                  <XAxis dataKey="month" tick={{ fill: C.textMuted, fontSize: 11 }} />
+                  <YAxis tick={{ fill: C.textMuted, fontSize: 10 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`} />
+                  <Tooltip
+                    contentStyle={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text }}
+                    formatter={(v) => [`₹${v.toLocaleString()}`, "Collected"]}
+                  />
+                  <Area type="monotone" dataKey="collected" stroke={C.green} strokeWidth={2.5} fill="url(#feeCollectGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="card">
+              <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>
+                Fee Status Distribution
+              </h3>
+              {overviewLoading ? (
+                <div
+                  className="pulse"
+                  style={{
+                    height: 220,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: C.primary,
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                >
+                  Loading fee status…
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Paid", value: overviewData?.summary?.paid_count || 0 },
+                        { name: "Partial", value: overviewData?.summary?.partial_count || 0 },
+                        { name: "Pending", value: overviewData?.summary?.pending_count || 0 },
+                      ]}
+                      cx="50%" cy="45%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value"
+                    >
+                      {[C.green, C.yellow, C.red].map((c, i) => <Cell key={i} fill={c} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text }} />
+                    <Legend
+                      wrapperStyle={{ paddingTop: 8 }}
+                      formatter={(v) => <span style={{ color: C.textMuted, fontSize: 12 }}>{v}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          {/* ROW 3: Class-wise Paid vs Pending grouped bars + Top Defaulter Classes */}
+          <div
+            className="grid-2"
+            style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 20 }}
+          >
+            <div className="card">
+              <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>
+                Class-wise Collection vs Pending
+              </h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart
+                                    data={(overviewData?.byClass || []).map((c) => ({
+                                      name: c.class_name,
+                                      paid: Math.round((c.paid_paise || 0) / 100000) / 10,
+                                      pending: Math.round((c.pending_paise || 0) / 100000) / 10,
+                                    }))}
+                  barSize={14}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                  <XAxis dataKey="name" tick={{ fill: C.textMuted, fontSize: 10 }} angle={-35} textAnchor="end" height={60} />
+                  <YAxis tick={{ fill: C.textMuted, fontSize: 10 }} tickFormatter={(v) => `₹${v}K`} />
+                  <Tooltip
+                    contentStyle={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text }}
+                    formatter={(v) => `₹${v}K`}
+                  />
+                  <Legend formatter={(v) => <span style={{ color: C.textMuted, fontSize: 11 }}>{v}</span>} />
+                  <Bar dataKey="paid" fill={C.green} radius={[4, 4, 0, 0]} name="Collected" />
+                  <Bar dataKey="pending" fill={C.red} radius={[4, 4, 0, 0]} name="Pending" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="card">
+              <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: C.red }}>
+                ⚠ Top Pending Classes
+              </h3>
+              {(overviewData?.byClass || [])
+                .filter((c) => c.pending_paise > 0)
+                .sort((a, b) => b.pending_paise - a.pending_paise)
+                .slice(0, 6)
+                .map((c) => {
+                  const total = c.paid_paise + c.pending_paise;
+                  const recoveryPct = total > 0 ? Math.round((c.paid_paise / total) * 100) : 0;
+                  return (
+                    <div key={c.class_name} style={{ marginBottom: 12 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600 }}>{c.class_name}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: C.red }}>{rupees(c.pending_paise)}</span>
+                      </div>
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${recoveryPct}%`, background: recoveryPct > 70 ? C.green : recoveryPct > 40 ? C.yellow : C.red }} />
+                      </div>
+                      <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{recoveryPct}% recovered</div>
+                    </div>
+                  );
+                })}
+              {(overviewData?.byClass || []).filter((c) => c.pending_paise > 0).length === 0 && (
+                <div style={{ fontSize: 12, color: C.textMuted, textAlign: "center", padding: "20px 0" }}>All classes fully paid ✓</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "ledger" && (
+        <div>
+          <div className="card" style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <select className="select" style={{ width: 160 }} value={filterClass} onChange={(e) => setFilterClass(e.target.value)}>
+              <option value="">All Classes</option>
+              {grades.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+            <select className="select" style={{ width: 130 }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+              <option value="">All Status</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+              <option value="partial">Partial</option>
+            </select>
+            <div style={{ flex: 1 }} />
+            <div style={{ fontSize: 12, color: C.textMuted }}>Showing {feeAccounts.length} accounts</div>
+          </div>
+
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+            {loadingAccounts ? (
+              <div className="pulse" style={{ padding: 60, textAlign: "center", color: C.primary }}>Loading fee ledger…</div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Student Info</th>
+                      <th>Class & Roll</th>
+                      <th style={{ textAlign: "right" }}>Total Fee</th>
+                      <th style={{ textAlign: "right" }}>Paid</th>
+                      <th style={{ textAlign: "right" }}>Due Balance</th>
+                      <th style={{ textAlign: "center" }}>Status</th>
+                      <th style={{ textAlign: "center" }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {feeAccounts.length > 0 ? (
+                      feeAccounts.map((acc) => (
+                        <tr key={acc.student_id}>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              {acc.photo_url ? (
+                                <img src={acc.photo_url} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: `2px solid ${C.border}` }} />
+                              ) : (
+                                <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${C.primary}22`, color: C.primary, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
+                                  {(acc.student_name?.[0] || "?").toUpperCase()}
+                                </div>
+                              )}
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: 13 }}>{acc.student_name}</div>
+                                <div style={{ fontSize: 11, color: C.textMuted }}>Adm: {acc.admission_no}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ fontSize: 13 }}>
+                            <div style={{ fontWeight: 600 }}>{acc.class_name} {acc.section_name && `(${acc.section_name})`}</div>
+                            <div style={{ fontSize: 11, color: C.textMuted }}>Roll: {acc.roll_no || "—"}</div>
+                          </td>
+                          <td style={{ textAlign: "right", fontWeight: 600, fontSize: 13 }}>{rupees(acc.total_fee_paise)}</td>
+                          <td style={{ textAlign: "right", fontWeight: 600, color: C.green, fontSize: 13 }}>{rupees(acc.paid_paise)}</td>
+                          <td style={{ textAlign: "right" }}>
+                            <span style={{ fontWeight: 800, color: acc.pending_paise > 0 ? C.red : C.text, fontSize: 14 }}>{rupees(acc.pending_paise)}</span>
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <span className={`badge ${acc.status === "paid" ? "badge-green" : acc.status === "partial" ? "badge-yellow" : "badge-red"}`}>
+                              {(acc.status || "pending").toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                              <button className="btn btn-primary" onClick={() => setCollectAccount(acc)} style={{ padding: "6px 14px", fontSize: 11 }} disabled={acc.pending_paise <= 0}>
+                                Collect
+                              </button>
+                              <button className="btn btn-ghost" onClick={() => setPassbookStudentId(acc.student_id)} style={{ padding: "6px 8px" }} title="View Passbook">
+                                <Icon name="eye" size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} style={{ padding: 40, textAlign: "center" }}>
+                          <div style={{ color: C.textMuted, fontWeight: 600 }}>No fee accounts found</div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 🔴 FIX 1: Passed the prop here */}
+      {tab === "receipts" && <FeeReceiptsTab setReceiptViewerUrl={setReceiptViewerUrl} />}
+      {tab === "structures" && <FeeStructuresTab />}
+
+      <CollectPaymentModal
+        account={collectAccount ? { ...collectAccount, school_name: school?.name } : null}
+        onClose={() => setCollectAccount(null)}
+        onSuccess={() => { setCollectAccount(null); refreshAll(); }}
+      />
+      <StudentPassbookModal
+        studentId={passbookStudentId}
+        onClose={() => setPassbookStudentId(null)}
+        onVoided={refreshAll}
+      />
+
+      {/* 🔴 FIX 2: Rendered the PdfViewerModal here */}
+      <PdfViewerModal 
+        url={receiptViewerUrl} 
+        onClose={() => setReceiptViewerUrl(null)} 
+        title="Fee Receipt" 
+      />
+    </div>
+  );
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// PAYROLL MODULE — reuses global components (KpiCard, Modal, FormRow,
+// FormGrid, Icon, useDialog, C palette, apiRequest, recharts).
+// All salary math is computed CLIENT-SIDE from raw attendance + structure data.
+// Paste this block into app.jsx (see integration notes at the end).
+// ═══════════════════════════════════════════════════════════════
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const currentMonthYear = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
+const monthLabel = (my) => {
+  const [y, m] = my.split("-");
+  return `${MONTH_NAMES[+m - 1]} ${y}`;
+};
+const daysInMonth = (my) => {
+  const [y, m] = my.split("-");
+  return new Date(+y, +m, 0).getDate();
+};
+const inr = (n) => `₹${(Number(n) || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
+// ── Pure calculation engine — the heart of client-side payroll math ──
+function computePayslip({ staff, attendanceRows, paidCodeSet, monthYear }) {
+  const totalDays = daysInMonth(monthYear);
+  let presentDays = 0, paidLeaveDays = 0, lopDays = 0;
+
+  const byStaff = attendanceRows.filter((a) => a.staff_id === staff.staff_id);
+  const markedDates = new Set();
+  byStaff.forEach((a) => {
+    // attendance_date may arrive as a Date object (mssql driver) or a string — normalize safely
+    const dateKey = a.attendance_date instanceof Date
+      ? a.attendance_date.toISOString().slice(0, 10)
+      : String(a.attendance_date).slice(0, 10);
+    markedDates.add(dateKey);
+
+    const code = String(a.status || "").toUpperCase().trim();
+    if (code === "P" || code === "OD") presentDays += 1;          // Present / On Duty → full paid day
+    else if (code === "A") lopDays += 1;                          // Absent → Loss of Pay
+    else if (paidCodeSet.has(code)) paidLeaveDays += 1;            // PL/CL/RH/HL etc. (from leave_types, if configured)
+    else if (code === "L") paidLeaveDays += 1;                     // Generic "Leave" (current UI default) → treated as paid
+    else lopDays += 1;                                             // Unknown code → safety default LOP
+  });
+  // Unmarked days in the month default to LOP (safety-conservative — school can override by marking attendance)
+  const unmarked = totalDays - markedDates.size;
+  if (unmarked > 0) lopDays += unmarked;
+
+  const basic = staff.basic || 0, hra = staff.hra || 0, da = staff.da || 0;
+  const spl = staff.special_allowance || 0, oa = staff.other_allowance || 0;
+  const gross = +(basic + hra + da + spl + oa).toFixed(2);
+  const perDayRate = totalDays > 0 ? gross / totalDays : 0;
+  const lopDeduction = +(perDayRate * lopDays).toFixed(2);
+  const pf = staff.pf_deduction || 0, pt = staff.pt_deduction || 0, od = staff.other_deduction || 0;
+  const totalDeduction = +(lopDeduction + pf + pt + od).toFixed(2);
+  const netPay = +(gross - totalDeduction).toFixed(2);
+
+  return {
+    staff_id: staff.staff_id, full_name: staff.full_name, designation: staff.designation, department: staff.department,
+    total_days: totalDays, present_days: presentDays, paid_leave_days: paidLeaveDays,
+    lop_days: lopDays, auto_lop_days: lopDays, // auto_lop_days = system baseline, never mutated by override
+    basic, hra, da, special_allowance: spl, other_allowance: oa, gross_salary: gross, per_day_rate: perDayRate,
+    lop_deduction: lopDeduction, pf_deduction: pf, pt_deduction: pt, other_deduction: od,
+    total_deduction: totalDeduction, net_pay: netPay, bonus_amount: 0,
+    is_manually_adjusted: false, adjustment_note: "",
+    has_salary_structure: staff.has_salary_structure, has_bank_details: staff.has_bank_details,
+  };
+}
+
+// Recompute a payslip after admin overrides LOP days and/or adds a bonus
+function applyPayslipOverride(base, override) {
+  const effectiveLop = override.manual_lop_days !== "" && override.manual_lop_days !== null && override.manual_lop_days !== undefined
+    ? Number(override.manual_lop_days)
+    : base.auto_lop_days;
+
+  const lopDeduction = +(base.per_day_rate * effectiveLop).toFixed(2);
+  const totalDeduction = +(lopDeduction + base.pf_deduction + base.pt_deduction + base.other_deduction).toFixed(2);
+  const bonus = Number(override.bonus_amount) || 0;
+  const netPay = +(base.gross_salary - totalDeduction + bonus).toFixed(2);
+  const isAdjusted = effectiveLop !== base.auto_lop_days || bonus !== 0;
+
+  return {
+    ...base,
+    lop_days: effectiveLop,
+    lop_deduction: lopDeduction,
+    total_deduction: totalDeduction,
+    bonus_amount: bonus,
+    net_pay: netPay,
+    is_manually_adjusted: isAdjusted,
+    adjustment_note: override.adjustment_note || "",
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STAFF SETUP MODAL — Bank + Salary Structure editor
+// ═══════════════════════════════════════════════════════════════
+const StaffPayrollSetupModal = ({ staff, open, onClose, onSaved }) => {
+  const { dialogAlert } = useDialog();
+  const [form, setForm] = useState({
+    basic: 0, hra: 0, da: 0, special_allowance: 0, other_allowance: 0,
+    pf_deduction: 0, pt_deduction: 0, other_deduction: 0, effective_from: todayISO(),
+    account_holder: "", account_number: "", ifsc_code: "", bank_name: "", branch_name: "", upi_id: "", pan_number: "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (staff) {
+      setForm({
+        basic: staff.basic || 0, hra: staff.hra || 0, da: staff.da || 0,
+        special_allowance: staff.special_allowance || 0, other_allowance: staff.other_allowance || 0,
+        pf_deduction: staff.pf_deduction || 0, pt_deduction: staff.pt_deduction || 0, other_deduction: staff.other_deduction || 0,
+        effective_from: staff.effective_from?.slice(0, 10) || todayISO(),
+        account_holder: staff.account_holder || staff.full_name || "", account_number: staff.account_number || "",
+        ifsc_code: staff.ifsc_code || "", bank_name: staff.bank_name || "", branch_name: "", upi_id: staff.upi_id || "", pan_number: "",
+      });
+    }
+  }, [staff]);
+
+  const gross = (Number(form.basic) || 0) + (Number(form.hra) || 0) + (Number(form.da) || 0) + (Number(form.special_allowance) || 0) + (Number(form.other_allowance) || 0);
+  const fixedDeductions = (Number(form.pf_deduction) || 0) + (Number(form.pt_deduction) || 0) + (Number(form.other_deduction) || 0);
+
+  const num = (v) => (v === "" ? 0 : parseFloat(v) || 0);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiRequest(`/payroll/structure/${staff.staff_id}`, "PUT", {
+        basic: num(form.basic), hra: num(form.hra), da: num(form.da),
+        special_allowance: num(form.special_allowance), other_allowance: num(form.other_allowance),
+        pf_deduction: num(form.pf_deduction), pt_deduction: num(form.pt_deduction), other_deduction: num(form.other_deduction),
+        effective_from: form.effective_from,
+      });
+      await apiRequest(`/payroll/bank/${staff.staff_id}`, "PUT", {
+        account_holder: form.account_holder, account_number: form.account_number, ifsc_code: form.ifsc_code,
+        bank_name: form.bank_name, branch_name: form.branch_name, upi_id: form.upi_id, pan_number: form.pan_number,
+      });
+      onSaved();
+      onClose();
+    } catch (e) {
+      dialogAlert("Save failed: " + e.message, "Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!staff) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Payroll Setup — ${staff.full_name}`} width={620}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>Earnings</div>
+      <FormGrid cols={2}>
+        <FormRow label="Basic Pay"><input className="input" type="number" value={form.basic} onChange={(e) => setForm((p) => ({ ...p, basic: e.target.value }))} /></FormRow>
+        <FormRow label="HRA"><input className="input" type="number" value={form.hra} onChange={(e) => setForm((p) => ({ ...p, hra: e.target.value }))} /></FormRow>
+        <FormRow label="DA"><input className="input" type="number" value={form.da} onChange={(e) => setForm((p) => ({ ...p, da: e.target.value }))} /></FormRow>
+        <FormRow label="Special Allowance"><input className="input" type="number" value={form.special_allowance} onChange={(e) => setForm((p) => ({ ...p, special_allowance: e.target.value }))} /></FormRow>
+        <FormRow label="Other Allowance"><input className="input" type="number" value={form.other_allowance} onChange={(e) => setForm((p) => ({ ...p, other_allowance: e.target.value }))} /></FormRow>
+        <FormRow label="Effective From"><input className="input" type="date" value={form.effective_from} onChange={(e) => setForm((p) => ({ ...p, effective_from: e.target.value }))} /></FormRow>
+      </FormGrid>
+
+      <div style={{ fontSize: 12, fontWeight: 800, color: C.red, textTransform: "uppercase", letterSpacing: "0.5px", margin: "16px 0 10px" }}>Fixed Deductions</div>
+      <FormGrid cols={3}>
+        <FormRow label="PF"><input className="input" type="number" value={form.pf_deduction} onChange={(e) => setForm((p) => ({ ...p, pf_deduction: e.target.value }))} /></FormRow>
+        <FormRow label="PT"><input className="input" type="number" value={form.pt_deduction} onChange={(e) => setForm((p) => ({ ...p, pt_deduction: e.target.value }))} /></FormRow>
+        <FormRow label="Other"><input className="input" type="number" value={form.other_deduction} onChange={(e) => setForm((p) => ({ ...p, other_deduction: e.target.value }))} /></FormRow>
+      </FormGrid>
+
+      <div style={{ background: `linear-gradient(135deg, ${C.primary}12, ${C.primary}04)`, border: `1px solid ${C.primary}33`, borderRadius: 14, padding: 14, margin: "16px 0", display: "flex", justifyContent: "space-between" }}>
+        <div><div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700 }}>MONTHLY GROSS</div><div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>{inr(gross)}</div></div>
+        <div><div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700 }}>FIXED DEDUCTIONS</div><div style={{ fontSize: 20, fontWeight: 800, color: C.red }}>{inr(fixedDeductions)}</div></div>
+        <div><div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700 }}>BASE NET (full attendance)</div><div style={{ fontSize: 20, fontWeight: 800, color: C.green }}>{inr(gross - fixedDeductions)}</div></div>
+      </div>
+
+      <div style={{ fontSize: 12, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: "0.5px", margin: "16px 0 10px" }}>Bank / UPI Details</div>
+      <FormGrid cols={2}>
+        <FormRow label="Account Holder Name"><input className="input" value={form.account_holder} onChange={(e) => setForm((p) => ({ ...p, account_holder: e.target.value }))} /></FormRow>
+        <FormRow label="Account Number"><input className="input" value={form.account_number} onChange={(e) => setForm((p) => ({ ...p, account_number: e.target.value }))} /></FormRow>
+        <FormRow label="IFSC Code"><input className="input" value={form.ifsc_code} onChange={(e) => setForm((p) => ({ ...p, ifsc_code: e.target.value.toUpperCase() }))} /></FormRow>
+        <FormRow label="Bank Name"><input className="input" value={form.bank_name} onChange={(e) => setForm((p) => ({ ...p, bank_name: e.target.value }))} /></FormRow>
+        <FormRow label="Branch"><input className="input" value={form.branch_name} onChange={(e) => setForm((p) => ({ ...p, branch_name: e.target.value }))} /></FormRow>
+        <FormRow label="UPI ID"><input className="input" value={form.upi_id} onChange={(e) => setForm((p) => ({ ...p, upi_id: e.target.value }))} placeholder="name@bank" /></FormRow>
+        <FormRow label="PAN Number"><input className="input" value={form.pan_number} onChange={(e) => setForm((p) => ({ ...p, pan_number: e.target.value.toUpperCase() }))} /></FormRow>
+      </FormGrid>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+        <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Setup"}</button>
+      </div>
+    </Modal>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// PAYSLIP VIEW / PRINT — mirrors the app's existing A4 print pattern
+// ═══════════════════════════════════════════════════════════════
+const PayslipViewModal = ({ slipId, open, onClose, school }) => {
+  const [slip, setSlip] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!open || !slipId) return;
+    setLoading(true);
+    apiRequest(`/payroll/payslips/${slipId}`).then((res) => setSlip(res.data)).finally(() => setLoading(false));
+  }, [open, slipId]);
+
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+
+  const handleGeneratePdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      const res = await apiRequest(`/payroll/payslips/${slipId}/generate-pdf`, "POST");
+      setPdfUrl(res.data.pdf_url);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
+  const handlePrint = () => {
+    const originalTitle = document.title;
+    document.title = `Payslip_${slip?.staff_name?.replace(/\s+/g, "_")}_${slip?.month_year}`;
+    window.print();
+    setTimeout(() => { document.title = originalTitle; }, 500);
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="slide-in" style={{ position: "fixed", inset: 0, zIndex: 9999, background: C.bg, display: "flex", flexDirection: "column" }}>
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #payslip-print-zone, #payslip-print-zone * { visibility: visible; }
+          #payslip-print-zone { position: absolute !important; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
+          @page { size: A4 portrait; margin: 12mm; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
+      <div className="no-print" style={{ padding: "12px 24px", background: C.surface, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button className="btn btn-ghost" onClick={onClose} style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon name="close" size={16} /> Close</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn btn-ghost" onClick={handleGeneratePdf} disabled={generatingPdf} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Icon name="file" size={15} /> {generatingPdf ? "Generating..." : "Generate PDF"}
+          </button>
+          <button className="btn btn-primary" onClick={handlePrint} disabled={loading} style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon name="print" size={15} /> Print</button>
+        </div>
+      </div>
+
+      {pdfUrl && (
+        <div className="no-print" style={{ background: "#26282f", padding: 12, display: "flex", justifyContent: "center", gap: 10 }}>
+          <span style={{ color: "#fff", fontSize: 12 }}>PDF ready:</span>
+          <a href={pdfUrl} target="_blank" rel="noreferrer" style={{ color: "#8ab4ff", fontSize: 12, fontWeight: 700 }}>Open Full Screen</a>
+          <a href={pdfUrl} download style={{ color: "#8ab4ff", fontSize: 12, fontWeight: 700 }}>Download</a>
+        </div>
+      )}
+
+<div style={{ flex: 1, overflowY: "auto", padding: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        {pdfUrl && (
+          <div className="no-print" style={{ width: "100%", maxWidth: 760, height: 600, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+            <iframe src={pdfUrl} title="Payslip PDF" style={{ width: "100%", height: "100%", border: "none" }} />
+          </div>
+        )}
+        {loading || !slip ? (
+          <div style={{ padding: 60, color: C.textMuted }}>Loading payslip...</div>
+        ) : (
+          <div id="payslip-print-zone" style={{ background: "#fff", width: 720, maxWidth: "100%", padding: 28, border: "1px solid #000", position: "relative", overflow: "hidden" }}>
+
+          {/* Watermark — centered, low opacity, behind all content */}
+          {(school?.watermark_url || school?.logo_url) && (
+            <img src={school.watermark_url || school.logo_url} alt=""
+              style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 300, height: 300, objectFit: "contain", opacity: 0.06, pointerEvents: "none", zIndex: 0 }} />
+          )}
+
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: `2px solid ${school?.brand_color || "#1a1a2e"}`, paddingBottom: 10, marginBottom: 14 }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                {school?.logo_url && <img src={school.logo_url} alt="" style={{ width: 42, height: 42, objectFit: "contain", flexShrink: 0 }} />}
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.2 }}>{school?.name}</div>
+                  {school?.tagline && <div style={{ fontSize: 9, fontStyle: "italic", color: "#777", marginTop: 1 }}>{school.tagline}</div>}
+                  <div style={{ fontSize: 9, color: "#666", marginTop: 2 }}>{[school?.address_line1, school?.city, school?.state, school?.pincode].filter(Boolean).join(", ")}</div>
+                </div>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: school?.brand_color || "#1a1a2e", letterSpacing: "0.5px" }}>SALARY SLIP</div>
+                <div style={{ fontSize: 13, fontWeight: 800, marginTop: 2 }}>{monthLabel(slip.month_year)}</div>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px", fontSize: 12.5, marginBottom: 20, borderBottom: "1px solid #ccc", paddingBottom: 16 }}>
+              <div><b>Employee:</b> {slip.staff_name}</div>
+              <div><b>Designation:</b> {slip.designation || "—"}</div>
+              <div><b>Department:</b> {slip.department || "—"}</div>
+              <div><b>Payment Status:</b> {slip.payment_status}</div>
+              <div><b>Present Days:</b> {slip.present_days} / {slip.total_days}</div>
+              <div><b>Paid Leave:</b> {slip.paid_leave_days} &nbsp; <b>LOP:</b> {slip.lop_days}</div>
+            </div>
+
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, marginBottom: 20 }}>
+              <thead>
+                <tr style={{ background: "#f0f0f0" }}>
+                  <th style={{ textAlign: "left", padding: 8, border: "1px solid #ccc" }}>Earnings</th>
+                  <th style={{ textAlign: "right", padding: 8, border: "1px solid #ccc" }}>Amount</th>
+                  <th style={{ textAlign: "left", padding: 8, border: "1px solid #ccc" }}>Deductions</th>
+                  <th style={{ textAlign: "right", padding: 8, border: "1px solid #ccc" }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Basic Pay", slip.basic, "LOP Deduction", slip.lop_deduction],
+                  ["HRA", slip.hra, "PF", slip.pf_deduction],
+                  ["DA", slip.da, "PT", slip.pt_deduction],
+                  ["Special Allowance", slip.special_allowance, "Other", slip.other_deduction],
+                  ["Other Allowance", slip.other_allowance, "", ""],
+                ].map(([el, ea, dl, da2], i) => (
+                  <tr key={i}>
+                    <td style={{ padding: 8, border: "1px solid #ccc" }}>{el}</td>
+                    <td style={{ padding: 8, border: "1px solid #ccc", textAlign: "right" }}>{inr(ea)}</td>
+                    <td style={{ padding: 8, border: "1px solid #ccc" }}>{dl}</td>
+                    <td style={{ padding: 8, border: "1px solid #ccc", textAlign: "right" }}>{da2 !== "" ? inr(da2) : ""}</td>
+                  </tr>
+                ))}
+                <tr style={{ fontWeight: 800, background: "#fafafa" }}>
+                  <td style={{ padding: 8, border: "1px solid #ccc" }}>Gross Total</td>
+                  <td style={{ padding: 8, border: "1px solid #ccc", textAlign: "right" }}>{inr(slip.gross_salary)}</td>
+                  <td style={{ padding: 8, border: "1px solid #ccc" }}>Total Deductions</td>
+                  <td style={{ padding: 8, border: "1px solid #ccc", textAlign: "right" }}>{inr(slip.total_deduction)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
+              <div style={{ border: "2px solid #000", padding: "10px 24px", textAlign: "center" }}>
+                <div style={{ fontSize: 11, fontWeight: 700 }}>NET PAY</div>
+                <div style={{ fontSize: 22, fontWeight: 800 }}>{inr(slip.net_pay)}</div>
+              </div>
+            </div>
+
+            {slip.is_manually_adjusted && (
+              <div style={{ background: "#FFF8E1", border: "1px solid #F0C929", borderRadius: 6, padding: 10, marginBottom: 16, fontSize: 11.5 }}>
+                <b>Note:</b> This payslip includes a manual adjustment. {slip.bonus_amount > 0 ? `Bonus: ${inr(slip.bonus_amount)}. ` : ""}
+                Reason: {slip.adjustment_note}
+              </div>
+            )}
+            {slip.bank_details && (
+              <div style={{ fontSize: 11.5, color: "#555", borderTop: "1px solid #ccc", paddingTop: 12 }}>
+                Paid to: {slip.bank_details.bank_name || "—"} • A/C: {slip.bank_details.account_number ? "••••" + String(slip.bank_details.account_number).slice(-4) : "—"}
+                {slip.bank_details.upi_id ? ` • UPI: ${slip.bank_details.upi_id}` : ""}
+                {slip.trx_id ? ` • Txn Ref: ${slip.trx_id}` : ""}
+              </div>
+            )}
+
+             <div style={{ fontSize: 9, color: "#999", textAlign: "center", marginTop: 18 }}>This is a system-generated payslip and does not require a signature.</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN MODULE
+// ═══════════════════════════════════════════════════════════════
+const PayrollModule = ({ school }) => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+  const [tab, setTab] = useState("overview"); // overview | staff | generate | payslips
+
+  const [staffList, setStaffList] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [allPayslips, setAllPayslips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [setupStaff, setSetupStaff] = useState(null);
+  const [viewSlipId, setViewSlipId] = useState(null);
+
+  const loadAll = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const [s, lt, ps] = await Promise.all([
+        apiRequest("/payroll/staff"),
+        apiRequest("/payroll/leave-types"),
+        apiRequest("/payroll/payslips"),
+      ]);
+      setStaffList(s?.data || []);
+      setLeaveTypes(lt?.data || []);
+      setAllPayslips(ps?.data || []);
+    } catch (e) {
+      dialogAlert("Failed to load payroll data: " + e.message, "Sync Error");
+    } finally {
+      setLoading(false);
+    }
+  }, [dialogAlert]);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  // ── Overview KPIs & charts (derived entirely from already-saved payslips) ──
+  const currentMY = currentMonthYear();
+  const thisMonthSlips = allPayslips.filter((p) => p.month_year === currentMY);
+  const overview = useMemo(() => {
+    const totalPayout = thisMonthSlips.reduce((s, p) => s + Number(p.net_pay), 0);
+    const pendingPayout = thisMonthSlips.filter((p) => p.payment_status === "PENDING").reduce((s, p) => s + Number(p.net_pay), 0);
+    const paidCount = thisMonthSlips.filter((p) => p.payment_status === "PAID").length;
+    const staffSetupPending = staffList.filter((s) => !s.has_salary_structure).length;
+
+    const byDept = {};
+    thisMonthSlips.forEach((p) => {
+      const dept = p.department || "Unassigned";
+      byDept[dept] = (byDept[dept] || 0) + Number(p.net_pay);
+    });
+    const deptChart = Object.entries(byDept).map(([name, value]) => ({ name, value }));
+
+    const trendMap = {};
+    allPayslips.forEach((p) => {
+      trendMap[p.month_year] = (trendMap[p.month_year] || 0) + Number(p.net_pay);
+    });
+    const trend = Object.entries(trendMap).sort(([a], [b]) => a.localeCompare(b)).slice(-6)
+      .map(([my, val]) => ({ month: monthLabel(my).split(" ")[0], amount: Math.round(val) }));
+
+    return { totalPayout, pendingPayout, paidCount, totalStaffThisMonth: thisMonthSlips.length, staffSetupPending, deptChart, trend };
+  }, [thisMonthSlips, allPayslips, staffList]);
+
+  const PIE_COLORS = [C.primary, C.blue, C.green, C.yellow, C.red, "#8b5cf6"];
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 className="syne" style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: 0 }}>Payroll</h1>
+          <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Attendance-linked salary engine — computed live, audited, and paid.</p>
+        </div>
+        <div style={{ display: "flex", gap: 8, background: C.surfaceAlt, padding: 4, borderRadius: 12, border: `1px solid ${C.border}` }}>
+          {[{ id: "overview", label: "Overview", icon: "chart" }, { id: "staff", label: "Staff Setup", icon: "users" }, { id: "generate", label: "Generate", icon: "plus" }, { id: "payslips", label: "Payslips", icon: "file" }].map((t) => (
+            <button key={t.id} className="btn" onClick={() => setTab(t.id)}
+              style={{ padding: "8px 14px", fontSize: 12.5, fontWeight: 700, borderRadius: 9, background: tab === t.id ? C.surface : "transparent", color: tab === t.id ? C.primary : C.textMuted, boxShadow: tab === t.id ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {tab === "overview" && (
+        <div className="slide-in">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
+            <KpiCard label={`Payroll Cost — ${monthLabel(currentMY)}`} value={inr(overview.totalPayout)} icon="wallet" color={C.primary} />
+            <KpiCard label="Pending Disbursal" value={inr(overview.pendingPayout)} icon="clock" color={C.red} />
+            <KpiCard label="Paid This Month" value={overview.paidCount} sub={`of ${overview.totalStaffThisMonth} slips`} icon="check" color={C.green} />
+            <KpiCard label="Setup Pending" value={overview.staffSetupPending} sub="staff without salary structure" icon="alert" color={C.yellow} />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16 }}>
+            <div className="card" style={{ padding: 20 }}>
+              <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>Payroll Cost Trend (Last 6 Months)</h4>
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={overview.trend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(v) => inr(v)} />
+                  <Line type="monotone" dataKey="amount" stroke={C.primary} strokeWidth={3} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="card" style={{ padding: 20 }}>
+              <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>Cost by Department — {monthLabel(currentMY)}</h4>
+              {overview.deptChart.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 40, color: C.textMuted, fontSize: 13 }}>No payroll generated for this month yet.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie data={overview.deptChart} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e) => e.name}>
+                      {overview.deptChart.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(v) => inr(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "staff" && (
+        <div className="slide-in">
+          {loading ? <div className="card pulse" style={{ padding: 40, textAlign: "center" }}>Loading staff...</div> : (
+            <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: C.surfaceAlt, textAlign: "left" }}>
+                    {["Staff", "Designation", "Gross Salary", "Bank", "Status", ""].map((h) => (
+                      <th key={h} style={{ padding: "12px 16px", fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: "uppercase" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffList.map((s) => {
+                    const gross = (s.basic || 0) + (s.hra || 0) + (s.da || 0) + (s.special_allowance || 0) + (s.other_allowance || 0);
+                    return (
+                      <tr key={s.staff_id} style={{ borderTop: `1px solid ${C.border}` }}>
+                        <td style={{ padding: "12px 16px", fontWeight: 700 }}>{s.full_name}</td>
+                        <td style={{ padding: "12px 16px", color: C.textMuted }}>{s.designation || "—"}</td>
+                        <td style={{ padding: "12px 16px", fontWeight: 700 }}>{s.has_salary_structure ? inr(gross) : "—"}</td>
+                        <td style={{ padding: "12px 16px" }}>
+                          {s.has_bank_details ? <span style={{ color: C.green, fontWeight: 700, fontSize: 12 }}>✓ Linked</span> : <span style={{ color: C.red, fontWeight: 700, fontSize: 12 }}>Missing</span>}
+                        </td>
+                        <td style={{ padding: "12px 16px" }}>
+                          {s.has_salary_structure && s.has_bank_details ? (
+                            <span style={{ fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: `${C.green}15`, color: C.green }}>Ready for Payroll</span>
+                          ) : (
+                            <span style={{ fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: `${C.yellow}15`, color: C.yellow }}>Incomplete</span>
+                          )}
+                        </td>
+                        <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                          <button className="btn btn-ghost" style={{ fontSize: 12, padding: "6px 12px" }} onClick={() => setSetupStaff(s)}>
+                            <Icon name="edit" size={13} /> Setup
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "generate" && (
+        <PayrollGenerateTab
+          staffList={staffList}
+          leaveTypes={leaveTypes}
+          onSaved={loadAll}
+        />
+      )}
+
+      {tab === "payslips" && (
+        <PayslipLibraryTab
+          payslips={allPayslips}
+          onViewSlip={setViewSlipId}
+          onRefresh={loadAll}
+        />
+      )}
+
+      <StaffPayrollSetupModal staff={setupStaff} open={!!setupStaff} onClose={() => setSetupStaff(null)} onSaved={loadAll} />
+      <PayslipViewModal slipId={viewSlipId} open={!!viewSlipId} onClose={() => setViewSlipId(null)} school={school} />
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// GENERATE TAB — month picker, live client-side preview, confirm & save
+// ═══════════════════════════════════════════════════════════════
+const PayrollGenerateTab = ({ staffList, leaveTypes, onSaved }) => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+  const [monthYear, setMonthYear] = useState(currentMonthYear());
+  const [attendanceRows, setAttendanceRows] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [preview, setPreview] = useState([]);
+  const [overrides, setOverrides] = useState({}); // { [staff_id]: { manual_lop_days, bonus_amount, adjustment_note } }
+  const [adjustingStaff, setAdjustingStaff] = useState(null);
+
+  const paidCodeSet = useMemo(() => {
+    const set = new Set(["PRESENT", "HALF_DAY"]);
+    leaveTypes.filter((l) => l.is_paid).forEach((l) => set.add(l.code));
+    return set;
+  }, [leaveTypes]);
+
+  const generatePreview = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest(`/payroll/attendance-raw?month_year=${monthYear}`);
+      const rows = res?.data || [];
+      setAttendanceRows(rows);
+      const eligibleStaff = staffList.filter((s) => s.has_salary_structure);
+      const computed = eligibleStaff.map((s) => computePayslip({ staff: s, attendanceRows: rows, paidCodeSet, monthYear }));
+      setPreview(computed);
+      setOverrides({}); // fresh preview clears any stale adjustments from a previous run
+    } catch (e) {
+      dialogAlert("Failed to fetch attendance: " + e.message, "Error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    // Merge base preview with any admin overrides — this is what actually gets rendered & saved
+    const finalPreview = useMemo(
+      () => preview.map((p) => (overrides[p.staff_id] ? applyPayslipOverride(p, overrides[p.staff_id]) : p)),
+      [preview, overrides]
+    );
+  
+    const totals = useMemo(() => ({
+      gross: finalPreview.reduce((s, p) => s + p.gross_salary, 0),
+      deduction: finalPreview.reduce((s, p) => s + p.total_deduction, 0),
+      net: finalPreview.reduce((s, p) => s + p.net_pay, 0),
+    }), [finalPreview]);
+
+    const handleConfirm = async () => {
+      if (finalPreview.length === 0) return;
+  
+      // Block save if any override is missing its mandatory reason
+      const missingReason = finalPreview.find((p) => p.is_manually_adjusted && !p.adjustment_note?.trim());
+      if (missingReason) {
+        return dialogAlert(`Please add a reason for the adjustment on ${missingReason.full_name} before saving.`, "Reason Required");
+      }
+  
+      const adjustedCount = finalPreview.filter((p) => p.is_manually_adjusted).length;
+      const confirmMsg = `Save payroll for ${finalPreview.length} staff members for ${monthLabel(monthYear)}?`
+        + (adjustedCount > 0 ? ` (${adjustedCount} manually adjusted)` : "") + ` Total payout: ${inr(totals.net)}.`;
+      const ok = await dialogConfirm(confirmMsg, "Confirm Payroll");
+      if (!ok) return;
+      setSaving(true);
+      try {
+        await apiRequest("/payroll/save-run", "POST", { month_year: monthYear, entries: finalPreview });
+      await dialogAlert("Payroll saved successfully. You can now view slips in the Payslips tab.", "Success");
+      onSaved();
+      setPreview([]);
+      setOverrides({});
+    } catch (e) {
+      dialogAlert("Save failed: " + e.message, "Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const skippedStaff = staffList.filter((s) => !s.has_salary_structure);
+
+  return (
+    <div className="slide-in">
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <FormRow label="Payroll Month">
+          <input className="input" type="month" value={monthYear} onChange={(e) => setMonthYear(e.target.value)} />
+        </FormRow>
+        <button className="btn btn-primary" onClick={generatePreview} disabled={loading} style={{ height: 42, display: "flex", alignItems: "center", gap: 8 }}>
+          <Icon name="refresh" size={14} /> {loading ? "Calculating..." : "Generate Preview"}
+        </button>
+      </div>
+
+      {skippedStaff.length > 0 && (
+        <div style={{ background: `${C.yellow}12`, border: `1px solid ${C.yellow}44`, borderRadius: 12, padding: 12, marginBottom: 16, fontSize: 12.5, color: C.text }}>
+          ⚠ {skippedStaff.length} staff skipped (no salary structure set): {skippedStaff.map((s) => s.full_name).join(", ")}
+        </div>
+      )}
+
+      {preview.length > 0 && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 20 }}>
+            <KpiCard label="Total Gross" value={inr(totals.gross)} icon="wallet" color={C.blue} />
+            <KpiCard label="Total Deductions" value={inr(totals.deduction)} icon="alert" color={C.red} />
+            <KpiCard label="Net Payout" value={inr(totals.net)} icon="check" color={C.green} />
+          </div>
+
+          <div className="card" style={{ padding: 0, overflow: "hidden", marginBottom: 16 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+            <thead>
+                <tr style={{ background: C.surfaceAlt, textAlign: "left" }}>
+                  {["Staff", "Present", "Paid Leave", "LOP", "Gross", "Deductions", "Net Pay", ""].map((h) => (
+                    <th key={h} style={{ padding: "10px 14px", fontSize: 10.5, fontWeight: 800, color: C.textMuted, textTransform: "uppercase" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {finalPreview.map((p) => (
+                  <tr key={p.staff_id} style={{ borderTop: `1px solid ${C.border}`, background: p.is_manually_adjusted ? `${C.yellow}0c` : "transparent" }}>
+                    <td style={{ padding: "10px 14px", fontWeight: 700 }}>
+                      {p.full_name}
+                      {p.is_manually_adjusted && (
+                        <span style={{ marginLeft: 8, fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 20, background: `${C.yellow}20`, color: C.amber || "#B7791F" }}>
+                          Adjusted
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>{p.present_days}</td>
+                    <td style={{ padding: "10px 14px", color: C.green }}>{p.paid_leave_days}</td>
+                    <td style={{ padding: "10px 14px", color: p.lop_days > 0 ? C.red : C.textMuted }}>
+                      {p.lop_days}{p.lop_days !== p.auto_lop_days && <span style={{ fontSize: 10, color: C.textMuted }}> (auto: {p.auto_lop_days})</span>}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>{inr(p.gross_salary)}</td>
+                    <td style={{ padding: "10px 14px", color: C.red }}>-{inr(p.total_deduction)}</td>
+                    <td style={{ padding: "10px 14px", fontWeight: 800 }}>
+                      {inr(p.net_pay)}{p.bonus_amount > 0 && <span style={{ fontSize: 10, color: C.green }}> (+{inr(p.bonus_amount)} bonus)</span>}
+                    </td>
+                    <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                      <button className="btn btn-ghost" style={{ fontSize: 11.5, padding: "5px 10px" }} onClick={() => setAdjustingStaff(p.staff_id)}>
+                        <Icon name="edit" size={12} /> Adjust
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button className="btn btn-primary" onClick={handleConfirm} disabled={saving} style={{ padding: "12px 28px", fontSize: 14 }}>
+              {saving ? "Saving..." : `Confirm & Save Payroll for ${monthLabel(monthYear)}`}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ── MANUAL OVERRIDE MODAL ── */}
+      {adjustingStaff && (() => {
+        const row = finalPreview.find((p) => p.staff_id === adjustingStaff);
+        const current = overrides[adjustingStaff] || { manual_lop_days: row.auto_lop_days, bonus_amount: 0, adjustment_note: "" };
+        return (
+          <Modal open={true} onClose={() => setAdjustingStaff(null)} title={`Adjust Payroll — ${row.full_name}`} width={460}>
+            <p style={{ fontSize: 12.5, color: C.textMuted, marginBottom: 14 }}>
+              System calculated <b>{row.auto_lop_days} LOP day(s)</b> from attendance. Override below if the admin wants to pay despite absence, or add a bonus.
+            </p>
+            <FormRow label="LOP Days to Apply">
+              <input className="input" type="number" step="0.5" min="0" value={current.manual_lop_days}
+                onChange={(e) => setOverrides((p) => ({ ...p, [adjustingStaff]: { ...current, manual_lop_days: e.target.value } }))} />
+            </FormRow>
+            <FormRow label="Bonus / Extra Amount (optional)">
+              <input className="input" type="number" min="0" value={current.bonus_amount}
+                onChange={(e) => setOverrides((p) => ({ ...p, [adjustingStaff]: { ...current, bonus_amount: e.target.value } }))} />
+            </FormRow>
+            <FormRow label="Reason (required if adjusting)">
+              <textarea className="input" rows={2} value={current.adjustment_note}
+                placeholder="e.g. Approved by Principal — medical emergency"
+                onChange={(e) => setOverrides((p) => ({ ...p, [adjustingStaff]: { ...current, adjustment_note: e.target.value } }))} />
+            </FormRow>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14 }}>
+              <button className="btn btn-ghost" style={{ color: C.red }} onClick={() => { setOverrides((p) => { const n = { ...p }; delete n[adjustingStaff]; return n; }); setAdjustingStaff(null); }}>
+                Reset to Auto
+              </button>
+              <button className="btn btn-primary" onClick={() => setAdjustingStaff(null)}>Apply</button>
+            </div>
+          </Modal>
+        );
+      })()}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// PAYSLIP LIBRARY TAB
+// ═══════════════════════════════════════════════════════════════
+const PayslipLibraryTab = ({ payslips, onViewSlip, onRefresh }) => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+  const [monthFilter, setMonthFilter] = useState("ALL");
+  const [payModal, setPayModal] = useState(null);
+  const [payForm, setPayForm] = useState({ payment_mode: "BANK_TRANSFER", trx_id: "" });
+  const [adjustModal, setAdjustModal] = useState(null);
+  const [adjustForm, setAdjustForm] = useState({ manual_lop_days: "", bonus_amount: "", adjustment_note: "" });
+
+  const handleAdjustSave = async () => {
+    try {
+      await apiRequest(`/payroll/payslips/${adjustModal.id}/adjust`, "PATCH", {
+        manual_lop_days: adjustForm.manual_lop_days === "" ? null : Number(adjustForm.manual_lop_days),
+        bonus_amount: Number(adjustForm.bonus_amount) || 0,
+        adjustment_note: adjustForm.adjustment_note,
+      });
+      setAdjustModal(null);
+      onRefresh();
+    } catch (e) {
+      dialogAlert("Adjustment failed: " + e.message, "Error");
+    }
+  };
+
+  const months = useMemo(() => Array.from(new Set(payslips.map((p) => p.month_year))).sort().reverse(), [payslips]);
+  const filtered = monthFilter === "ALL" ? payslips : payslips.filter((p) => p.month_year === monthFilter);
+
+  const handleMarkPaid = async () => {
+    try {
+      await apiRequest(`/payroll/payslips/${payModal.id}/mark-paid`, "PATCH", payForm);
+      setPayModal(null);
+      onRefresh();
+    } catch (e) {
+      dialogAlert("Failed: " + e.message, "Error");
+    }
+  };
+
+  return (
+    <div className="slide-in">
+      <div style={{ marginBottom: 16 }}>
+        <select className="select" style={{ maxWidth: 220 }} value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
+          <option value="ALL">All Months</option>
+          {months.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
+        </select>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>No payslips generated yet.</div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: C.surfaceAlt, textAlign: "left" }}>
+                {["Staff", "Month", "Net Pay", "Status", ""].map((h) => (
+                  <th key={h} style={{ padding: "12px 16px", fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: "uppercase" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p) => (
+                <tr key={p.id} style={{ borderTop: `1px solid ${C.border}` }}>
+                  <td style={{ padding: "12px 16px", fontWeight: 700 }}>{p.staff_name}</td>
+                  <td style={{ padding: "12px 16px", color: C.textMuted }}>{monthLabel(p.month_year)}</td>
+                  <td style={{ padding: "12px 16px", fontWeight: 800 }}>{inr(p.net_pay)}</td>
+                  <td style={{ padding: "12px 16px" }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: p.payment_status === "PAID" ? `${C.green}15` : `${C.yellow}15`, color: p.payment_status === "PAID" ? C.green : C.yellow }}>
+                      {p.payment_status}
+                    </span>
+                  </td>
+                  <td style={{ padding: "12px 16px", textAlign: "right", display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                    <button className="btn btn-ghost" style={{ fontSize: 12, padding: "6px 12px" }} onClick={() => onViewSlip(p.id)}>
+                      <Icon name="eye" size={13} /> View
+                    </button>
+                    {p.payment_status !== "PAID" && (
+                      <>
+                        <button className="btn btn-ghost" style={{ fontSize: 12, padding: "6px 12px" }} onClick={() => setAdjustModal(p)}>
+                          <Icon name="edit" size={13} /> Adjust
+                        </button>
+                        <button className="btn btn-ghost" style={{ fontSize: 12, padding: "6px 12px", color: C.green }} onClick={() => { setPayModal(p); setPayForm({ payment_mode: "BANK_TRANSFER", trx_id: "" }); }}>
+                          <Icon name="check" size={13} /> Mark Paid
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+<Modal open={!!adjustModal} onClose={() => setAdjustModal(null)} title={`Adjust Payslip — ${adjustModal?.staff_name || ""}`} width={440}>
+        <FormRow label="LOP Days to Apply">
+          <input className="input" type="number" step="0.5" placeholder={`Current: ${adjustModal?.lop_days ?? 0}`}
+            value={adjustForm.manual_lop_days} onChange={(e) => setAdjustForm((p) => ({ ...p, manual_lop_days: e.target.value }))} />
+        </FormRow>
+        <FormRow label="Bonus / Extra Amount">
+          <input className="input" type="number" value={adjustForm.bonus_amount} onChange={(e) => setAdjustForm((p) => ({ ...p, bonus_amount: e.target.value }))} />
+        </FormRow>
+        <FormRow label="Reason">
+          <textarea className="input" rows={2} value={adjustForm.adjustment_note} onChange={(e) => setAdjustForm((p) => ({ ...p, adjustment_note: e.target.value }))} />
+        </FormRow>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 14 }}>
+          <button className="btn btn-ghost" onClick={() => setAdjustModal(null)}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleAdjustSave}>Save Adjustment</button>
+        </div>
+      </Modal>
+
+      <Modal open={!!payModal} onClose={() => setPayModal(null)} title={`Mark Paid — ${payModal?.staff_name || ""}`} width={420}>
+        <FormRow label="Payment Mode">
+          <select className="select" value={payForm.payment_mode} onChange={(e) => setPayForm((p) => ({ ...p, payment_mode: e.target.value }))}>
+            <option value="BANK_TRANSFER">Bank Transfer</option>
+            <option value="UPI">UPI</option>
+            <option value="CASH">Cash</option>
+          </select>
+        </FormRow>
+        <FormRow label="Transaction Reference (optional)">
+          <input className="input" value={payForm.trx_id} onChange={(e) => setPayForm((p) => ({ ...p, trx_id: e.target.value }))} placeholder="UTR / Txn ID" />
+        </FormRow>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 14 }}>
+          <button className="btn btn-ghost" onClick={() => setPayModal(null)}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleMarkPaid}>Confirm Payment</button>
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// EXAM MANAGEMENT MODULE — full lifecycle: Setup → Date Sheet →
+// Marks Entry → Result Processing → Publish, plus a school-wide
+
+
+// ═══════════════════════════════════════════════════════════════
+
+const EXAM_TYPES = [
+  { v: "unit_test", l: "Unit Test" },
+  { v: "half_yearly", l: "Half Yearly" },
+  { v: "annual", l: "Annual" },
+  { v: "custom", l: "Custom" },
+];
+
+const EXAM_STATUS_META = {
+  draft: { label: "Draft", color: C.textMuted },
+  scheduled: { label: "Scheduled", color: C.blue },
+  ongoing: { label: "Ongoing", color: C.yellow },
+  completed: { label: "Completed", color: C.cyan },
+  published: { label: "Published", color: C.green },
+};
+
+const MARK_STATUS_OPTIONS = [
+  { v: "present", l: "Present" },
+  { v: "absent", l: "Absent (AB)" },
+  { v: "leave", l: "Leave (L)" },
+  { v: "tc", l: "TC" },
+  { v: "malpractice", l: "Malpractice" },
+  { v: "exempted", l: "Exempted" },
+];
+
+// ── Small exam card for the overview grid — plain function, no hooks ──
+const ExamCard = ({ exam, onManage, onEdit, onDelete, onPublishToggle }) => {
+  const meta = EXAM_STATUS_META[exam.status] || EXAM_STATUS_META.draft;
+  return (
+    <div
+      key={exam.id}
+      className="card"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        borderTop: `4px solid ${meta.color}`,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: 10,
+        }}
+      >
+          <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
+          <div className="syne" style={{ fontSize: 16, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {exam.name}
+          </div>
+          <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 3 }}>
+            {EXAM_TYPES.find((t) => t.v === exam.exam_type)?.l ||
+              exam.exam_type}
+            {exam.academic_year_name ? ` · ${exam.academic_year_name}` : ""}
+          </div>
+        </div>
+        <span
+          className="badge"
+          style={{
+            background: `${meta.color}22`,
+            color: meta.color,
+            fontSize: 10.5,
+          }}
+        >
+          {meta.label}
+        </span>
+      </div>
+
+      <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 10 }}>
+        🗓{" "}
+        {exam.start_date
+          ? new Date(exam.start_date).toLocaleDateString("en-IN")
+          : "—"}
+        {" → "}
+        {exam.end_date
+          ? new Date(exam.end_date).toLocaleDateString("en-IN")
+          : "—"}
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: 8,
+          marginBottom: 14,
+        }}
+      >
+        {[
+          ["Classes", exam.section_count ?? 0],
+          ["Weightage", `${exam.weightage_percent ?? 0}%`],
+          ["Subjects", exam.subject_count ?? 0],
+        ].map(([k, v]) => (
+          <div
+            key={k}
+            style={{
+              background: C.surfaceAlt,
+              borderRadius: 8,
+              padding: "6px 8px",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 9.5,
+                color: C.textMuted,
+                textTransform: "uppercase",
+                fontWeight: 700,
+              }}
+            >
+              {k}
+            </div>
+            <div
+              className="syne"
+              style={{ fontSize: 14, fontWeight: 800, color: C.text }}
+            >
+              {v}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          borderTop: `1px solid ${C.border}33`,
+          paddingTop: 10,
+        }}
+      >
+        <button
+          className="btn btn-primary"
+          style={{ flex: 1, fontSize: 12 }}
+          onClick={() => onManage(exam)}
+        >
+          Manage →
+        </button>
+        <button
+          className="btn btn-ghost"
+          style={{ padding: "6px 8px" }}
+          title="Edit"
+          onClick={() => onEdit(exam)}
+        >
+          <Icon name="edit" size={13} />
+        </button>
+        {exam.status === "published" ? (
+          <button
+            className="btn btn-ghost"
+            style={{ padding: "6px 8px" }}
+            title="Unpublish"
+            onClick={() => onPublishToggle(exam, false)}
+          >
+            <Icon name="eye" size={13} />
+          </button>
+        ) : (
+          <button
+            className="btn btn-ghost"
+            style={{ padding: "6px 8px" }}
+            title="Publish"
+            onClick={() => onPublishToggle(exam, true)}
+          >
+            <Icon name="check" size={13} />
+          </button>
+        )}
+        <button
+          className="btn btn-danger"
+          style={{ padding: "6px 8px" }}
+          title="Delete"
+          onClick={() => onDelete(exam)}
+        >
+          <Icon name="trash" size={13} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DATE SHEET TAB — per exam, pick a class, tick which subjects are
+// part of this exam, set date/time/marks via dropdowns+pickers.
+// ═══════════════════════════════════════════════════════════════
+const DateSheetTab = ({ examId, examSections, grades }) => {
+  const [sectionId, setSectionId] = useState(examSections[0]?.id || "");
+  const currentSection = examSections.find((s) => s.id === sectionId);
+  const gradeId = currentSection?.grade_id;
+  const { subjects: classSubjects } = useGradeSubjects(gradeId);
+
+  const [rows, setRows] = useState({}); // subject_id -> {included, exam_date, start_time, duration_minutes, max_marks, passing_marks}
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [bulkMax, setBulkMax] = useState(80);
+  const [bulkDuration, setBulkDuration] = useState(120);
+
+  const load = async () => {
+    if (!sectionId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/exams/${examId}/datesheet?section_id=${sectionId}`
+      );
+      const existing = Array.isArray(res?.data) ? res.data : [];
+      const map = {};
+      existing.forEach((r) => {
+        map[r.subject_id] = {
+          included: true,
+          is_grade_only: !!r.is_grade_only, // 🔴 FIX: Checkbox state loaded from DB
+          exam_date: r.exam_date?.split("T")[0] || "",
+          start_time: r.start_time || "09:00",
+          duration_minutes: r.duration_minutes || 120,
+          max_marks: r.max_marks ?? 80,         // 🔴 FIX: Preserves 0 instead of defaulting to 80
+          passing_marks: r.passing_marks ?? 33, // 🔴 FIX: Preserves 0 instead of defaulting to 33
+        };
+      });
+      setRows(map);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, [sectionId]); // eslint-disable-line
+
+  const toggleRow = (subjectId) => {
+    setRows((prev) => {
+      const cur = prev[subjectId];
+      if (cur?.included) {
+        return { ...prev, [subjectId]: { ...cur, included: false } };
+      }
+      return {
+        ...prev,
+        [subjectId]: {
+          included: true,
+          exam_date: cur?.exam_date || "",
+          start_time: cur?.start_time || "09:00",
+          duration_minutes: cur?.duration_minutes || bulkDuration,
+          max_marks: cur?.max_marks || bulkMax,
+          passing_marks:
+            cur?.passing_marks ||
+            Math.round((cur?.max_marks || bulkMax) * 0.33),
+        },
+      };
+    });
+  };
+
+  const setRowField = (subjectId, field, value) => {
+    setRows((prev) => ({
+      ...prev,
+      [subjectId]: { ...prev[subjectId], [field]: value },
+    }));
+  };
+
+  const applyBulkToAll = () => {
+    setRows((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((sid) => {
+        if (next[sid]?.included) {
+          next[sid] = {
+            ...next[sid],
+            max_marks: bulkMax,
+            duration_minutes: bulkDuration,
+          };
+        }
+      });
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    const entries = Object.entries(rows)
+      .filter(([, r]) => r.included)
+      .map(([subject_id, r]) => ({
+        section_id: sectionId,
+        subject_id,
+        exam_date: r.exam_date || null,
+        start_time: r.start_time,
+        duration_minutes: Number(r.duration_minutes) || 0,
+        max_marks: Number(r.max_marks) || 0,
+        passing_marks: Number(r.passing_marks) || 0,
+        is_grade_only: !!r.is_grade_only // 
+      }));
+
+    if (entries.some((e) => !e.exam_date)) {
+      alert("Please set an exam date for every ticked subject.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await apiRequest(`/exams/${examId}/datesheet`, "PUT", {
+        section_id: sectionId,
+        entries,
+      });
+      alert("✅ Date sheet saved!");
+      await load();
+    } catch (e) {
+      alert("Save failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "flex-end",
+          }}
+        >
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              CLASS / SECTION
+            </label>
+            <select
+              className="select"
+              style={{ width: 220 }}
+              value={sectionId}
+              onChange={(e) => setSectionId(e.target.value)}
+            >
+              {examSections.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.grade_name} — {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              BULK MAX MARKS
+            </label>
+            <select
+              className="select"
+              style={{ width: 110 }}
+              value={bulkMax}
+              onChange={(e) => setBulkMax(Number(e.target.value))}
+            >
+              {[20, 25, 40, 50, 80, 100].map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: C.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              BULK DURATION
+            </label>
+            <select
+              className="select"
+              style={{ width: 130 }}
+              value={bulkDuration}
+              onChange={(e) => setBulkDuration(Number(e.target.value))}
+            >
+              {[60, 90, 120, 150, 180].map((v) => (
+                <option key={v} value={v}>
+                  {v} min
+                </option>
+              ))}
+            </select>
+          </div>
+          <button className="btn btn-ghost" onClick={applyBulkToAll}>
+            Apply to Ticked Subjects
+          </button>
+          <button
+            className="btn btn-primary"
+            style={{ marginLeft: "auto" }}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Save Date Sheet"}
+          </button>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {loading ? (
+          <div
+            className="pulse"
+            style={{ padding: 30, textAlign: "center", color: C.primary }}
+          >
+            Loading subjects…
+          </div>
+        ) : classSubjects.length === 0 ? (
+          <div style={{ padding: 30, textAlign: "center", color: C.textMuted }}>
+          No subjects configured for this class. Set them up in School Setup →
+          Subjects tab first.
+        </div>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+        <table className="table" style={{ minWidth: 760 }}>
+            <thead>
+            <tr>
+                <th style={{ width: 40 }}></th>
+                <th>Subject</th>
+                <th>Grade Only?</th> {/* 🔴 NEW COLUMN */}
+                <th>Date</th>
+                <th>Start Time</th>
+                <th>Duration</th>
+                <th>Max Marks</th>
+                <th>Passing</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classSubjects.map((sub) => {
+                const r = rows[sub.id] || {};
+                return (
+                  <tr key={sub.id} style={{ background: r.is_grade_only ? `${C.yellow}11` : "transparent" }}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={!!r.included}
+                        onChange={() => toggleRow(sub.id)}
+                        style={{
+                          width: 16,
+                          height: 16,
+                          cursor: "pointer",
+                          accentColor: C.primary,
+                        }}
+                      />
+                    </td>
+                    <td style={{ fontWeight: 600 }}>{sub.name}</td>
+                    {/* 🔴 NEW: Grade Only Checkbox */}
+                    <td>
+                      <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 700, color: r.is_grade_only ? C.yellow : C.textMuted }}>
+                      <input
+                          type="checkbox"
+                          checked={!!r.is_grade_only}
+                          disabled={!r.included}
+                          onChange={(e) => {
+                            const isGrade = e.target.checked;
+                            setRows(prev => ({
+                              ...prev,
+                              [sub.id]: {
+                                ...prev[sub.id],
+                                is_grade_only: isGrade,
+                                max_marks: isGrade ? 0 : 80,
+                                passing_marks: isGrade ? 0 : 26
+                              }
+                            }));
+                          }}
+                          style={{ accentColor: C.yellow }}
+                        />
+                        Yes
+                      </label>
+                    </td>
+                    <td>
+                      <input
+                        className="input"
+                        type="date"
+                        style={{ width: 150 }}
+                        disabled={!r.included}
+                        value={r.exam_date || ""}
+                        onChange={(e) =>
+                          setRowField(sub.id, "exam_date", e.target.value)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="input"
+                        type="time"
+                        style={{ width: 110 }}
+                        disabled={!r.included}
+                        value={r.start_time || "09:00"}
+                        onChange={(e) =>
+                          setRowField(sub.id, "start_time", e.target.value)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <select
+                        className="select"
+                        style={{ width: 110 }}
+                        disabled={!r.included}
+                        value={r.duration_minutes || 120}
+                        onChange={(e) =>
+                          setRowField(
+                            sub.id,
+                            "duration_minutes",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {[60, 90, 120, 150, 180].map((v) => (
+                          <option key={v} value={v}>
+                            {v} min
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        className="select"
+                        style={{ width: 90 }}
+                        disabled={!r.included || r.is_grade_only}
+                        value={r.is_grade_only ? 0 : (r.max_marks ?? 80)} // 🔴 FIX: Using ?? instead of ||
+                        onChange={(e) =>
+                          setRowField(sub.id, "max_marks", e.target.value)
+                        }
+                      >
+                        {r.is_grade_only && <option value={0}>0 (NIL)</option>} {/* 🔴 FIX: Show NIL */}
+                        {[20, 25, 40, 50, 80, 100].map((v) => (
+                          <option key={v} value={v}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        className="select"
+                        style={{ width: 90 }}
+                        disabled={!r.included || r.is_grade_only}
+                        value={r.is_grade_only ? 0 : (r.passing_marks ?? Math.round((r.max_marks || 80) * 0.33))}
+                        onChange={(e) =>
+                          setRowField(sub.id, "passing_marks", e.target.value)
+                        }
+                      >
+                        {r.is_grade_only && <option value={0}>0 (NIL)</option>}
+                        {Array.from({ length: 10 }, (_, i) =>
+                          Math.round((r.max_marks || 80) * (0.2 + i * 0.05))
+                        ).map((v) => (
+                          <option key={v} value={v}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
+  // ═══════════════════════════════════════════════════════════════
+ // MARKS ENTRY TAB — FIXED WITH BULK CSV IMPORT & STRICT VALIDATION
+ // ═══════════════════════════════════════════════════════════════
+const MarksEntryTab = ({ examId, examSections }) => {
+  const [sectionId, setSectionId] = useState(examSections[0]?.id || "");
+  const [datesheet, setDatesheet] = useState([]);
+  const [subjectId, setSubjectId] = useState("");
+  const [roster, setRoster] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // 🔴 Master Grading Scale State
+  const [validGrades, setValidGrades] = useState([]);
+
+  useEffect(() => {
+    apiRequest("/setup/grading-scale")
+      .then(res => {
+        const scale = Array.isArray(res?.data) ? res.data : [];
+        setValidGrades(scale.map(s => s.grade_label.toUpperCase()));
+      })
+      .catch(e => {
+        console.error("Failed to load grading scale", e);
+        setValidGrades(["A+", "A", "B+", "B", "C", "D", "E"]); // Fallback
+      });
+  }, []);
+
+  // 🔴 CSV Import States
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importData, setImportData] = useState(null); // { validPayloads: [], errors: [], previewRows: [] }
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef(null);
+
+  const activeSubjectMeta = datesheet.find((d) => d.subject_id === subjectId);
+
+  // 1. Load Datesheet (Subjects allowed for this exam)
+  useEffect(() => {
+    (async () => {
+      if (!sectionId) return;
+      try {
+        const res = await apiRequest(`/exams/${examId}/datesheet?section_id=${sectionId}`);
+        const list = Array.isArray(res?.data) ? res.data : [];
+        setDatesheet(list);
+        setSubjectId(list[0]?.subject_id || "");
+      } catch (e) { console.error(e); }
+    })();
+  }, [sectionId, examId]);
+
+  // 2. Load Single Subject Roster
+  const loadRoster = async () => {
+    if (!sectionId || !subjectId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(`/exams/${examId}/marks-roster?section_id=${sectionId}&subject_id=${subjectId}`);
+      setRoster(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) {
+      console.error(e); setRoster([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadRoster(); }, [sectionId, subjectId]); // eslint-disable-line
+
+  const setEntry = (studentId, field, value) => {
+    setRoster((prev) => prev.map((r) => r.student_id === studentId ? { ...r, [field]: value } : r));
+  };
+
+  const markAllAbsent = () => {
+    setRoster((prev) => prev.map((r) => ({ ...r, status: "absent", marks_obtained: 0 })));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiRequest(`/exams/${examId}/marks`, "POST", {
+        exam_subject_id: activeSubjectMeta?.id,
+        entries: roster.map((r) => ({
+          student_id: r.student_id,
+          marks_obtained: r.status === "present" ? Number(r.marks_obtained) || 0 : 0,
+          status: r.status || "present",
+          remarks: r.remarks || null,
+        })),
+      });
+      alert("✅ Marks saved successfully!");
+      await loadRoster();
+    } catch (e) { alert("Save failed: " + e.message); } finally { setSaving(false); }
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🔴 BULK IMPORT LOGIC (SMART TEMPLATE & VALIDATION)
+  // ═══════════════════════════════════════════════════════════════
+
+  const downloadTemplate = async () => {
+    if (!sectionId || datesheet.length === 0) return alert("Datesheet not set for this class.");
+    
+    // Fetch all students for this section to build the template
+    let students = [];
+    try {
+      const res = await apiRequest(`/students?section_id=${sectionId}&limit=200`);
+      students = Array.isArray(res?.data) ? res.data : [];
+      
+      // 🔴 FIX: Sort students strictly by Roll Number (Handles both '1,2,10' and 'A1, B1')
+      students.sort((a, b) => {
+        const rollA = String(a.enrolment?.roll_no || "");
+        const rollB = String(b.enrolment?.roll_no || "");
+        return rollA.localeCompare(rollB, undefined, { numeric: true });
+      });
+
+    } catch (e) {
+      return alert("Failed to fetch students for template.");
+    }
+
+    // Prepare CSV Structure
+    const headers = ["Student_ID(DO_NOT_EDIT)", "Roll_No", "Student_Name"];
+    datesheet.forEach(d => headers.push(`${d.subject_name} (Max:${d.max_marks})`));
+
+    let csvContent = headers.join(",") + "\n";
+
+    students.forEach(s => {
+      const name = [s.first_name, s.last_name].filter(Boolean).join(" ");
+      const roll = s.enrolment?.roll_no || "";
+      let row = [`"${s.id}"`, `"${roll}"`, `"${name}"`];
+      // Empty columns for subjects
+      datesheet.forEach(() => row.push(""));
+      csvContent += row.join(",") + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const secMeta = examSections.find(s => s.id === sectionId);
+    link.href = url;
+    link.download = `Marks_Template_${secMeta?.grade_name}_Sec${secMeta?.name}.csv`;
+    link.click();
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => processCSV(ev.target.result);
+    reader.readAsText(file);
+    e.target.value = ""; // reset
+  };
+
+  const processCSV = (csvText) => {
+    const lines = csvText.trim().split("\n");
+    if (lines.length < 2) return alert("Invalid or empty CSV file.");
+
+    const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
+    const subjectMap = [];
+    
+    headers.forEach((h, idx) => {
+      if (idx < 3) return; 
+      
+      // 🔴 FIX: Clean up ALL double spaces and invisible characters before matching
+      const rawSubName = h.split(/\s*\(/)[0]; // Splits before the first bracket, handling any spaces
+      const subName = rawSubName.replace(/\s+/g, ' ').trim().toLowerCase();
+      
+      const matchedSubject = datesheet.find(d => 
+        (d.subject_name || "").replace(/\s+/g, ' ').trim().toLowerCase() === subName
+      );
+      
+      if (matchedSubject) {
+        subjectMap.push({ index: idx, meta: matchedSubject });
+      }
+    });
+
+    if (subjectMap.length === 0) return alert("No matching subjects found in CSV headers. Please use the downloaded template.");
+
+    const errors = [];
+    const previewRows = [];
+    const validPayloadsBySubject = {};
+    subjectMap.forEach(sm => validPayloadsBySubject[sm.meta.id] = []);
+
+    // 🔴 FIX: Now using dynamically loaded validGrades
+    const VALID_GRADES = validGrades.length > 0 ? validGrades : ["A+", "A", "B+", "B", "C", "D", "E"];
+
+    for (let i = 1; i < lines.length; i++) {
+      const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
+      const studentId = vals[0];
+      const studentName = vals[2] || "Unknown";
+
+      if (!studentId || studentId.length < 5) continue;
+
+      let rowHasError = false;
+      const previewMarks = {};
+
+      subjectMap.forEach(sm => {
+        const rawMark = vals[sm.index];
+        if (!rawMark || rawMark === "") return; // Skip empty cells
+
+        let status = "present";
+        let markVal = 0;
+        let gradeVal = null;
+        let displayVal = rawMark;
+
+        const rawUpper = rawMark.toUpperCase();
+
+        // 🔴 1. Check for Special Statuses (AB, L, TC)
+        if (rawUpper === "AB" || rawUpper === "ABSENT") {
+          status = "absent"; displayVal = "AB";
+        } else if (rawUpper === "L" || rawUpper === "LEAVE") {
+          status = "leave"; displayVal = "L";
+        } else if (rawUpper === "TC") {
+          status = "tc"; displayVal = "TC";
+        } 
+        // 🔴 2. If Present, check if subject is Grade-Only
+        else if (sm.meta.is_grade_only) {
+          if (VALID_GRADES.includes(rawUpper)) {
+            gradeVal = rawUpper; displayVal = rawUpper;
+          } else {
+            errors.push(`Row ${i+1} (${studentName}): Invalid grade '${rawMark}' for ${sm.meta.subject_name}. Allowed: ${VALID_GRADES.join(", ")}`);
+            rowHasError = true;
+          }
+        } 
+        // 🔴 3. Standard Subject (Marks)
+        else {
+          markVal = parseFloat(rawMark);
+          if (isNaN(markVal)) {
+            errors.push(`Row ${i+1} (${studentName}): Invalid mark '${rawMark}' for ${sm.meta.subject_name}. Use AB, L, or TC if not present.`);
+            rowHasError = true;
+          } else if (markVal > sm.meta.max_marks || markVal < 0) {
+            errors.push(`Row ${i+1} (${studentName}): ${markVal} exceeds max marks (${sm.meta.max_marks}) for ${sm.meta.subject_name}`);
+            rowHasError = true;
+          } else {
+            displayVal = markVal;
+          }
+        }
+
+        previewMarks[sm.meta.subject_name] = displayVal;
+
+        if (!rowHasError) {
+          validPayloadsBySubject[sm.meta.id].push({
+            student_id: studentId,
+            marks_obtained: markVal,
+            grade_obtained: gradeVal,
+            status: status,
+            remarks: null
+          });
+        }
+      });
+
+      if (!rowHasError && Object.keys(previewMarks).length > 0) {
+        previewRows.push({ name: studentName, marks: previewMarks });
+      }
+    }
+
+    setImportData({ validPayloadsBySubject, errors, previewRows });
+    setShowImportModal(true);
+  };
+
+  const confirmBulkImport = async () => {
+    if (!importData) return;
+    setImporting(true);
+    try {
+      const subjectKeys = Object.keys(importData.validPayloadsBySubject);
+      let successCount = 0;
+
+      // Smart loop: Hit existing backend API for each subject present in the CSV
+      for (const examSubjectId of subjectKeys) {
+        const entries = importData.validPayloadsBySubject[examSubjectId];
+        if (entries.length > 0) {
+          await apiRequest(`/exams/${examId}/marks`, "POST", {
+            exam_subject_id: examSubjectId,
+            entries: entries
+          });
+          successCount += entries.length;
+        }
+      }
+
+      alert(`🎉 Bulk Import Successful! ${successCount} mark entries saved.`);
+      setShowImportModal(false);
+      setImportData(null);
+      await loadRoster(); // Reload the UI grid
+    } catch (e) {
+      alert("Import failed during saving: " + e.message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+
+  const filteredRoster = roster.filter((r) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return `${r.first_name} ${r.last_name}`.toLowerCase().includes(q) || String(r.roll_no).includes(q);
+  });
+
+  const entered = roster.filter((r) => r.marks_obtained !== null && r.marks_obtained !== undefined).length;
+
+  return (
+    <div>
+      {/* 🔴 OPTIMIZED: Compact, Responsive, One-Liner Header */}
+      <div className="card" style={{ marginBottom: 16, padding: "12px 16px" }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          
+          {/* Filters (Class, Subject, Search) */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", flex: "1 1 50%" }}>
+            <select
+              className="select"
+              style={{ minWidth: 160, flex: 1, padding: "8px 12px" }}
+              value={sectionId}
+              onChange={(e) => setSectionId(e.target.value)}
+            >
+              {examSections.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.grade_name} — Sec {s.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="select"
+              style={{ minWidth: 160, flex: 1, padding: "8px 12px" }}
+              value={subjectId}
+              onChange={(e) => setSubjectId(e.target.value)}
+              disabled={!datesheet.length}
+            >
+              {datesheet.length === 0 && <option value="">No subjects found</option>}
+              {datesheet.map((d) => (
+                <option key={d.subject_id} value={d.subject_id}>{d.subject_name}</option>
+              ))}
+            </select>
+
+            <div style={{ position: "relative", minWidth: 180, flex: 1 }}>
+              <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <Icon name="search" size={14} color={C.textMuted} />
+              </div>
+              <input
+                className="input"
+                placeholder="Search student..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ padding: "8px 12px 8px 32px", width: "100%" }}
+              />
+            </div>
+          </div>
+
+          {/* Dynamic Meta & Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginLeft: "auto" }}>
+            
+            {activeSubjectMeta && (
+              <div style={{ display: "flex", gap: 8, fontSize: 11, background: C.surfaceAlt, padding: "6px 12px", borderRadius: 8, border: `1px solid ${C.border}` }}>
+                <span style={{ color: C.textMuted }}>Max: <b style={{ color: C.text }}>{activeSubjectMeta.max_marks}</b></span>
+                <span style={{ color: C.textMuted }}>Pass: <b style={{ color: C.text }}>{activeSubjectMeta.passing_marks}</b></span>
+                <span style={{ color: C.textMuted }}>Done: <b style={{ color: C.primary }}>{entered}/{roster.length}</b></span>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 8 }}>
+              {/* 🔴 NEW: Bulk Actions */}
+              <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 8, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                <button className="btn btn-ghost" style={{ border: "none", borderRadius: 0, padding: "8px 12px" }} title="Download Template" onClick={downloadTemplate}>
+                  <Icon name="download" size={14} />
+                </button>
+                <button className="btn btn-ghost" style={{ border: "none", borderRadius: 0, borderLeft: `1px solid ${C.border}`, padding: "8px 12px" }} title="Upload CSV" onClick={() => fileRef.current?.click()}>
+                  <Icon name="setup" size={14} /> CSV
+                </button>
+                <input type="file" accept=".csv" ref={fileRef} style={{ display: "none" }} onChange={handleFileUpload} />
+              </div>
+
+              <button className="btn btn-ghost" style={{ fontSize: 12, padding: "8px 12px" }} onClick={markAllAbsent}>Mark Absent</button>
+              <button className="btn btn-primary" style={{ fontSize: 12, padding: "8px 16px" }} onClick={handleSave} disabled={saving || !activeSubjectMeta}>
+                {saving ? "Saving…" : "Save Marks"}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {loading ? (
+          <div className="pulse" style={{ padding: 30, textAlign: "center", color: C.primary }}>Loading roster…</div>
+        ) : !activeSubjectMeta ? (
+          <div style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No subjects scheduled for this class yet.</div>
+        ) : filteredRoster.length === 0 ? (
+          <div style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No students found.</div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ width: 50 }}>Roll</th>
+                  <th>Student</th>
+                  <th style={{ width: 160 }}>Status</th>
+                  <th style={{ width: 120 }}>Marks (/{activeSubjectMeta.max_marks})</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRoster.map((r) => (
+                  <tr key={r.student_id}>
+                    <td style={{ color: C.textMuted }}>{r.roll_no || "—"}</td>
+                    <td style={{ fontWeight: 600 }}>{[r.first_name, r.last_name].filter(Boolean).join(" ")}</td>
+                    <td>
+                      <select className="select" value={r.status || "present"} onChange={(e) => setEntry(r.student_id, "status", e.target.value)}>
+                        {MARK_STATUS_OPTIONS.map((o) => (<option key={o.v} value={o.v}>{o.l}</option>))}
+                      </select>
+                    </td>
+                    {/* 🔴 SMART INPUT: Numbers for core subjects, Dropdown for Grade-Only */}
+                    <td>
+                      {activeSubjectMeta.is_grade_only ? (
+                        <select
+                          className="select"
+                          disabled={r.status !== "present"}
+                          value={r.status === "present" ? r.grade_obtained ?? "" : ""}
+                          onChange={(e) => setEntry(r.student_id, "grade_obtained", e.target.value)}
+                          style={{ fontWeight: 800, color: C.yellow, width: 100 }}
+                        >
+                          <option value="">- Grade -</option>
+                          {/* 🔴 FIX: Dropdown mapped from Master Scale */}
+                          {(validGrades.length > 0 ? validGrades : ["A+", "A", "B+", "B", "C", "D", "E"]).map(g => (
+                            <option key={g} value={g}>{g}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          className="input"
+                          type="number"
+                          min={0}
+                          max={activeSubjectMeta.max_marks}
+                          disabled={r.status !== "present"}
+                          value={r.status === "present" ? r.marks_obtained ?? "" : 0}
+                          onChange={(e) => setEntry(r.student_id, "marks_obtained", e.target.value)}
+                          style={{ fontWeight: 800, color: C.primary, width: 100 }}
+                        />
+                      )}
+                    </td>
+                    <td>
+                      <input className="input" placeholder="optional" value={r.remarks || ""} onChange={(e) => setEntry(r.student_id, "remarks", e.target.value)} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* 🔴 MODAL: BULK IMPORT PREVIEW & VALIDATION */}
+      <Modal open={showImportModal} onClose={() => setShowImportModal(false)} title="Bulk Marks Import" width={750}>
+        {importData && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: importData.errors.length > 0 ? `${C.red}11` : `${C.green}11`, borderRadius: 10, border: `1px solid ${importData.errors.length > 0 ? C.red : C.green}`, marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, color: importData.errors.length > 0 ? C.red : C.green }}>
+                {importData.errors.length > 0 ? "⚠ Validation Errors Found" : "✅ Data is valid and ready to import"}
+              </div>
+              <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}>
+                Valid Rows: {importData.previewRows.length} | Errors: {importData.errors.length}
+              </div>
+            </div>
+
+            {importData.errors.length > 0 && (
+              <div style={{ background: C.surfaceAlt, border: `1px solid ${C.red}44`, borderRadius: 8, padding: 12, maxHeight: 150, overflowY: "auto", marginBottom: 16 }}>
+                {importData.errors.map((err, i) => (
+                  <div key={i} style={{ fontSize: 12, color: C.red, marginBottom: 4, fontWeight: 600 }}>• {err}</div>
+                ))}
+              </div>
+            )}
+
+            <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: C.text }}>Valid Data Preview</h4>
+            <div style={{ maxHeight: 300, overflowY: "auto", border: `1px solid ${C.border}`, borderRadius: 8 }}>
+              <table className="table" style={{ fontSize: 11 }}>
+                <thead>
+                  <tr>
+                    <th>Student Name</th>
+                    <th>Extracted Marks (Subject-wise)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importData.previewRows.map((r, i) => (
+                    <tr key={i}>
+                      <td style={{ fontWeight: 600 }}>{r.name}</td>
+                      <td>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {Object.entries(r.marks).map(([sub, mark]) => (
+                            <span key={sub} style={{ background: C.surfaceAlt, padding: "2px 6px", borderRadius: 4, border: `1px solid ${C.border}` }}>
+                              {sub}: <b style={{ color: C.primary }}>{mark}</b>
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {importData.previewRows.length === 0 && (
+                    <tr><td colSpan={2} style={{ textAlign: "center", color: C.textMuted, padding: 20 }}>No valid data found to import.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+              <button className="btn btn-ghost" onClick={() => setShowImportModal(false)}>Cancel</button>
+              <button 
+                className="btn btn-primary" 
+                onClick={confirmBulkImport} 
+                disabled={importing || importData.previewRows.length === 0 || importData.errors.length > 0}
+                style={{ opacity: (importing || importData.previewRows.length === 0 || importData.errors.length > 0) ? 0.6 : 1 }}
+              >
+                {importing ? "Importing..." : "Confirm & Import Marks"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// RESULTS & PUBLISH TAB
+// ═══════════════════════════════════════════════════════════════
+const ResultsPublishTab = ({ exam, examSections, onExamUpdated }) => {
+  const { dialogConfirm } = useDialog();
+  const [sectionId, setSectionId] = useState(examSections[0]?.id || "");
+  const [results, setResults] = useState([]);
+  const [subjectCols, setSubjectCols] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // student row to reset
+  const [confirmPublish, setConfirmPublish] = useState(false);
+
+  const load = async () => {
+    if (!sectionId) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest(
+        `/exams/${exam.id}/results?section_id=${sectionId}`
+      );
+      setResults(Array.isArray(res?.data?.rows) ? res.data.rows : []);
+      setSubjectCols(
+        Array.isArray(res?.data?.subjects) ? res.data.subjects : []
+      );
+    } catch (e) {
+      console.error(e);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    load();
+  }, [sectionId]); // eslint-disable-line
+
+      // 🔴 FIXED: Now points to the unified Result Engine and passes section_id
+  const handleProcess = async () => {
+    if (!sectionId) return alert("Please select a class/section first.");
+    if (!(await dialogConfirm("Compute/Recompute results for this specific class?", "Recompute Results"))) return;
+    setProcessing(true);
+    try {
+      // 🔴 Nayi API jo section_id ke sath hit hogi
+      const res = await apiRequest(`/results/compute/${exam.id}`, "POST", {
+        section_id: sectionId, 
+      });
+      await load(); // Table reload
+      alert(`✅ ${res?.message || "Results computed successfully!"}`);
+    } catch (e) {
+      alert("Processing failed: " + e.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handlePublish = async (publish) => {
+    try {
+      await apiRequest(
+        `/exams/${exam.id}/${publish ? "publish" : "unpublish"}`,
+        "PUT"
+      );
+      onExamUpdated({ ...exam, status: publish ? "published" : "completed" });
+      setConfirmPublish(false);
+    } catch (e) {
+      alert("Failed: " + e.message);
+    }
+  };
+
+  const handleDeleteResult = async () => {
+    if (!confirmDelete) return;
+    try {
+      await apiRequest(
+        `/exams/${exam.id}/results/${confirmDelete.student_id}`,
+        "DELETE"
+      );
+      setConfirmDelete(null);
+      await load();
+    } catch (e) {
+      alert("Delete failed: " + e.message);
+    }
+  };
+
+  const gradeColor = (g) => {
+    if (["A+", "A"].includes(g)) return C.green;
+    if (["B+", "B"].includes(g)) return C.blue;
+    if (g === "C") return C.yellow;
+    return C.red;
+  };
+
+  const passCount = results.filter((r) => r.percentage >= 33).length;
+  const gradeDist = ["A+", "A", "B+", "B", "C", "D", "F"]
+    .map((g) => ({
+      name: g,
+      value: results.filter((r) => r.grade === g).length,
+    }))
+    .filter((d) => d.value > 0);
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <select
+            className="select"
+            style={{ width: 220 }}
+            value={sectionId}
+            onChange={(e) => setSectionId(e.target.value)}
+          >
+            {examSections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.grade_name} — {s.name}
+              </option>
+            ))}
+          </select>
+          <span
+            className="badge"
+            style={{
+              background: `${EXAM_STATUS_META[exam.status]?.color}22`,
+              color: EXAM_STATUS_META[exam.status]?.color,
+            }}
+          >
+            {EXAM_STATUS_META[exam.status]?.label}
+          </span>
+          <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+            <button
+              className="btn btn-ghost"
+              onClick={handleProcess}
+              disabled={processing}
+            >
+              {processing ? "Computing…" : "Process / Recompute Results"}
+            </button>
+            {exam.status === "published" ? (
+              <button
+                className="btn btn-ghost"
+                onClick={() => handlePublish(false)}
+              >
+                Unpublish (Edit Mode)
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary"
+                onClick={() => setConfirmPublish(true)}
+                disabled={results.length === 0}
+              >
+                Publish Results
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {results.length > 0 && (
+        <div
+          className="grid-2"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 2fr",
+            gap: 20,
+            marginBottom: 20,
+          }}
+        >
+          <div className="card">
+            <h3
+              className="syne"
+              style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}
+            >
+              Grade Distribution
+            </h3>
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie
+                  data={gradeDist}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={75}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {gradeDist.map((d, i) => (
+                    <Cell key={i} fill={gradeColor(d.name)} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    color: C.text,
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div
+            className="card"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              gap: 14,
+            }}
+          >
+            {[
+              ["Students", results.length, C.blue],
+              ["Passed", passCount, C.green],
+              [
+                "Pass Rate",
+                `${Math.round((passCount / results.length) * 100)}%`,
+                C.primary,
+              ],
+              [
+                "Class Topper",
+                `${Math.max(...results.map((r) => r.percentage))}%`,
+                C.yellow,
+              ],
+            ].map(([l, v, c]) => (
+              <div
+                key={l}
+                style={{ display: "flex", justifyContent: "space-between" }}
+              >
+                <span style={{ fontSize: 12, color: C.textMuted }}>{l}</span>
+                <span
+                  className="syne"
+                  style={{ fontSize: 16, fontWeight: 800, color: c }}
+                >
+                  {v}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {loading ? (
+          <div
+            className="pulse"
+            style={{ padding: 30, textAlign: "center", color: C.primary }}
+          >
+            Loading results…
+          </div>
+        ) : results.length === 0 ? (
+          <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+            No results yet — enter marks for all subjects, then click "Process /
+            Recompute Results".
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Roll</th>
+                  <th>Student</th>
+                  {subjectCols.map((s) => (
+                    <th key={s.id} style={{ fontSize: 10 }}>
+                      {s.name}
+                    </th>
+                  ))}
+                  <th>Total</th>
+                  <th>%</th>
+                  <th>Grade</th>
+                  <th>Rank</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((r) => (
+                  <tr key={r.student_id}>
+                    <td style={{ color: C.textMuted }}>{r.roll_no || "—"}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      {[r.first_name, r.last_name].filter(Boolean).join(" ")}
+                    </td>
+                    {subjectCols.map((s) => {
+                    const markData = r.marks?.[s.id];
+                    return (
+                      <td 
+                        key={s.id} 
+                        style={{ 
+                          fontSize: 12, 
+                          color: markData?.status && markData.status !== 'present' ? C.red : C.text,
+                          fontWeight: markData?.status && markData.status !== 'present' ? 700 : 400
+                        }}
+                      >
+                        {markData?.val ?? "—"}
+                      </td>
+                    );
+                  })}
+                    <td className="syne" style={{ fontWeight: 700 }}>
+                      {r.total_marks}/{r.max_total}
+                    </td>
+                    <td
+                      className="syne"
+                      style={{
+                        fontWeight: 700,
+                        color:
+                          r.percentage >= 60
+                            ? C.green
+                            : r.percentage >= 33
+                            ? C.yellow
+                            : C.red,
+                      }}
+                    >
+                      {r.percentage}%
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          background: `${gradeColor(r.grade)}22`,
+                          color: gradeColor(r.grade),
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          fontSize: 12,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {r.grade}
+                      </span>
+                    </td>
+                    <td>#{r.class_rank}</td>
+                    <td>
+                      <button
+                        className="btn btn-danger"
+                        style={{ padding: "4px 8px" }}
+                        title="Delete this student's result"
+                        onClick={() => setConfirmDelete(r)}
+                      >
+                        <Icon name="trash" size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Confirm publish */}
+      <Modal
+        open={confirmPublish}
+        onClose={() => setConfirmPublish(false)}
+        title="Publish Results?"
+        width={420}
+      >
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>📢</div>
+          <div
+            style={{
+              color: C.textMuted,
+              fontSize: 13,
+              marginBottom: 22,
+              lineHeight: 1.6,
+            }}
+          >
+            Once published, this class's results become final and visible on
+            report cards. You can unpublish later to make corrections.
+          </div>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setConfirmPublish(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => handlePublish(true)}
+            >
+              Yes, Publish
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Confirm delete one student's result */}
+      <Modal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        title="Delete Result?"
+        width={420}
+      >
+        {confirmDelete && (
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{ fontSize: 40, marginBottom: 10 }}>⚠️</div>
+            <div
+              style={{
+                color: C.textMuted,
+                fontSize: 13,
+                marginBottom: 22,
+                lineHeight: 1.6,
+              }}
+            >
+              This will remove the processed result for{" "}
+              <b style={{ color: C.text }}>
+                {confirmDelete.first_name} {confirmDelete.last_name}
+              </b>
+              . Their entered marks stay intact — you can recompute anytime.
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-danger" onClick={handleDeleteResult}>
+                Delete Result
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// GRADING SCALE TAB — school-wide grade bands, add/remove rows
+// ═══════════════════════════════════════════════════════════════
+const GradingScaleTab = () => {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest("/setup/grading-scale");
+      const data = Array.isArray(res?.data) ? res.data : [];
+      setRows(
+        data.length
+          ? data
+          : [
+              { grade_label: "A+", min_percent: 90, max_percent: 100 },
+              { grade_label: "A", min_percent: 80, max_percent: 89 },
+              { grade_label: "B+", min_percent: 70, max_percent: 79 },
+              { grade_label: "B", min_percent: 60, max_percent: 69 },
+              { grade_label: "C", min_percent: 50, max_percent: 59 },
+              { grade_label: "D", min_percent: 33, max_percent: 49 },
+              { grade_label: "F", min_percent: 0, max_percent: 32 },
+            ]
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    load();
+  }, []);
+
+  const updateRow = (i, field, value) => {
+    setRows((prev) =>
+      prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r))
+    );
+  };
+
+  const addRow = () =>
+    setRows((prev) => [
+      ...prev,
+      { grade_label: "", min_percent: 0, max_percent: 0 },
+    ]);
+  const removeRow = (i) =>
+    setRows((prev) => prev.filter((_, idx) => idx !== i));
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiRequest("/setup/grading-scale", "PUT", { scale: rows });
+      alert("✅ Grading scale saved!");
+    } catch (e) {
+      alert("Save failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading)
+    return (
+      <div
+        className="pulse"
+        style={{ padding: 30, textAlign: "center", color: C.primary }}
+      >
+        Loading…
+      </div>
+    );
+
+  return (
+    <div className="card">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 14,
+        }}
+      >
+        <div>
+          <h3 className="syne" style={{ fontSize: 15, fontWeight: 700 }}>
+            Grading Scale
+          </h3>
+          <p style={{ fontSize: 12, color: C.textMuted, marginTop: 3 }}>
+            Used to auto-assign grades when results are processed.
+          </p>
+        </div>
+        <button className="btn btn-ghost" onClick={addRow}>
+          <Icon name="plus" size={13} /> Add Band
+        </button>
+      </div>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Grade Label</th>
+            <th>Min %</th>
+            <th>Max %</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              <td>
+                <input
+                  className="input"
+                  style={{ width: 90 }}
+                  value={r.grade_label}
+                  onChange={(e) => updateRow(i, "grade_label", e.target.value)}
+                />
+              </td>
+              <td>
+                <select
+                  className="select"
+                  style={{ width: 90 }}
+                  value={r.min_percent}
+                  onChange={(e) =>
+                    updateRow(i, "min_percent", Number(e.target.value))
+                  }
+                >
+                  {Array.from({ length: 21 }, (_, k) => k * 5).map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </td>
+              <td>
+                <select
+                  className="select"
+                  style={{ width: 90 }}
+                  value={r.max_percent}
+                  onChange={(e) =>
+                    updateRow(i, "max_percent", Number(e.target.value))
+                  }
+                >
+                  {Array.from({ length: 21 }, (_, k) => k * 5).map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </td>
+              <td>
+                <button
+                  className="btn btn-danger"
+                  style={{ padding: "4px 8px" }}
+                  onClick={() => removeRow(i)}
+                >
+                  <Icon name="trash" size={12} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div
+        style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}
+      >
+        <button
+          className="btn btn-primary"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? "Saving…" : "Save Grading Scale"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// EXAM WORKSPACE — opened after clicking "Manage" on an exam card
+// ═══════════════════════════════════════════════════════════════
+const ExamWorkspace = ({ exam, onBack, onExamUpdated }) => {
+  const [tab, setTab] = useState("datesheet"); // 'datesheet' | 'marks' | 'results'
+  const [examSections, setExamSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await apiRequest(`/exams/${exam.id}`);
+        setExamSections(
+          Array.isArray(res?.data?.sections) ? res.data.sections : []
+        );
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [exam.id]);
+
+  return (
+    <div className="slide-in">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 16,
+        }}
+      >
+        <button className="btn btn-ghost" onClick={onBack}>
+          <Icon
+            name="arrow_right"
+            size={14}
+            style={{ transform: "rotate(180deg)" }}
+          />{" "}
+          Back
+        </button>
+        <div>
+          <div className="syne" style={{ fontSize: 18, fontWeight: 800 }}>
+            {exam.name}
+          </div>
+          <div style={{ fontSize: 12, color: C.textMuted }}>
+            {EXAM_TYPES.find((t) => t.v === exam.exam_type)?.l} · Weightage{" "}
+            {exam.weightage_percent}%
+          </div>
+        </div>
+        <span
+          className="badge"
+          style={{
+            marginLeft: "auto",
+            background: `${EXAM_STATUS_META[exam.status]?.color}22`,
+            color: EXAM_STATUS_META[exam.status]?.color,
+          }}
+        >
+          {EXAM_STATUS_META[exam.status]?.label}
+        </span>
+      </div>
+
+      <div
+        style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}
+      >
+        {[
+          { id: "datesheet", label: "Date Sheet" },
+          { id: "marks", label: "Marks Entry" },
+          { id: "results", label: "Results & Publish" },
+        ].map((t) => (
+          <button
+            key={t.id}
+            className={`tab ${tab === t.id ? "active" : ""}`}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div
+          className="card pulse"
+          style={{ padding: 40, textAlign: "center", color: C.primary }}
+        >
+          Loading exam…
+        </div>
+      ) : examSections.length === 0 ? (
+        <div
+          className="card"
+          style={{ padding: 40, textAlign: "center", color: C.textMuted }}
+        >
+          No classes assigned to this exam yet. Edit the exam and select classes
+          first.
+        </div>
+      ) : (
+        <>
+          {tab === "datesheet" && (
+            <DateSheetTab examId={exam.id} examSections={examSections} />
+          )}
+          {tab === "marks" && (
+            <MarksEntryTab examId={exam.id} examSections={examSections} />
+          )}
+          {tab === "results" && (
+            <ResultsPublishTab
+              exam={exam}
+              examSections={examSections}
+              onExamUpdated={onExamUpdated}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN MODULE — overview list + create/edit exam + delete confirm
+// ═══════════════════════════════════════════════════════════════
+const ExamManagementModule = () => {
+  const [topTab, setTopTab] = useState("exams"); // 'exams' | 'grading'
+  const [exams, setExams] = useState([]);
+  const [grades, setGrades] = useState([]);
+  const [sections, setSections] = useState([]);
+  const { academicYears: academicYrs, currentYear } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterType, setFilterType] = useState("");
+
+  const [modal, setModal] = useState(null); // 'create' | 'edit' | 'delete'
+  const [selectedExam, setSelectedExam] = useState(null);
+  const [workspaceExam, setWorkspaceExam] = useState(null);
+
+  const blankForm = () => ({
+    name: "",
+    exam_type: "unit_test",
+    academic_year_id: "",
+    start_date: "",
+    end_date: "",
+    weightage_percent: 10,
+    section_ids: [],
+  });
+  const [form, setForm] = useState(blankForm());
+  const setF = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const loadAll = async () => {
+    setLoading(true);
+    try {
+      const [examRes, gRes, secRes] = await Promise.all([
+        apiRequest("/exams"),
+        apiRequest("/setup/grades"),
+        apiRequest("/setup/sections"),
+      ]);
+      setExams(Array.isArray(examRes?.data) ? examRes.data : []);
+      setGrades(gRes?.data || []);
+      setSections(secRes?.data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadAll();
+  }, []);
+
+  
+
+  const filteredExams = exams.filter((e) => {
+    const matchStatus = !filterStatus || e.status === filterStatus;
+    const matchType = !filterType || e.exam_type === filterType;
+    return matchStatus && matchType;
+  });
+
+  // ── Open modals ──────────────────────────────────────────────
+  const openCreate = () => {
+    setForm({ ...blankForm(), academic_year_id: currentYear?.id || "" });
+    setSelectedExam(null);
+    setModal("create");
+  };
+
+  const openEdit = (exam) => {
+    setForm({
+      name: exam.name,
+      exam_type: exam.exam_type,
+      academic_year_id: exam.academic_year_id,
+      start_date: exam.start_date?.split("T")[0] || "",
+      end_date: exam.end_date?.split("T")[0] || "",
+      weightage_percent: exam.weightage_percent,
+      section_ids: exam.section_ids || [],
+    });
+    setSelectedExam(exam);
+    setModal("edit");
+  };
+
+  const openDelete = (exam) => {
+    setSelectedExam(exam);
+    setModal("delete");
+  };
+
+  // ── Save ─────────────────────────────────────────────────────
+  const toggleSection = (sectionId) => {
+    setForm((f) => ({
+      ...f,
+      section_ids: f.section_ids.includes(sectionId)
+        ? f.section_ids.filter((id) => id !== sectionId)
+        : [...f.section_ids, sectionId],
+    }));
+  };
+
+  const toggleWholeGrade = (gradeId, gradeSections) => {
+    const allSelected = gradeSections.every((s) =>
+      form.section_ids.includes(s.id)
+    );
+    setForm((f) => ({
+      ...f,
+      section_ids: allSelected
+        ? f.section_ids.filter((id) => !gradeSections.some((s) => s.id === id))
+        : Array.from(
+            new Set([...f.section_ids, ...gradeSections.map((s) => s.id)])
+          ),
+    }));
+  };
+
+  const handleSave = async () => {
+    if (
+      !form.name ||
+      !form.academic_year_id ||
+      !form.start_date ||
+      !form.end_date
+    ) {
+      alert("Name, academic year, start date and end date are required.");
+      return;
+    }
+    if (form.section_ids.length === 0) {
+      alert("Select at least one class/section for this exam.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        name: form.name,
+        exam_type: form.exam_type,
+        academic_year_id: form.academic_year_id,
+        start_date: form.start_date,
+        end_date: form.end_date,
+        weightage_percent: Number(form.weightage_percent) || 0,
+      };
+      let examId = selectedExam?.id;
+      if (modal === "edit" && examId) {
+        await apiRequest(`/exams/${examId}`, "PUT", payload);
+      } else {
+        const res = await apiRequest("/exams", "POST", payload);
+        examId = res?.data?.id;
+      }
+      await apiRequest(`/exams/${examId}/classes`, "PUT", {
+        section_ids: form.section_ids,
+      });
+      setModal(null);
+      await loadAll();
+    } catch (e) {
+      alert("Save failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedExam) return;
+    setSaving(true);
+    try {
+      await apiRequest(`/exams/${selectedExam.id}`, "DELETE");
+      setModal(null);
+      await loadAll();
+    } catch (e) {
+      alert("Delete failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePublishToggle = async (exam, publish) => {
+    try {
+      await apiRequest(
+        `/exams/${exam.id}/${publish ? "publish" : "unpublish"}`,
+        "PUT"
+      );
+      await loadAll();
+    } catch (e) {
+      alert("Failed: " + e.message);
+    }
+  };
+
+  // 🔴 Create/Edit form body — called as a plain function {ExamFormBody()},
+  // never as a JSX component, so typing the exam name never loses focus.
+  const ExamFormBody = () => (
+    <div>
+      <FormGrid cols={2}>
+        <FormRow label="Exam Name *">
+          <input
+            className="input"
+            placeholder="e.g. Half Yearly Examination"
+            value={form.name}
+            onChange={(e) => setF("name", e.target.value)}
+          />
+        </FormRow>
+        <FormRow label="Exam Type *">
+          <select
+            className="select"
+            value={form.exam_type}
+            onChange={(e) => setF("exam_type", e.target.value)}
+          >
+            {EXAM_TYPES.map((t) => (
+              <option key={t.v} value={t.v}>
+                {t.l}
+              </option>
+            ))}
+          </select>
+        </FormRow>
+      </FormGrid>
+      <FormGrid cols={3}>
+        <FormRow label="Academic Year *">
+          <select
+            className="select"
+            value={form.academic_year_id}
+            onChange={(e) => setF("academic_year_id", e.target.value)}
+          >
+            <option value="">-- Select --</option>
+            {academicYrs.map((ay) => (
+              <option key={ay.id} value={ay.id}>
+                {ay.name}
+                {ay.is_current ? " (Current)" : ""}
+              </option>
+            ))}
+          </select>
+        </FormRow>
+        <FormRow label="Start Date *">
+          <input
+            className="input"
+            type="date"
+            value={form.start_date}
+            onChange={(e) => setF("start_date", e.target.value)}
+          />
+        </FormRow>
+        <FormRow label="End Date *">
+          <input
+            className="input"
+            type="date"
+            value={form.end_date}
+            onChange={(e) => setF("end_date", e.target.value)}
+          />
+        </FormRow>
+      </FormGrid>
+      <FormRow label="Weightage in Final Result (%)">
+        <select
+          className="select"
+          style={{ maxWidth: 160 }}
+          value={form.weightage_percent}
+          onChange={(e) => setF("weightage_percent", e.target.value)}
+        >
+          {[5, 10, 15, 20, 25, 30, 40, 50, 100].map((v) => (
+            <option key={v} value={v}>
+              {v}%
+            </option>
+          ))}
+        </select>
+      </FormRow>
+
+      <div style={{ marginTop: 16 }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: C.textMuted,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            marginBottom: 10,
+            letterSpacing: "0.5px",
+          }}
+        >
+          Select Participating Classes
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))",
+            gap: 10,
+            maxHeight: 260,
+            overflowY: "auto",
+          }}
+        >
+          {grades.map((g) => {
+            const gradeSections = sections.filter((s) => s.grade_id === g.id);
+            if (gradeSections.length === 0) return null;
+            const allSelected = gradeSections.every((s) =>
+              form.section_ids.includes(s.id)
+            );
+            return (
+              <div
+                key={g.id}
+                style={{
+                  background: C.surfaceAlt,
+                  borderRadius: 10,
+                  padding: 10,
+                  border: `1px solid ${C.border}`,
+                }}
+              >
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    cursor: "pointer",
+                    marginBottom: 8,
+                    fontWeight: 700,
+                    fontSize: 12.5,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={() => toggleWholeGrade(g.id, gradeSections)}
+                    style={{ accentColor: C.primary }}
+                  />
+                  {g.name}
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {gradeSections.map((s) => (
+                    <label
+                      key={s.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                        fontSize: 11.5,
+                        padding: "3px 8px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        background: form.section_ids.includes(s.id)
+                          ? `${C.primary}22`
+                          : C.surface,
+                        color: form.section_ids.includes(s.id)
+                          ? C.primary
+                          : C.textMuted,
+                        border: `1px solid ${
+                          form.section_ids.includes(s.id) ? C.primary : C.border
+                        }`,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.section_ids.includes(s.id)}
+                        onChange={() => toggleSection(s.id)}
+                        style={{ display: "none" }}
+                      />
+                      Sec {s.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 8 }}>
+          {form.section_ids.length} section(s) selected
+        </div>
+      </div>
+    </div>
+  );
+
+  if (workspaceExam) {
+    return (
+      <ExamWorkspace
+        exam={workspaceExam}
+        onBack={() => {
+          setWorkspaceExam(null);
+          loadAll();
+        }}
+        onExamUpdated={(updated) => setWorkspaceExam(updated)}
+      />
+    );
+  }
+
+  const kpi = {
+    total: exams.length,
+    ongoing: exams.filter(
+      (e) => e.status === "ongoing" || e.status === "scheduled"
+    ).length,
+    published: exams.filter((e) => e.status === "published").length,
+    draft: exams.filter((e) => e.status === "draft").length,
+  };
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Exam Management"
+        sub="Setup exams, build date sheets, enter marks, and publish results"
+        action={
+          <button className="btn btn-primary" onClick={openCreate}>
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon name="plus" size={14} /> Create New Exam
+            </span>
+          </button>
+        }
+      />
+
+      <div
+        style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}
+      >
+        {[
+          { id: "exams", label: "All Exams" },
+          { id: "grading", label: "Grading Scale" },
+        ].map((t) => (
+          <button
+            key={t.id}
+            className={`tab ${topTab === t.id ? "active" : ""}`}
+            onClick={() => setTopTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {topTab === "grading" ? (
+        <GradingScaleTab />
+      ) : (
+        <>
+          <div
+            className="grid-4"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4,1fr)",
+              gap: 16,
+              marginBottom: 20,
+            }}
+          >
+            <KpiCard
+              label="Total Exams"
+              value={loading ? "—" : kpi.total}
+              icon="test"
+              color={C.blue}
+            />
+            <KpiCard
+              label="Ongoing / Scheduled"
+              value={loading ? "—" : kpi.ongoing}
+              icon="timetable"
+              color={C.yellow}
+            />
+            <KpiCard
+              label="Published"
+              value={loading ? "—" : kpi.published}
+              icon="check"
+              color={C.green}
+            />
+            <KpiCard
+              label="Draft"
+              value={loading ? "—" : kpi.draft}
+              icon="edit"
+              color={C.textMuted}
+            />
+          </div>
+
+          <div
+            className="card"
+            style={{ marginBottom: 16, padding: "12px 16px" }}
+          >
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <select
+                className="select"
+                style={{ width: 160 }}
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="">All Types</option>
+                {EXAM_TYPES.map((t) => (
+                  <option key={t.v} value={t.v}>
+                    {t.l}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="select"
+                style={{ width: 160 }}
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="">All Status</option>
+                {Object.entries(EXAM_STATUS_META).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {loading ? (
+            <div
+              className="card pulse"
+              style={{ padding: 40, textAlign: "center", color: C.primary }}
+            >
+              Loading exams…
+            </div>
+          ) : filteredExams.length === 0 ? (
+            <div className="card" style={{ padding: 50, textAlign: "center" }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>📝</div>
+              <div
+                className="syne"
+                style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}
+              >
+                No exams yet
+              </div>
+              <div
+                style={{ color: C.textMuted, fontSize: 13, marginBottom: 20 }}
+              >
+                Create your first exam to start building its date sheet.
+              </div>
+              <button className="btn btn-primary" onClick={openCreate}>
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="plus" size={14} /> Create New Exam
+                </span>
+              </button>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))",
+                gap: 16,
+              }}
+            >
+              {filteredExams.map((exam) =>
+                ExamCard({
+                  exam,
+                  onManage: setWorkspaceExam,
+                  onEdit: openEdit,
+                  onDelete: openDelete,
+                  onPublishToggle: handlePublishToggle,
+                })
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ════ MODAL: CREATE / EDIT EXAM ════ */}
+      <Modal
+        open={modal === "create" || modal === "edit"}
+        onClose={() => setModal(null)}
+        title={modal === "edit" ? "Edit Exam" : "Create New Exam"}
+        width={720}
+      >
+        {ExamFormBody()}
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            marginTop: 20,
+            justifyContent: "flex-end",
+            borderTop: `1px solid ${C.border}33`,
+            paddingTop: 16,
+          }}
+        >
+          <button
+            className="btn btn-ghost"
+            onClick={() => setModal(null)}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+            style={{ minWidth: 150, opacity: saving ? 0.7 : 1 }}
+          >
+            {saving
+              ? "Saving…"
+              : modal === "edit"
+              ? "Update Exam"
+              : "Create Exam"}
+          </button>
+        </div>
+      </Modal>
+
+      {/* ════ MODAL: DELETE EXAM ════ */}
+      <Modal
+        open={modal === "delete"}
+        onClose={() => setModal(null)}
+        title="Delete Exam"
+        width={440}
+      >
+        {selectedExam && (
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div>
+            <div
+              className="syne"
+              style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}
+            >
+              Delete "{selectedExam.name}"?
+            </div>
+            <div
+              style={{
+                color: C.textMuted,
+                fontSize: 13,
+                marginBottom: 22,
+                lineHeight: 1.6,
+              }}
+            >
+              This permanently removes the exam, its full date sheet, every
+              entered mark, and any processed results. This cannot be undone.
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setModal(null)}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleDelete}
+                disabled={saving}
+                style={{ minWidth: 140, opacity: saving ? 0.7 : 1 }}
+              >
+                {saving ? "Deleting…" : "Yes, Delete Everything"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+// end ExamManagementModule
+// ═══════════════════════════════════════════════════════════════
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// MODULE: RESULTS
+// ═══════════════════════════════════════════════════════════════
+
+
+const RESULT_TABS = [
+  { id: "overview", label: "Overview" },
+  { id: "classwise", label: "Class-wise" },
+  { id: "sectionwise", label: "Section-wise" },
+  { id: "subjectwise", label: "Subject-wise" },
+  { id: "teacherwise", label: "Teacher-wise" },
+  { id: "toppers", label: "Toppers" },
+  { id: "student", label: "Student Report Card" },
+];
+
+const GRADE_COLORS = [C.primary, C.purple, C.blue, C.green, C.yellow];
+
+
+
+// ─────────────────────────────────────────────────────────────
+const ResultsOverviewTab = ({ examGroupId }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    apiRequest(`/results/overview?exam_group_id=${examGroupId}`)
+      .then((res) => setData(res?.data || null))
+      .catch((e) => { console.error(e); setData(null); })
+      .finally(() => setLoading(false));
+  }, [examGroupId]);
+
+  if (loading) return <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 30 }}>Loading…</div>;
+  if (!data || !data.total_appeared) return <div className="card" style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No data yet — compute results first.</div>;
+
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))", gap: 14, marginBottom: 16 }}>
+        <KpiCard label="Appeared" value={data.total_appeared} color={C.primary} />
+        <KpiCard label="Passed" value={data.total_pass} color={C.green} sub={`${data.pass_percent}% pass rate`} />
+        <KpiCard label="Failed" value={data.total_fail} color={C.red || "#e11d48"} />
+        <KpiCard label="Incomplete" value={data.total_incomplete} color={C.yellow} sub="Marks pending entry" />
+        <KpiCard label="Average %" value={`${data.avg_percentage}%`} color={C.purple} />
+        <KpiCard label="Highest %" value={`${data.highest_percentage ?? "-"}%`} color={C.blue} />
+      </div>
+      {data.topper && (
+        <div className="card" style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ fontSize: 34 }}>🏆</div>
+          <div>
+            <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, textTransform: "uppercase" }}>School Topper</div>
+            <div className="syne" style={{ fontSize: 16, fontWeight: 700 }}>{data.topper.full_name}</div>
+            <div style={{ fontSize: 12, color: C.textMuted }}>
+              {data.topper.grade_name} - {data.topper.section_name} · {data.topper.percentage}%
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+const ResultsClassWiseTab = ({ examGroupId }) => {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    apiRequest(`/results/class-wise?exam_group_id=${examGroupId}`)
+      .then((res) => setRows(Array.isArray(res?.data) ? res.data : []))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [examGroupId]);
+
+  if (loading) return <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 30 }}>Loading…</div>;
+  if (!rows.length) return <div className="card" style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No data yet.</div>;
+
+  return (
+    <div className="card">
+      <h3 className="syne" style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Class-wise Average Performance</h3>
+      <div style={{ width: "100%", height: 300, marginBottom: 20 }}>
+        <ResponsiveContainer>
+          <BarChart data={rows}>
+            <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+            <XAxis dataKey="grade_name" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+            <Tooltip />
+            <Bar dataKey="avg_percentage" name="Avg %" radius={[6, 6, 0, 0]}>
+              {rows.map((_, i) => <Cell key={i} fill={GRADE_COLORS[i % GRADE_COLORS.length]} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+      <table className="table" style={{ minWidth: 420 }}>
+        <thead><tr><th>Class</th><th>Students</th><th>Pass %</th><th>Avg %</th></tr></thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.grade_id}>
+              <td>{r.grade_name}</td><td>{r.total_students}</td><td>{r.pass_percent}%</td><td>{r.avg_percentage}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+const ResultsSectionWiseTab = ({ examGroupId }) => {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [drill, setDrill] = useState(null);
+  const [drillRows, setDrillRows] = useState([]);
+  const [drillLoading, setDrillLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    apiRequest(`/results/section-wise?exam_group_id=${examGroupId}`)
+      .then((res) => setRows(Array.isArray(res?.data) ? res.data : []))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [examGroupId]);
+
+  const openDrill = async (row) => {
+    setDrill(row);
+    setDrillLoading(true);
+    try {
+      const res = await apiRequest(`/results/section-results?exam_group_id=${examGroupId}&section_id=${row.section_id}`);
+      setDrillRows(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) { console.error(e); } finally { setDrillLoading(false); }
+  };
+
+  if (loading) return <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 30 }}>Loading…</div>;
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ overflowX: "auto" }}>
+        <table className="table" style={{ minWidth: 560 }}>
+          <thead><tr><th>Class</th><th>Section</th><th>Students</th><th>Pass %</th><th>Avg %</th><th></th></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.section_id}>
+                <td>{r.grade_name}</td><td>Section {r.section_name}</td><td>{r.total_students}</td>
+                <td>{r.pass_percent}%</td><td>{r.avg_percentage}%</td>
+                <td>
+                  <button className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 10px" }} onClick={() => openDrill(r)}>
+                    View Students
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      {drill && (
+        <div className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+            <h3 className="syne" style={{ fontSize: 15, fontWeight: 700 }}>
+              {drill.grade_name} - Section {drill.section_name} — Student Results
+            </h3>
+            <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setDrill(null)}>Close</button>
+          </div>
+          {drillLoading ? (
+            <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 20 }}>Loading…</div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+            <table className="table" style={{ minWidth: 620 }}>
+              <thead><tr><th>Rank</th><th>Roll</th><th>Name</th><th>Marks</th><th>%</th><th>Grade</th><th>Status</th></tr></thead>
+              <tbody>
+                {drillRows.map((s) => (
+                  <tr key={s.student_id}>
+                    <td>{s.class_rank ?? "-"}</td>
+                    <td>{s.roll_no || "-"}</td>
+                    <td>{s.student_name}</td>
+                    <td>{s.status === "incomplete" ? "-" : `${s.total_marks}/${s.max_total}`}</td>
+                    <td>{s.percentage ?? "-"}</td>
+                    <td>{s.grade || "-"}</td>
+                    <td>
+                      <span className={`badge ${s.status === "pass" ? "badge-green" : s.status === "fail" ? "badge-red" : "badge-purple"}`}>
+                        {s.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+const ResultsSubjectWiseTab = ({ examGroupId }) => {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    apiRequest(`/results/subject-wise?exam_group_id=${examGroupId}`)
+      .then((res) => setRows(Array.isArray(res?.data) ? res.data : []))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [examGroupId]);
+
+  if (loading) return <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 30 }}>Loading…</div>;
+  if (!rows.length) return <div className="card" style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No data yet.</div>;
+
+  return (
+    <div className="card">
+      <h3 className="syne" style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Subject-wise Performance</h3>
+      <div style={{ width: "100%", height: 300, marginBottom: 20 }}>
+        <ResponsiveContainer>
+          <BarChart data={rows}>
+            <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+            <XAxis dataKey="subject_name" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="avg_percentage" name="Avg %" fill={C.primary} radius={[6, 6, 0, 0]} />
+            <Bar dataKey="pass_percent" name="Pass %" fill={C.green} radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+      <table className="table" style={{ minWidth: 640 }}>
+        <thead><tr><th>Subject</th><th>Attempted</th><th>Absent</th><th>Pass %</th><th>Avg %</th><th>Highest</th><th>Lowest</th></tr></thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.subject_id}>
+              <td>{r.subject_name}</td><td>{r.total_attempted}</td><td>{r.absent_count}</td>
+              <td>{r.pass_percent}%</td><td>{r.avg_percentage}%</td>
+              <td>{r.highest_marks ?? "-"}</td><td>{r.lowest_marks ?? "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+const ResultsTeacherWiseTab = ({ examGroupId }) => {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    apiRequest(`/results/teacher-wise?exam_group_id=${examGroupId}`)
+      .then((res) => setRows(Array.isArray(res?.data) ? res.data : []))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [examGroupId]);
+
+  const byTeacher = {};
+  rows.forEach((r) => {
+    if (!byTeacher[r.teacher_user_id]) byTeacher[r.teacher_user_id] = { name: r.teacher_name, total: 0, count: 0 };
+    byTeacher[r.teacher_user_id].total += r.avg_percentage;
+    byTeacher[r.teacher_user_id].count += 1;
+  });
+  const chartData = Object.values(byTeacher).map((t) => ({
+    name: t.name, avg_percentage: Math.round((t.total / t.count) * 100) / 100,
+  }));
+
+  if (loading) return <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 30 }}>Loading…</div>;
+  if (!rows.length) return <div className="card" style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No data yet — check that Timetable has teacher assignments for these subjects.</div>;
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 className="syne" style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
+          Teacher-wise Average (across all their classes)
+        </h3>
+        <div style={{ width: "100%", height: 280 }}>
+          <ResponsiveContainer>
+            <BarChart data={chartData} layout="vertical" margin={{ left: 40 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
+              <Tooltip />
+              <Bar dataKey="avg_percentage" name="Avg %" fill={C.purple} radius={[0, 6, 6, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div className="card">
+        <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Class-wise Breakdown</h3>
+        <div style={{ overflowX: "auto" }}>
+        <table className="table" style={{ minWidth: 640 }}>
+          <thead><tr><th>Teacher</th><th>Subject</th><th>Class</th><th>Attempted</th><th>Pass %</th><th>Avg %</th></tr></thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i}>
+                <td>{r.teacher_name}</td><td>{r.subject_name}</td><td>{r.grade_name} - {r.section_name}</td>
+                <td>{r.total_attempted}</td><td>{r.pass_percent}%</td><td>{r.avg_percentage}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+const ResultsToppersTab = ({ examGroupId }) => {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [limit, setLimit] = useState(10);
+
+  useEffect(() => {
+    setLoading(true);
+    apiRequest(`/results/toppers?exam_group_id=${examGroupId}&limit=${limit}`)
+      .then((res) => setRows(Array.isArray(res?.data) ? res.data : []))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [examGroupId, limit]);
+
+  return (
+    <div className="card">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h3 className="syne" style={{ fontSize: 15, fontWeight: 700 }}>🏆 School Toppers</h3>
+        <select className="select" style={{ width: 100 }} value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
+          {[5, 10, 20, 50].map((v) => <option key={v} value={v}>Top {v}</option>)}
+        </select>
+      </div>
+      {loading ? (
+        <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 20 }}>Loading…</div>
+      ) : !rows.length ? (
+        <div style={{ padding: 30, textAlign: "center", color: C.textMuted }}>No data yet.</div>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+        <table className="table" style={{ minWidth: 480 }}>
+          <thead><tr><th>Rank</th><th>Name</th><th>Class</th><th>%</th><th>Grade</th></tr></thead>
+          <tbody>
+            {rows.map((s, i) => (
+              <tr key={s.student_id}>
+                <td>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : s.school_rank}</td>
+                <td>{s.student_name}</td>
+                <td>{s.grade_name} - {s.section_name}</td>
+                <td>{s.percentage}%</td>
+                <td>{s.grade}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+   // ─────────────────────────────────────────────────────────────
+   // ─────────────────────────────────────────────────────────────
+
+const ResultsStudentReportTab = ({ examGroupId, examName, school }) => {
+  const [reportPdfUrl, setReportPdfUrl] = useState(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [availableSections, setAvailableSections] = useState([]);
+  const [sectionId, setSectionId] = useState("");
+  const [studentsList, setStudentsList] = useState([]);
+  const [studentId, setStudentId] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [report, setReport] = useState(null);
+  const [trend, setTrend] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // 1. Fetch available sections (Only those which have computed results for this Exam)
+  useEffect(() => {
+    if (!examGroupId) return;
+    setLoading(true);
+    apiRequest(`/results/section-wise?exam_group_id=${examGroupId}`)
+      .then((res) => {
+        const secs = Array.isArray(res?.data) ? res.data : [];
+        setAvailableSections(secs);
+        if (secs.length > 0) {
+          setSectionId(secs[0].section_id);
+        } else {
+          setSectionId("");
+        }
+        setStudentId("");
+        setReport(null);
+      })
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [examGroupId]);
+
+    // 2. Fetch students only for the selected section
+  useEffect(() => {
+    if (!sectionId || !examGroupId) {
+      setStudentsList([]);
+      return;
+    }
+    setLoading(true);
+    apiRequest(`/results/section-results?exam_group_id=${examGroupId}&section_id=${sectionId}`)
+      .then((res) => {
+        setStudentsList(Array.isArray(res?.data) ? res.data : []);
+        setStudentId("");
+        setReport(null);
+      })
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [sectionId, examGroupId]);
+
+  // 3. Fetch Report Card & Trend for the selected student
+  useEffect(() => {
+    if (!studentId || !examGroupId) {
+      setReport(null);
+      setTrend([]);
+      return;
+    }
+    setLoading(true);
+    Promise.all([
+      apiRequest(`/results/student/${studentId}/report-card?exam_group_id=${examGroupId}`).catch(() => null),
+      apiRequest(`/results/student/${studentId}/trend`).catch(() => null),
+    ])
+      .then(([repRes, trendRes]) => {
+        setReport(repRes?.data || null);
+        setTrend(Array.isArray(trendRes?.data) ? trendRes.data : []);
+      })
+      .finally(() => setLoading(false));
+  }, [studentId, examGroupId]);
+
+  // Filter students based on the search box
+  const filteredStudents = studentsList.filter(s => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    const name = (s.student_name || "").toLowerCase();
+    const roll = String(s.roll_no || "").toLowerCase(); 
+    return name.includes(q) || roll.includes(q);
+  });
+
+  const selectedStudentMeta = studentsList.find(s => s.student_id === studentId);
+
+  const handleGenerateSingle = async () => {
+    if (!studentId || !examGroupId) return;
+    setGeneratingPdf(true);
+    try {
+      const res = await apiRequest(`/results/student/${studentId}/report-card/pdf?exam_group_id=${examGroupId}`);
+      if (res?.data?.url) setReportPdfUrl(res.data.url);
+      else alert("PDF generation failed.");
+    } catch (e) {
+      alert("Failed to generate report card: " + e.message);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+  
+  const handleGenerateBulk = async () => {
+    if (!sectionId || !examGroupId) return;
+    setBulkGenerating(true);
+    try {
+      const res = await apiRequest(`/results/report-cards/bulk?section_id=${sectionId}&exam_group_id=${examGroupId}`);
+      if (res?.data?.url) setReportPdfUrl(res.data.url);
+      else alert("Bulk generation failed.");
+    } catch (e) {
+      alert("Failed to generate bulk report cards: " + e.message);
+    } finally {
+      setBulkGenerating(false);
+    }
+  };
+
+  return (
+    <div>
+            <div className="card" style={{ marginBottom: 16, padding: "12px 16px" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <select
+            className="select"
+            style={{ width: 200 }}
+            value={sectionId}
+            onChange={(e) => { setSectionId(e.target.value); setSearch(""); }}
+            disabled={availableSections.length === 0}
+          >
+            {availableSections.length === 0 && <option value="">No Results Computed Yet</option>}
+            {availableSections.length > 0 && <option value="">-- Class & Section --</option>}
+            {availableSections.map((s) => (
+              <option key={s.section_id} value={s.section_id}>{s.grade_name} — Sec {s.section_name}</option>
+            ))}
+          </select>
+          <input
+            className="input"
+            placeholder="Search name/roll…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            disabled={!sectionId}
+            style={{ width: 160 }}
+          />
+          <select
+            className="select"
+            value={studentId}
+            onChange={(e) => setStudentId(e.target.value)}
+            disabled={!sectionId}
+            style={{ flex: 1, minWidth: 180 }}
+          >
+            <option value="">-- Select Student --</option>
+            {filteredStudents.map((s) => (
+              <option key={s.student_id} value={s.student_id}>{s.roll_no ? `${s.roll_no} - ` : ""}{s.student_name}</option>
+            ))}
+          </select>
+          <button
+            className="btn btn-primary"
+            onClick={handleGenerateSingle}
+            disabled={!studentId || !report || generatingPdf}
+            style={{ display: "flex", alignItems: "center", gap: 6, opacity: (!studentId || !report || generatingPdf) ? 0.5 : 1 }}
+          >
+            <Icon name="download" size={14} /> {generatingPdf ? "Generating…" : "Report Card"}
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={handleGenerateBulk}
+            disabled={!sectionId || bulkGenerating}
+            style={{ display: "flex", alignItems: "center", gap: 6, opacity: (!sectionId || bulkGenerating) ? 0.5 : 1 }}
+          >
+            <Icon name="students" size={14} /> {bulkGenerating ? "Generating…" : `Print All (${studentsList.length})`}
+          </button>
+        </div>
+      </div>
+
+      <PdfViewerModal
+        url={reportPdfUrl}
+        onClose={() => setReportPdfUrl(null)}
+        title="Report Card"
+        pageSize="A4"
+      />
+
+      {!studentId ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+          {availableSections.length === 0 
+            ? "No results have been processed for this Exam yet. Please go to 'Results & Publish' to compute them."
+            : "Select a class, section, and student to view their report card and exam trend."}
+        </div>
+      ) : loading ? (
+        <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 30 }}>Loading Report Card…</div>
+      ) : (
+        <>
+          {trend.length > 1 && (
+            <div className="card" style={{ marginBottom: 16 }}>
+              <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>
+                Performance Trend — {selectedStudentMeta?.student_name}
+              </h3>
+              <div style={{ width: "100%", height: 240 }}>
+                <ResponsiveContainer>
+                  <LineChart data={trend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                    <XAxis dataKey="exam_name" tick={{ fontSize: 10 }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="percentage" stroke={C.primary} strokeWidth={2.5} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {!report ? (
+            <div className="card" style={{ padding: 30, textAlign: "center", color: C.textMuted }}>
+              No result data found for this student in the selected exam.
+            </div>
+          ) : (
+            <div className="card">
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+                <div>
+                  <h3 className="syne" style={{ fontSize: 18, fontWeight: 800 }}>
+                    {selectedStudentMeta?.student_name}
+                  </h3>
+                  <span className={`badge ${report.status === "pass" ? "badge-green" : "badge-red"}`}>
+                    {report.status?.toUpperCase()}
+                  </span>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div className="syne" style={{ fontSize: 24, fontWeight: 800, color: C.primary }}>{report.percentage}%</div>
+                  <div style={{ fontSize: 11, color: C.textMuted }}>
+                    Grade <b style={{color: C.text}}>{report.grade}</b> · Class Rank <b style={{color: C.text}}>#{report.class_rank}</b> · School Rank <b style={{color: C.text}}>#{report.school_rank}</b>
+                  </div>
+                </div>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+              <table className="table" style={{ minWidth: 520 }}>
+                <thead><tr><th>Subject</th><th>Marks Obtained</th><th>Max Marks</th><th>Status</th></tr></thead>
+                <tbody>
+                {report.subjects?.map((s, i) => (
+                    <tr key={i}>
+                      <td>
+                        {s.subject_name} 
+                        {s.is_grade_only ? <span style={{fontSize: 9, marginLeft: 6, color: C.textMuted}}>(Graded)</span> : null}
+                      </td>
+                      <td className="syne" style={{ fontWeight: 700 }}>
+                        {s.status === "absent" ? "AB" : s.is_grade_only ? (s.grade_obtained || "-") : (s.marks_obtained ?? "-")}
+                      </td>
+                      <td>{s.is_grade_only ? "-" : s.max_marks}</td>
+                      <td>
+                        {s.is_grade_only ? (
+                           <span className="badge badge-yellow">Evaluated</span>
+                        ) : (
+                           <span className={`badge ${s.status === "absent" ? "badge-red" : Number(s.marks_obtained) >= Number(s.passing_marks) ? "badge-green" : "badge-red"}`}>
+                             {s.status === "absent" ? "Absent" : Number(s.marks_obtained) >= Number(s.passing_marks) ? "Pass" : "Fail"}
+                           </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+
+
+
+// 🔴 NEW: Quick Marks Modal Wrapper for Results Module
+const QuickMarksModal = ({ examId, onClose }) => {
+  const [examSections, setExamSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest(`/exams/${examId}`);
+        setExamSections(Array.isArray(res?.data?.sections) ? res.data.sections : []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [examId]);
+
+  return (
+    <Modal open={true} onClose={onClose} title="Quick Marks Entry" width={900}>
+      {loading ? (
+        <div className="pulse" style={{ padding: 40, textAlign: "center", color: C.primary }}>
+          Loading classes for this exam...
+        </div>
+      ) : examSections.length === 0 ? (
+        <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+          No classes assigned to this exam yet.
+        </div>
+      ) : (
+        <div style={{ paddingBottom: 20 }}>
+          {/* 🔴 Calling the exact same tab from ExamManagementModule! */}
+          <MarksEntryTab examId={examId} examSections={examSections} />
+        </div>
+      )}
+    </Modal>
+  );
+};
+// ═══════════════════════════════════════════════════════════════
+// MAIN MODULE
+// ═══════════════════════════════════════════════════════════════
+const ResultsModule = ({ school }) => {
+  const [examGroups, setExamGroups] = useState([]);
+  const [examGroupId, setExamGroupId] = useState("");
+  const [tab, setTab] = useState("overview");
+  const [computing, setComputing] = useState(false);
+  const [showMarksModal, setShowMarksModal] = useState(false); // 🔴 New State
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest("/results/exam-groups");
+        const list = Array.isArray(res?.data) ? res.data : [];
+        setExamGroups(list);
+        if (list.length) setExamGroupId((prev) => prev || list[0].id);
+      } catch (e) { console.error(e); }
+    })();
+  }, []);
+
+  const selectedExam = examGroups.find((e) => e.id === examGroupId);
+
+ 
+
+  return (
+    <div>
+      {/* 🔴 OPTIMIZED TOP BAR: Uses Global CSS (.card, .btn, .badge) */}
+      <div className="card" style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
+        
+        {/* LEFT: Inline Select & Status Chip */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Select wrapper keeps inline styles because global .select is for big forms, we want a compact chip here */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, background: C.surfaceAlt, padding: "4px 12px", borderRadius: 8, border: `1px solid ${C.border}` }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase" }}>Exam:</span>
+            <select
+              value={examGroupId}
+              onChange={(e) => setExamGroupId(e.target.value)}
+              style={{ background: "transparent", border: "none", fontSize: 13, fontWeight: 800, color: C.primary, outline: "none", cursor: "pointer", width: 180 }}
+            >
+              <option value="">-- Select --</option>
+              {examGroups.map((eg) => (
+                <option key={eg.id} value={eg.id}>{eg.name} ({eg.exam_type})</option>
+              ))}
+            </select>
+          </div>
+
+          {selectedExam && (
+            <span className={`badge ${selectedExam.results_computed_count > 0 ? "badge-green" : "badge-yellow"}`}>
+              {selectedExam.results_computed_count > 0 ? `✓ ${selectedExam.results_computed_count} Computed` : "⚠ Pending"}
+            </span>
+          )}
+        </div>
+
+        {/* RIGHT: Action Buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          
+          {/* 🔴 NEW: Marks Entry Shortcut Button */}
+          <button 
+            className="btn btn-ghost" 
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, padding: "8px 16px" }}
+            onClick={() => setShowMarksModal(true)}
+            disabled={!examGroupId}
+          >
+            <Icon name="edit" size={14} /> Marks Entry
+          </button>
+
+         {/* 🔴 Compute Button Removed: Computation is now strictly handled Section-wise in the Exam Management module. */}
+         <span style={{ fontSize: 11, color: C.textMuted, fontStyle: "italic", marginLeft: 10 }}>
+            * Compute results via Exam Management
+          </span>
+
+        </div>
+      </div>
+
+      {!examGroupId ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+          Select an exam to view result analysis.
+        </div>
+      ) : (
+        <>
+          {/* 🔴 FIXED TABS UI */}
+          <div style={{ 
+            display: "flex", 
+            gap: 20, 
+            borderBottom: `2px solid ${C.border}`, 
+            marginBottom: 20, 
+            overflowX: "auto",
+            scrollbarWidth: "none" 
+          }}>
+            {RESULT_TABS.map((t) => {
+              const isActive = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  style={{
+                    padding: "10px 4px",
+                    background: "transparent",
+                    border: "none",
+                    borderBottom: isActive ? `3px solid ${C.primary}` : "3px solid transparent",
+                    color: isActive ? C.primary : C.textMuted,
+                    fontWeight: isActive ? 800 : 600,
+                    fontSize: 14,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    transition: "all 0.2s ease-in-out",
+                    marginBottom: "-2px" // Overlaps the bottom border smoothly
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = C.text; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = C.textMuted; }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {tab === "overview" && <ResultsOverviewTab examGroupId={examGroupId} />}
+          {tab === "classwise" && <ResultsClassWiseTab examGroupId={examGroupId} />}
+          {tab === "sectionwise" && <ResultsSectionWiseTab examGroupId={examGroupId} />}
+          {tab === "subjectwise" && <ResultsSubjectWiseTab examGroupId={examGroupId} />}
+          {tab === "teacherwise" && <ResultsTeacherWiseTab examGroupId={examGroupId} />}
+          {tab === "toppers" && <ResultsToppersTab examGroupId={examGroupId} />}
+          {tab === "student" && <ResultsStudentReportTab examGroupId={examGroupId} examName={selectedExam?.name} school={school} />}
+        </>
+      )}
+
+      {/* 🔴 Quick Marks Entry Modal Overlay */}
+      {showMarksModal && examGroupId && (
+        <QuickMarksModal examId={examGroupId} onClose={() => setShowMarksModal(false)} />
+      )}
+    </div>
+  );
+}; 
+
+
+// ═══════════════════════════════════════════════════════════════
+// MODULE: LEADERBOARD
+// ═══════════════════════════════════════════════════════════════
+const LeaderboardModule = () => {
+  const [filterClass, setFilterClass] = useState("");
+  const [filterSection, setFilterSection] = useState("");
+  const [tab, setTab] = useState("overall");
+
+  const getStudentScore = (s) => {
+    const m = MARKS_DATA[s.id] || {};
+    const subs = CLASS_SUBJECTS[s.class] || [];
+    let total = 0,
+      max = 0;
+    subs.forEach((sub) => {
+      const sm = m[sub] || {};
+      total += sm.annual || 0;
+      max += 100;
+    });
+    return max > 0 ? Math.round((total / max) * 100) : 0;
+  };
+
+  const ranked = [...STUDENTS]
+    .filter((s) => !filterClass || s.class === filterClass)
+    .filter((s) => !filterSection || s.section === filterSection)
+    .map((s) => ({
+      ...s,
+      score: getStudentScore(s),
+      subjects: Object.fromEntries(
+        (CLASS_SUBJECTS[s.class] || []).map((sub) => [
+          sub,
+          MARKS_DATA[s.id]?.[sub]?.annual || 0,
+        ])
+      ),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((s, i) => ({ ...s, schoolRank: i + 1 }));
+
+  const classRanked = (cls, sec) =>
+    [...STUDENTS]
+      .filter((s) => s.class === cls && (!sec || s.section === sec))
+      .map((s) => ({ ...s, score: getStudentScore(s) }))
+      .sort((a, b) => b.score - a.score)
+      .map((s, i) => ({ ...s, classRank: i + 1 }));
+
+  const getMedal = (rank) => {
+    if (rank === 1) return "🥇";
+    if (rank === 2) return "🥈";
+    if (rank === 3) return "🥉";
+    return `#${rank}`;
+  };
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="School Leaderboard"
+        sub="Rankings and performance overview"
+      />
+      <div
+        style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}
+      >
+        {["overall", "class"].map((t) => (
+          <button
+            key={t}
+            className={`tab ${tab === t ? "active" : ""}`}
+            onClick={() => setTab(t)}
+          >
+            {t === "overall" ? "Overall School" : "Class-wise"}
+          </button>
+        ))}
+      </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <select
+            className="select"
+            style={{ width: 140 }}
+            value={filterClass}
+            onChange={(e) => {
+              setFilterClass(e.target.value);
+              setFilterSection("");
+            }}
+          >
+            <option value="">All Classes</option>
+            {CLASSES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+          {filterClass && (
+            <select
+              className="select"
+              style={{ width: 130 }}
+              value={filterSection}
+              onChange={(e) => setFilterSection(e.target.value)}
+            >
+              <option value="">All Sections</option>
+              {(SECTIONS[filterClass] || []).map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      </div>
+
+      {/* Top 3 Podium */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 16,
+          marginBottom: 24,
+          flexWrap: "wrap",
+        }}
+      >
+        {ranked.slice(0, 3).map((s, i) => (
+          <div
+            key={s.id}
+            style={{
+              textAlign: "center",
+              background: C.surface,
+              border: `2px solid ${
+                [C.yellow, C.textMuted + "88", C.primary + "66"][i]
+              }`,
+              borderRadius: 20,
+              padding: "20px 24px",
+              minWidth: 150,
+              transform: i === 0 ? "translateY(-12px)" : "none",
+            }}
+          >
+            <div style={{ fontSize: 32 }}>{getMedal(i + 1)}</div>
+            <div style={{ fontSize: 28, marginTop: 4 }}>{s.photo}</div>
+            <div
+              className="syne"
+              style={{ fontWeight: 700, fontSize: 14, marginTop: 6 }}
+            >
+              {s.name.split(" ")[0]}
+            </div>
+            <div style={{ fontSize: 11, color: C.textMuted }}>
+              {s.class} {s.section}
+            </div>
+            <div
+              className="syne"
+              style={{
+                fontSize: 22,
+                fontWeight: 800,
+                color: [C.yellow, C.textMuted, C.primary][i],
+                marginTop: 6,
+              }}
+            >
+              {s.score}%
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="grid-2"
+        style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}
+      >
+        <div className="card">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Student</th>
+                <th>Class</th>
+                <th>Score</th>
+                <th>Subject Performance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ranked.slice(0, 15).map((s) => (
+                <tr key={s.id}>
+                  <td
+                    className="syne"
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 16,
+                      color:
+                        s.schoolRank <= 3
+                          ? [C.yellow, C.textMuted, C.primary][s.schoolRank - 1]
+                          : C.textMuted,
+                    }}
+                  >
+                    {getMedal(s.schoolRank)}
+                  </td>
+                  <td>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
+                      <span style={{ fontSize: 20 }}>{s.photo}</span>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>
+                          {s.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: C.textMuted }}>
+                          Roll #{s.rollNo}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="badge badge-blue">
+                      {s.class.replace("Class ", "C")}-{s.section}
+                    </span>
+                  </td>
+                  <td>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
+                      <div className="progress-bar" style={{ width: 60 }}>
+                        <div
+                          className="progress-fill"
+                          style={{
+                            width: `${s.score}%`,
+                            background:
+                              s.score >= 80
+                                ? C.green
+                                : s.score >= 60
+                                ? C.yellow
+                                : C.red,
+                          }}
+                        />
+                      </div>
+                      <span
+                        className="syne"
+                        style={{
+                          fontWeight: 700,
+                          color:
+                            s.score >= 80
+                              ? C.green
+                              : s.score >= 60
+                              ? C.yellow
+                              : C.red,
+                        }}
+                      >
+                        {s.score}%
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ maxWidth: 200 }}>
+                    <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                      {Object.entries(s.subjects)
+                        .slice(0, 4)
+                        .map(([sub, marks]) => (
+                          <span
+                            key={sub}
+                            style={{
+                              fontSize: 9,
+                              background: `${marks >= 60 ? C.green : C.red}22`,
+                              color: marks >= 60 ? C.green : C.red,
+                              border: `1px solid ${
+                                marks >= 60 ? C.green : C.red
+                              }44`,
+                              borderRadius: 4,
+                              padding: "1px 4px",
+                            }}
+                          >
+                            {sub.slice(0, 3)}:{marks}
+                          </span>
+                        ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h3
+              className="syne"
+              style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}
+            >
+              Score Distribution
+            </h3>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart
+                data={[
+                  {
+                    r: "90-100",
+                    n: ranked.filter((s) => s.score >= 90).length,
+                  },
+                  {
+                    r: "80-89",
+                    n: ranked.filter((s) => s.score >= 80 && s.score < 90)
+                      .length,
+                  },
+                  {
+                    r: "70-79",
+                    n: ranked.filter((s) => s.score >= 70 && s.score < 80)
+                      .length,
+                  },
+                  {
+                    r: "60-69",
+                    n: ranked.filter((s) => s.score >= 60 && s.score < 70)
+                      .length,
+                  },
+                  { r: "<60", n: ranked.filter((s) => s.score < 60).length },
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                <XAxis dataKey="r" tick={{ fill: C.textMuted, fontSize: 10 }} />
+                <YAxis tick={{ fill: C.textMuted, fontSize: 10 }} />
+                <Tooltip
+                  contentStyle={{
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    color: C.text,
+                  }}
+                />
+                <Bar dataKey="n" radius={[5, 5, 0, 0]} fill={C.primary} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="card">
+            <h3
+              className="syne"
+              style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}
+            >
+              Quick KPIs
+            </h3>
+            {[
+              {
+                l: "School Average",
+                v: `${Math.round(
+                  ranked.reduce((s, r) => s + r.score, 0) /
+                    Math.max(ranked.length, 1)
+                )}%`,
+                c: C.primary,
+              },
+              { l: "Top Score", v: `${ranked[0]?.score || 0}%`, c: C.green },
+              {
+                l: "Pass Rate (33%+)",
+                v: `${Math.round(
+                  (ranked.filter((s) => s.score >= 33).length /
+                    Math.max(ranked.length, 1)) *
+                    100
+                )}%`,
+                c: C.blue,
+              },
+              { l: "Students Tracked", v: ranked.length, c: C.cyan },
+            ].map((k, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "9px 0",
+                  borderBottom: `1px solid ${C.border}22`,
+                }}
+              >
+                <span style={{ fontSize: 12, color: C.textMuted }}>{k.l}</span>
+                <span
+                  className="syne"
+                  style={{ fontSize: 16, fontWeight: 800, color: k.c }}
+                >
+                  {k.v}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+ // ═══════════════════════════════════════════════════════════════
+ // MODULE: TEST CONTROL CENTER (QUICK TESTS)
+ // ═══════════════════════════════════════════════════════════════
+
+
+ const TestsModule = ({ school }) => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+
+  // ── STATE MANAGEMENT ──
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [viewState, setViewState] = useState("classes");
+  const [activeClass, setActiveClass] = useState(null);
+  const [activeSubject, setActiveSubject] = useState(null);
+  const [activeChapter, setActiveChapter] = useState(null);
+  const [printWorkspaceData, setPrintWorkspaceData] = useState(null);
+  
+  const [showPrintPromptModal, setShowPrintPromptModal] = useState(false);
+  const [promptTestId, setPromptTestId] = useState("");
+  const [fetchingPaper, setFetchingPaper] = useState(false);
+ 
+  // Modals & Active Selections
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAttempts, setShowAttempts] = useState(false);
+  const [showWizard, setShowWizard] = useState(false); 
+  const [selectedTest, setSelectedTest] = useState(null);
+  const [attemptsData, setAttemptsData] = useState([]);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+    // ── 🔴 WIZARD STATE & PARSER LOGIC (NEW) ──
+    const [wizardStep, setWizardStep] = useState(1); 
+    const [wizardMethod, setWizardMethod] = useState(null); // 'code', 'ocr'
+    const [rawCode, setRawCode] = useState("");
+    const [parsedQuestions, setParsedQuestions] = useState([]);
+    const [testMeta, setTestMeta] = useState({
+      testId: "", classVal: "", subject: "", chapterNo: "", chapterName: "", testName: "", duration: 30
+    });
+  
+    const processJSCode = () => {
+      if (!rawCode.trim()) return dialogAlert("Please paste the JS code first.", "Empty Field");
+      try {
+        const dMatch = rawCode.match(/const\s+testDetails\s*=\s*({[\s\S]*?});/);
+        const qMatch = rawCode.match(/const\s+mockQuestions\s*=\s*(\[[\s\S]*?\]);/);
+  
+        if (!dMatch) throw new Error("Missing 'const testDetails = {...}'");
+        if (!qMatch) throw new Error("Missing 'const mockQuestions = [...]'");
+  
+        const getMeta = new Function("return " + dMatch[1]);
+        const getQ    = new Function("return " + qMatch[1]);
+        const meta    = getMeta();
+        let questions = getQ();
+  
+        // Smart Parser: Auto-detect missing types
+        questions = questions.map((q, idx) => {
+           let type = (q.type || 'MCQ').toUpperCase();
+           if (!q.options && type !== 'TF' && type !== 'DESC' && type !== 'FIB') {
+              if (q.correct === 'True' || q.correct === 'False') type = 'TF';
+              else if (q.text.includes('___')) type = 'FIB';
+              else type = 'DESC';
+           }
+           let opts = q.options || [];
+           if (type === 'MCQ') while (opts.length < 4) opts.push(""); // Ensure 4 options for MCQ
+           
+           return {
+              id: q.id || `Q-${Date.now().toString().slice(-6)}-${idx}`,
+              text: q.text || "",
+              options: opts,
+              correctAnswer: q.correctAnswer || q.correct || "",
+              explanation: q.explanation || "",
+              marks: q.marks || (type === 'DESC' ? 3 : 1),
+              type: type
+           };
+        });
+  
+        setTestMeta({
+          testId: meta.testId || `T-${Math.floor(1000 + Math.random() * 9000)}`,
+          classVal: meta.className || "",
+          subject: meta.subject || "",
+          chapterNo: meta.chapterNumber || "01",
+          chapterName: meta.chapterName || "",
+          testName: meta.testName || meta.mockNumber || "",
+          duration: meta.duration || meta.time || 30
+        });
+  
+        setParsedQuestions(questions);
+        setWizardStep(3);
+      } catch (e) {
+        dialogAlert(e.message + "\n\nEnsure variables are strictly named 'testDetails' and 'mockQuestions'.", "Parsing Error");
+      }
+    };
+  
+    const updateParsedQuestion = (index, field, value) => {
+      setParsedQuestions(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], [field]: value };
+        return updated;
+      });
+    };
+  
+    const handleFinalUpload = async () => {
+      if (!testMeta.testName || !testMeta.subject) return dialogAlert("Test Name and Subject are required.", "Missing Info");
+      
+      // Convert to GAS Sheet Array Format (16 Columns)
+      const rowsData = parsedQuestions.map((q) => {
+        let opts = q.type === 'MCQ' ? q.options : ["N/A", "N/A", "N/A", "N/A"];
+        while(opts.length < 4) opts.push("");
+        
+        let correctAns = q.correctAnswer;
+        if (!correctAns) correctAns = (q.type === 'DESC') ? "Descriptive Answer" : opts[0];
+  
+        return [
+          testMeta.testId, testMeta.classVal, testMeta.subject, testMeta.chapterNo, testMeta.chapterName, 
+          testMeta.testName, testMeta.duration, `${q.id}_${q.type}`, q.text, 
+          opts[0], opts[1], opts[2], opts[3], correctAns, q.explanation, q.marks
+        ];
+      });
+  
+      setSaving(true);
+      try {
+        const res = await gasRequest('addBulkQuestions', { rowsData: JSON.stringify(rowsData) });
+        if (res.status || res.success) {
+          await dialogAlert(`Test Bank Created Successfully!\nTest ID: ${testMeta.testId}`, "Published");
+          setShowWizard(false);
+          loadTests(true); // Refresh Dashboard
+        } else throw new Error(res.message);
+      } catch (e) {
+        dialogAlert("Upload failed: " + e.message, "Network Error");
+      } finally {
+        setSaving(false);
+      }
+    };
+    // ── 🔴 WIZARD END ──
+
+  // 🔴 Fetch Test Data for Printing
+  const openPrintWorkspace = async (targetTestId) => {
+    if (!targetTestId) return dialogAlert("Please provide a Test ID.");
+    setFetchingPaper(true);
+    try {
+      const res = await gasRequest('fetchTest', { testId: targetTestId, verifiedRole: 'ADMIN' });
+      if (res.status && res.data) {
+        setPrintWorkspaceData(res.data);
+        setShowPrintPromptModal(false); // Close prompt if it was open
+        setPromptTestId("");
+      } else {
+        dialogAlert(res.message || "Test not found.", "Error");
+      }
+     } catch (e) {
+      // 🔴 FIX: Show actual GAS API rejection message instead of masking it
+      dialogAlert(e.message || "Network Error fetching Test.", "API Alert");
+    } finally {
+      setFetchingPaper(false);
+    }
+  };
+
+  // 🔴 NEW: Report & Proctoring States
+  const [showReport, setShowReport] = useState(false);
+  const [activeReport, setActiveReport] = useState(null); // Merged Attempt + Test Data
+  const [loadingReport, setLoadingReport] = useState(false);
+  
+  const [showProctoring, setShowProctoring] = useState(false);
+  const [proctorImages, setProctorImages] = useState([]);
+  const [loadingProctor, setLoadingProctor] = useState(false);
+
+  // ── INITIAL DATA LOAD FROM GAS ──
+  const loadTests = React.useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const res = await gasRequest("getTestRegistry");
+      if (res.status && Array.isArray(res.data)) {
+        setTests(res.data);
+      }
+    } catch (e) {
+      console.error(e);
+      if (!silent) dialogAlert("Failed to load tests from Google Apps Script.", "Sync Error");
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [dialogAlert]);
+
+  useEffect(() => { loadTests(); }, [loadTests]);
+
+  useEffect(() => {
+    window.triggerPrintWorkspace = (id) => openPrintWorkspace(id);
+    return () => { delete window.triggerPrintWorkspace; };
+  }, []);
+
+  const hierarchy = React.useMemo(() => {
+    const h = {};
+    tests.forEach((t) => {
+      const cls = t.classVal || "General";
+      const sub = t.subject || "Others";
+      const chap = t.chapterName || t.testName || "Mix";
+      if (!h[cls]) h[cls] = {};
+      if (!h[cls][sub]) h[cls][sub] = {};
+      if (!h[cls][sub][chap]) h[cls][sub][chap] = [];
+      h[cls][sub][chap].push(t);
+    });
+    return h;
+  }, [tests]);
+
+  const kpis = {
+    total: tests.length,
+    published: tests.filter(t => t.status === "PUBLISHED").length,
+    drafts: tests.filter(t => t.status === "DRAFT").length,
+    attempts: tests.reduce((sum, t) => sum + (Number(t.attemptCount) || 0), 0)
+  };
+
+  // ── LIVE HANDLERS ──
+  const handleStatusChange = async (testId, newStatus) => {
+    try {
+      setTests(prev => prev.map(t => t.testId === testId ? { ...t, status: newStatus } : t));
+      const res = await gasRequest('updateTestStatus', { testId, status: newStatus });
+      if (!res.status && !res.success) throw new Error(res.message);
+    } catch (e) {
+      dialogAlert("Status update failed.", "Error");
+      loadTests(true); 
+    }
+  };
+
+  const handleDelete = async (testId) => {
+    if (!await dialogConfirm("Permanently delete this test and its Question Bank?", "Delete Test")) return;
+    try {
+      setTests(prev => prev.filter(t => t.testId !== testId));
+      await gasRequest('deleteTestCompletely', { testId });
+    } catch (e) {
+      dialogAlert("Failed to delete test.", "Error");
+      loadTests(true);
+    }
+  };
+
+  const openSettingsModal = (test) => {
+    setSelectedTest({
+      ...test,
+      duration: test.duration || 20,
+      resultVisibility: test.resultVisibility || "IMMEDIATE",
+      visibleTo: test.visibleTo || "ALL"
+    });
+    setShowSettings(true);
+  };
+
+  const handleSaveSettings = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        testId: selectedTest.testId, classVal: selectedTest.classVal, section: selectedTest.section || "ALL",
+        duration: selectedTest.duration, resultVisibility: selectedTest.resultVisibility, visibleTo: selectedTest.visibleTo
+      };
+      const res = await gasRequest('updateTestMeta', payload);
+      if (res.status || res.success) {
+        await dialogAlert("Test configuration saved successfully.", "Success");
+        setShowSettings(false); loadTests(true);
+      } else throw new Error(res.message);
+    } catch (e) { dialogAlert("Failed to save settings.", "Error"); } 
+    finally { setSaving(false); }
+  };
+
+  const openAttemptsModal = async (test) => {
+    setSelectedTest(test); setShowAttempts(true); setLoadingAttempts(true); setAttemptsData([]);
+    try {
+      const res = await gasRequest('getTestAttemptsList', { testId: test.testId });
+      if (res.status && Array.isArray(res.data)) setAttemptsData(res.data);
+    } catch (e) { dialogAlert("Failed to load student attempts.", "Network Error"); } 
+    finally { setLoadingAttempts(false); }
+  };
+
+  const deleteAttempt = async (rowNum, testId) => {
+    if (!await dialogConfirm("Delete this result entry?", "Remove Attempt")) return;
+    try {
+      setAttemptsData(prev => prev.filter(a => a._row !== rowNum)); 
+      await gasRequest('deleteResultEntry', { row: rowNum, testId: testId });
+      loadTests(true); 
+    } catch (e) { dialogAlert("Failed to remove attempt.", "Error"); openAttemptsModal(selectedTest); }
+  };
+
+  // 🔴 ── NEW: REPORT & PROCTORING LOGIC ── 🔴
+  const openAnalysisReport = async (attempt) => {
+    setShowAttempts(false); // Close attempts list
+    setShowReport(true);
+    setLoadingReport(true);
+    setActiveReport(null);
+
+    try {
+      // Fetch Master Test Data (Questions & Options)
+      const res = await gasRequest('fetchTest', { testId: attempt.testId, verifiedRole: 'ADMIN' });
+      if (res.status && res.data) {
+        
+        // Parse Student's Choices & Time Spent
+        let userChoices = [];
+        let timeSpent = [];
+        try { userChoices = JSON.parse(attempt.userChoices || '[]'); } catch(e) {}
+        try { timeSpent = JSON.parse(attempt.timeSpent || '[]'); } catch(e) {}
+
+        setActiveReport({
+          student: attempt,
+          testData: res.data,
+          choices: userChoices,
+          timing: timeSpent
+        });
+      } else {
+        throw new Error(res.message);
+      }
+    } catch (e) {
+      dialogAlert("Failed to generate report. Question bank data missing.", "Error");
+      setShowReport(false);
+    } finally {
+      setLoadingReport(false);
+    }
+  };
+
+  const viewProctoringLogs = async (folderId) => {
+    if (!folderId || folderId.startsWith("Error") || folderId === "NO_PROCTORING") {
+      return dialogAlert("No surveillance data available for this session.", "Proctoring Alert");
+    }
+    
+    setShowProctoring(true);
+    setLoadingProctor(true);
+    setProctorImages([]);
+
+    try {
+      const res = await gasRequest('getProctorImages', { folderId });
+      if (res.status && res.data) {
+        setProctorImages(res.data);
+      } else {
+        throw new Error("Folder empty");
+      }
+    } catch (e) {
+      setProctorImages([]); // Will show empty state
+    } finally {
+      setLoadingProctor(false);
+    }
+  };
+
+  // ── VIEW RENDERERS ──
+  const renderClasses = () => {
+    if (loading) return <div className="card pulse" style={{ padding: 60, textAlign: "center", color: C.primary }}>Synchronizing Test Registry...</div>;
+    const classes = Object.keys(hierarchy).sort();
+    if (classes.length === 0) return <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>No Tests Generated Yet. Create one to begin.</div>;
+
+    const gradients = [
+      `linear-gradient(135deg, ${C.blue}, #7c3aed)`, `linear-gradient(135deg, ${C.green}, #10b981)`,
+      `linear-gradient(135deg, ${C.red}, #f97316)`, `linear-gradient(135deg, ${C.yellow}, #fbbf24)`
+    ];
+
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }} className="slide-in">
+        {classes.map((cls, i) => (
+          <div key={cls} style={{ background: gradients[i % 4], borderRadius: 24, padding: 24, color: "white", cursor: "pointer", position: "relative", overflow: "hidden", minHeight: 180, display: "flex", flexDirection: "column", justifyContent: "space-between", boxShadow: "0 10px 20px rgba(0,0,0,0.1)", transition: "transform 0.2s" }} onClick={() => { setActiveClass(cls); setActiveSubject(null); setViewState("subjects"); }}>
+            <div style={{ position: "absolute", bottom: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
+            <div style={{ position: "relative", zIndex: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                <div style={{ background: "rgba(255,255,255,0.2)", width: 44, height: 44, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }}><Icon name="academic" size={24} color="white" /></div>
+                <span style={{ background: "rgba(255,255,255,0.2)", padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700, backdropFilter: "blur(10px)" }}>{Object.keys(hierarchy[cls]).length} Subjects</span>
+              </div>
+              <h3 className="syne" style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>{cls}</h3>
+              <p style={{ fontSize: 12, opacity: 0.8, marginTop: 4, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>Manage Tests <Icon name="arrow_right" size={12} /></p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderSubjects = () => {
+    const subjects = hierarchy[activeClass];
+    const subColors = [C.blue, C.green, C.red, C.yellow, C.purple, C.cyan];
+    return (
+      <div className="slide-in">
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+          <button className="btn btn-ghost" style={{ padding: "8px 12px" }} onClick={() => { setViewState("classes"); setActiveClass(null); }}><Icon name="arrow_right" size={16} style={{ transform: "rotate(180deg)" }} /></button>
+          <div><h2 className="syne" style={{ fontSize: 22, fontWeight: 800, color: C.text, margin: 0 }}>{activeClass}</h2><p style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", margin: "2px 0 0 0" }}>Select Subject</p></div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+          {Object.keys(subjects).sort().map((sub, i) => {
+            const color = subColors[i % subColors.length];
+            let testCount = 0; Object.keys(subjects[sub]).forEach(ch => testCount += subjects[sub][ch].length);
+            return (
+              <div key={sub} className="card" style={{ cursor: "pointer", display: "flex", flexDirection: "column", gap: 16, borderBottom: `4px solid ${color}`, transition: "transform 0.2s" }} onClick={() => { setActiveSubject(sub); setViewState("chapters"); }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: `${color}22`, color: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, fontFamily: "monospace" }}>{sub.substring(0, 2).toUpperCase()}</div>
+                <div><h4 style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0 }}>{sub}</h4><p style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, marginTop: 4, textTransform: "uppercase" }}>{testCount} Total Tests</p></div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderChapters = () => {
+    const chapters = hierarchy[activeClass][activeSubject];
+    return (
+      <div className="slide-in pb-10">
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20, background: C.surfaceAlt, padding: "12px 16px", borderRadius: 16, border: `1px solid ${C.border}` }}>
+          <button className="btn btn-ghost" style={{ padding: "8px 12px", background: C.surface }} onClick={() => { setViewState("subjects"); setActiveSubject(null); }}><Icon name="arrow_right" size={14} style={{ transform: "rotate(180deg)" }} /></button>
+          <div><h2 className="syne" style={{ fontSize: 20, fontWeight: 800, color: C.text, margin: 0 }}>{activeSubject}</h2><p style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", margin: "2px 0 0 0" }}>{activeClass} • {Object.keys(chapters).length} Chapters</p></div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {Object.keys(chapters).sort().map((ch, idx) => {
+            const chapTests = chapters[ch]; const isOpen = activeChapter === ch;
+            return (
+              <div key={ch} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
+                <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", background: isOpen ? C.surfaceAlt : "transparent" }} onClick={() => setActiveChapter(isOpen ? null : ch)}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ width: 36, height: 36, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: C.textMuted }}>{String(idx + 1).padStart(2, '0')}</div>
+                    <div><h4 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>{ch}</h4><p style={{ fontSize: 10, fontWeight: 700, color: C.primary, textTransform: "uppercase", marginTop: 2 }}>{chapTests.length} Assessments</p></div>
+                  </div>
+                  <Icon name="arrow_right" size={18} color={C.textMuted} style={{ transform: isOpen ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 0.3s" }} />
+                </div>
+                {isOpen && (
+                  <div style={{ padding: 20, borderTop: `1px solid ${C.border}`, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                    {chapTests.map(t => {
+                      const statusColors = { "PUBLISHED": C.green, "DRAFT": C.textMuted, "CLOSED": C.red };
+                      const sColor = statusColors[t.status] || C.textMuted;
+                      return (
+                        <div key={t.testId} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                            <div style={{ flex: 1, paddingRight: 10 }}><h5 style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={t.testName}>{t.testName}</h5><p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1px", marginTop: 4 }}>{t.testId}</p></div>
+                            <span style={{ fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 6, background: `${sColor}22`, color: sColor, border: `1px solid ${sColor}44` }}>{t.status}</span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", background: C.surfaceAlt, padding: "8px 12px", borderRadius: 10, marginBottom: 16, border: `1px solid ${C.border}` }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, display: "flex", alignItems: "center", gap: 4 }}><Icon name="timetable" size={12} color={C.primary} /> {t.duration}m</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, display: "flex", alignItems: "center", gap: 4 }} title="Result Visibility"><Icon name="eye" size={12} color={t.resultVisibility === 'HIDDEN' ? C.red : C.green} /> {t.resultVisibility}</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, display: "flex", alignItems: "center", gap: 4 }}><Icon name="test" size={12} color={C.yellow} /> {t.questionCount} Qs</div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${C.border}66` }}>
+                            <select className="select" style={{ flex: 1, fontSize: 10, fontWeight: 800, padding: "6px", textAlign: "center", color: sColor }} value={t.status} onChange={(e) => handleStatusChange(t.testId, e.target.value)}>
+                              <option value="DRAFT">DRAFT</option><option value="PUBLISHED">PUBLISH</option><option value="CLOSED">CLOSE</option>
+                            </select>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <button className="btn btn-ghost" style={{ padding: "6px 8px" }} title="Settings" onClick={() => openSettingsModal(t)}><Icon name="setup" size={14} /></button>
+                              <button className="btn btn-ghost" style={{ padding: "6px 10px", display: "flex", alignItems: "center", gap: 4, background: `${C.blue}15`, color: C.blue }} title="Attempts" onClick={() => openAttemptsModal(t)}>
+                                <Icon name="students" size={14} /> <span style={{ fontSize: 10, fontWeight: 800 }}>{t.attemptCount}</span>
+                              </button>
+                              <button className="btn btn-danger" style={{ padding: "6px 8px" }} title="Delete" onClick={() => handleDelete(t.testId)}><Icon name="trash" size={14} /></button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="slide-in">
+      <SectionHeader title="Test Control Center" sub="Manage Question Banks, Publish Tests & Track Analytics" action={
+          <div style={{ display: "flex", gap: 10 }}>
+            {/* 🔴 Trigger Print Prompt Modal */}
+            <button className="btn btn-ghost" onClick={() => setShowPrintPromptModal(true)} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon name="download" size={14} /> Print Paper
+            </button>
+            <button className="btn btn-primary" onClick={() => setShowWizard(true)} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} /> Create New Test</button>
+            <button className="btn btn-ghost" onClick={() => loadTests(false)} style={{ padding: "8px", background: C.surfaceAlt }}><Icon name="attendance" size={16} /></button>
+          </div>
+        }
+      />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+        <KpiCard label="Total Tests" value={kpis.total} icon="test" color={C.blue} />
+        <KpiCard label="Published" value={kpis.published} icon="check" color={C.green} />
+        <KpiCard label="Drafts" value={kpis.drafts} icon="edit" color={C.yellow} />
+        <KpiCard label="Total Attempts" value={kpis.attempts} icon="students" color={C.purple} />
+      </div>
+
+      {viewState === "classes" && renderClasses()}
+      {viewState === "subjects" && renderSubjects()}
+      {viewState === "chapters" && renderChapters()}
+
+      {/* ── EXISTING MODALS (Settings, Attempts, Wizard) ── */}
+      <Modal open={showSettings} onClose={() => setShowSettings(false)} title="Test Configuration" width={460}>
+        {selectedTest && (
+          <div style={{ padding: "8px 0" }}>
+            <div style={{ background: C.surfaceAlt, padding: 16, borderRadius: 12, marginBottom: 20, border: `1px solid ${C.border}` }}>
+              <h4 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: "0 0 4px 0" }}>{selectedTest.testName}</h4>
+              <p style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, margin: 0, textTransform: "uppercase", letterSpacing: "1px" }}>{selectedTest.testId}</p>
+            </div>
+            <FormGrid cols={2}>
+              <FormRow label="Library Class"><input className="input" value={selectedTest.classVal} disabled /></FormRow>
+              <FormRow label="Score Visibility">
+                <select className="select" value={selectedTest.resultVisibility} onChange={e => setSelectedTest({...selectedTest, resultVisibility: e.target.value})}>
+                  <option value="IMMEDIATE">🟢 Immediate</option><option value="HIDDEN">🔴 Hidden</option>
+                </select>
+              </FormRow>
+            </FormGrid>
+            <FormGrid cols={2}>
+               <FormRow label="Duration (Mins)"><input className="input" type="number" value={selectedTest.duration} onChange={e => setSelectedTest({...selectedTest, duration: e.target.value})} /></FormRow>
+               <FormRow label="Global Status">
+                <select className="select" value={selectedTest.status} onChange={e => setSelectedTest({...selectedTest, status: e.target.value})}>
+                  <option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="CLOSED">Closed</option>
+                </select>
+              </FormRow>
+            </FormGrid>
+            <FormRow label="Target Audience Access (Visible To)">
+                <input className="input" placeholder="e.g. ALL or 9, 10" value={selectedTest.visibleTo} onChange={e => setSelectedTest({...selectedTest, visibleTo: e.target.value})} />
+            </FormRow>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
+              <button className="btn btn-ghost" onClick={() => setShowSettings(false)} disabled={saving}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveSettings} disabled={saving}>{saving ? "Saving..." : "Save Configuration"}</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+      {/* 🔴 1. PRINT PROMPT MODAL (If user clicks top button without selecting test) */}
+      <Modal open={showPrintPromptModal} onClose={() => setShowPrintPromptModal(false)} title="Print Question Paper" width={400}>
+        <div style={{ padding: "10px 0" }}>
+          <FormRow label="Enter Test ID">
+            <input 
+              className="input" 
+              placeholder="e.g. T-10-SCI-1234" 
+              value={promptTestId} 
+              onChange={e => setPromptTestId(e.target.value.toUpperCase())} 
+              style={{ fontFamily: "monospace", fontSize: 14, textTransform: "uppercase" }}
+            />
+          </FormRow>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
+            <button className="btn btn-ghost" onClick={() => setShowPrintPromptModal(false)}>Cancel</button>
+            <button className="btn btn-primary" onClick={() => openPrintWorkspace(promptTestId)} disabled={fetchingPaper || !promptTestId}>
+              {fetchingPaper ? "Locating..." : "Load Paper in Studio"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 🔴 2. ACTUAL PRINT WORKSPACE MODAL (Full Screen) */}
+      {printWorkspaceData && (
+        <PrintPaperWorkspace 
+          testData={printWorkspaceData} 
+          school={school} // From App.jsx global state
+          onClose={() => setPrintWorkspaceData(null)} 
+        />
+      )}
+
+      <Modal open={showAttempts} onClose={() => setShowAttempts(false)} title="Student Attempts" width={750}>
+        {selectedTest && (
+          <div>
+             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
+                <div>
+                   <h3 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>{selectedTest.testName}</h3>
+                   <p style={{ fontSize: 11, color: C.primary, fontWeight: 700, marginTop: 4 }}>{attemptsData.length} Total Submissions Found</p>
+                </div>
+                <button className="btn btn-ghost" onClick={() => openAttemptsModal(selectedTest)} disabled={loadingAttempts} style={{padding: "6px", background: C.surfaceAlt}}><Icon name="attendance" size={14} /></button>
+             </div>
+             
+             {loadingAttempts ? (
+                <div className="pulse" style={{ padding: 40, textAlign: "center", color: C.primary, fontWeight: 600 }}>Loading Submissions...</div>
+             ) : attemptsData.length === 0 ? (
+                <div style={{ padding: 40, textAlign: "center", color: C.textMuted, fontWeight: 600 }}>No students have attempted this test yet.</div>
+             ) : (
+                <div style={{ overflowX: "auto", maxHeight: 400, overflowY: "auto" }}>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th style={{ textAlign: "center" }}>Submitted At</th>
+                        <th style={{ textAlign: "center" }}>Score</th>
+                        <th style={{ textAlign: "right" }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attemptsData.map(a => (
+                        <tr key={a._row}>
+                          <td>
+                            <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>{a.name}</div>
+                            <div style={{ fontSize: 9, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", marginTop: 2 }}>UID: {a.uid} | {a.className}</div>
+                          </td>
+                          <td style={{ textAlign: "center", fontSize: 11, fontWeight: 600 }}>{new Date(a.timestamp).toLocaleString('en-IN', {day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'})}</td>
+                          <td style={{ textAlign: "center" }}><span style={{ fontSize: 14, fontWeight: 800, color: parseFloat(a.score) >= 33 ? C.green : C.red }}>{a.score}%</span></td>
+                          <td style={{ textAlign: "right", display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                             <button className="btn btn-ghost" style={{ padding: "4px 8px", fontSize: 10, background: `${C.blue}15`, color: C.blue }} onClick={() => openAnalysisReport(a)}>Report</button>
+                             <button className="btn btn-danger" style={{ padding: "4px 8px" }} onClick={() => deleteAttempt(a._row, selectedTest.testId)}><Icon name="trash" size={12}/></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+             )}
+          </div>
+        )}
+      </Modal>
+
+      {/* 🔴 1. PREMIUM REPORT MODAL 🔴 */}
+      <Modal open={showReport} onClose={() => setShowReport(false)} title="Intelligence Report" width={850}>
+        {loadingReport ? (
+          <div className="pulse" style={{ padding: 60, textAlign: "center", color: C.primary }}>Extracting Question Data...</div>
+        ) : activeReport ? (
+          <div style={{ padding: "8px 0" }}>
+            {/* Header Box */}
+            <div style={{ background: `linear-gradient(135deg, ${C.surfaceAlt}, ${C.surface})`, borderRadius: 20, padding: 24, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, border: `1px solid ${C.border}` }}>
+              <div>
+                <h2 className="syne" style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: 0 }}>{activeReport.student.name}</h2>
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, background: C.surface, padding: "4px 8px", borderRadius: 6, border: `1px solid ${C.border}` }}>UID: {activeReport.student.uid}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.primary, background: `${C.primary}22`, padding: "4px 8px", borderRadius: 6, border: `1px solid ${C.primary}44` }}>{activeReport.student.className}</span>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                 <div className="syne" style={{ fontSize: 36, fontWeight: 900, color: parseFloat(activeReport.student.score) >= 33 ? C.green : C.red, lineHeight: 1 }}>
+                   {activeReport.student.score}%
+                 </div>
+                 <span style={{ fontSize: 10, fontWeight: 800, color: parseFloat(activeReport.student.score) >= 33 ? C.green : C.red, textTransform: "uppercase", letterSpacing: "1px" }}>
+                   {parseFloat(activeReport.student.score) >= 33 ? "Qualified" : "Failed"}
+                 </span>
+              </div>
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
+               <div style={{ background: `${C.green}11`, border: `1px solid ${C.green}33`, padding: 16, borderRadius: 16, textAlign: "center" }}>
+                 <div style={{ fontSize: 28, fontWeight: 900, color: C.green }}>{activeReport.student.correct}</div>
+                 <div style={{ fontSize: 10, fontWeight: 800, color: C.green, textTransform: "uppercase", marginTop: 4 }}>Correct</div>
+               </div>
+               <div style={{ background: `${C.red}11`, border: `1px solid ${C.red}33`, padding: 16, borderRadius: 16, textAlign: "center" }}>
+                 <div style={{ fontSize: 28, fontWeight: 900, color: C.red }}>{activeReport.student.incorrect}</div>
+                 <div style={{ fontSize: 10, fontWeight: 800, color: C.red, textTransform: "uppercase", marginTop: 4 }}>Wrong</div>
+               </div>
+               <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, padding: 16, borderRadius: 16, textAlign: "center" }}>
+                 <div style={{ fontSize: 28, fontWeight: 900, color: C.textMuted }}>{activeReport.testData.questions.length - activeReport.student.correct - activeReport.student.incorrect}</div>
+                 <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: "uppercase", marginTop: 4 }}>Skipped</div>
+               </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 16, borderBottom: `1px solid ${C.border}`, marginBottom: 20 }}>
+               <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}>
+                 <Icon name="timetable" size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Time Taken: {activeReport.student.timeTaken}
+               </div>
+               <div style={{ display: "flex", gap: 10 }}>
+                 <button className="btn btn-ghost" onClick={() => dialogAlert("PDF Generation coming soon.", "Print")}><Icon name="download" size={14}/> Print PDF</button>
+                 <button className="btn btn-primary" style={{ background: "#0f172a", color: C.green, border: `1px solid ${C.green}55` }} onClick={() => viewProctoringLogs(activeReport.student.proctorUrl)}>
+                   <Icon name="eye" size={14}/> View Proctoring
+                 </button>
+               </div>
+            </div>
+
+            {/* Questions Breakdown */}
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 16 }}>Response Breakdown</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, maxHeight: 400, overflowY: "auto", paddingRight: 8 }} className="custom-scroll">
+               {activeReport.testData.questions.map((q, i) => {
+                  const userAns = activeReport.choices[i] || "";
+                  const correctAns = String(q.correctAnswer || q.correct || "").trim();
+                  const timeSpent = activeReport.timing[i] !== undefined ? activeReport.timing[i] + "s" : "--";
+                  
+                  const isCorrect = userAns === correctAns;
+                  const isSkipped = !userAns;
+                  
+                  let bgClass = isSkipped ? C.surfaceAlt : (isCorrect ? `${C.green}11` : `${C.red}11`);
+                  let borderClass = isSkipped ? C.border : (isCorrect ? `${C.green}55` : `${C.red}55`);
+                  let badge = isSkipped ? <span style={{fontSize: 9, background: C.surface, color: C.textMuted, padding: "2px 8px", borderRadius: 4, border: `1px solid ${C.border}`}}>SKIPPED</span> :
+                             (isCorrect ? <span style={{fontSize: 9, background: C.green, color: "white", padding: "2px 8px", borderRadius: 4}}>CORRECT</span> :
+                                          <span style={{fontSize: 9, background: C.red, color: "white", padding: "2px 8px", borderRadius: 4}}>WRONG</span>);
+
+                  // Extract Options safely
+                  let opts = q.options || [];
+                  if (!Array.isArray(opts)) opts = Object.values(opts);
+                  const optKeys = ['A','B','C','D'];
+
+                  return (
+                    <div key={i} style={{ background: bgClass, border: `1px solid ${borderClass}`, borderRadius: 16, padding: 16 }}>
+                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                           <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted }}>Q{i+1}</span>
+                           <span style={{ fontSize: 9, fontWeight: 700, color: C.primary, background: `${C.primary}22`, padding: "2px 6px", borderRadius: 4 }}>Time: {timeSpent}</span>
+                         </div>
+                         {badge}
+                       </div>
+                       <p style={{ fontSize: 14, fontWeight: 600, color: C.text, margin: "0 0 16px 0", lineHeight: 1.5 }}>{q.text}</p>
+                       
+                       {q.image && <img src={q.image} alt="Question" style={{ maxHeight: 150, borderRadius: 8, border: `1px solid ${C.border}`, marginBottom: 16 }} />}
+
+                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                          {opts.map((optText, idx) => {
+                             if (!optText || optText === "N/A") return null;
+                             const isThisCorrect = (optText === correctAns || optKeys[idx] === correctAns);
+                             const isThisSelected = (optText === userAns || optKeys[idx] === userAns);
+                             
+                             let optBg = C.surface;
+                             let optBorder = C.border;
+                             let optColor = C.text;
+
+                             if (isThisCorrect) { optBg = `${C.green}22`; optBorder = C.green; optColor = C.green; }
+                             else if (isThisSelected && !isCorrect) { optBg = `${C.red}22`; optBorder = C.red; optColor = C.red; }
+
+                             return (
+                               <div key={idx} style={{ background: optBg, border: `1px solid ${optBorder}`, color: optColor, padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                                 <span style={{ opacity: 0.5, fontSize: 10 }}>({optKeys[idx]})</span> {optText}
+                               </div>
+                             );
+                          })}
+                       </div>
+
+                       {q.explanation && (
+                         <div style={{ marginTop: 16, padding: 12, background: C.surface, borderLeft: `3px solid ${C.yellow}`, borderRadius: "0 8px 8px 0", fontSize: 12, color: C.textMuted }}>
+                           <strong style={{ color: C.yellow }}>Explanation:</strong> {q.explanation}
+                         </div>
+                       )}
+                    </div>
+                  );
+               })}
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: 40, textAlign: "center", color: C.red }}>Failed to load report data.</div>
+        )}
+      </Modal>
+
+      {/* 🔴 2. PREMIUM PROCTORING SURVEILLANCE MODAL 🔴 */}
+      <Modal open={showProctoring} onClose={() => setShowProctoring(false)} title="Security & Surveillance Logs" width={900}>
+         <div style={{ background: "#020617", borderRadius: 24, padding: 24, border: "1px solid #1e293b", position: "relative", overflow: "hidden" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, borderBottom: "1px solid #1e293b", paddingBottom: 16 }}>
+               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                 <div style={{ width: 40, height: 40, background: "rgba(16, 185, 129, 0.1)", color: "#10b981", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(16, 185, 129, 0.2)", boxShadow: "0 0 15px rgba(16,185,129,0.2)" }}>
+                   <Icon name="eye" size={20} />
+                 </div>
+                 <div>
+                   <h3 style={{ fontSize: 18, fontWeight: 800, color: "white", margin: 0 }}>Proctoring Engine</h3>
+                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                     <span style={{ width: 6, height: 6, background: "#10b981", borderRadius: "50%", display: "inline-block" }} className="pulse"></span>
+                     <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "2px" }}>Live Sync Active</span>
+                   </div>
+                 </div>
+               </div>
+            </div>
+
+            {loadingProctor ? (
+               <div style={{ height: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                 <div style={{ width: 60, height: 60, border: "4px solid #1e293b", borderTopColor: "#6366f1", borderRadius: "50%" }} className="pulse"></div>
+                 <p style={{ color: "#6366f1", fontSize: 12, fontWeight: 800, marginTop: 16, textTransform: "uppercase", letterSpacing: "3px" }} className="pulse">Decrypting Visual Data...</p>
+               </div>
+            ) : proctorImages.length === 0 ? (
+               <div style={{ height: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: 0.5 }}>
+                 <Icon name="warning" size={48} color="#64748b" />
+                 <p style={{ color: "#64748b", fontSize: 12, fontWeight: 800, marginTop: 16, textTransform: "uppercase", letterSpacing: "2px" }}>No Surveillance Data Found</p>
+               </div>
+            ) : (
+               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, maxHeight: 500, overflowY: "auto", paddingRight: 8 }} className="custom-scroll">
+                 {proctorImages.map((b64, i) => (
+                    <div key={i} style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid #1e293b", aspectRatio: "16/9", background: "black" }}>
+                       <img src={b64} alt={`Proctor ${i+1}`} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.7, transition: "transform 0.5s, opacity 0.5s" }} onMouseEnter={e => {e.currentTarget.style.transform="scale(1.1)"; e.currentTarget.style.opacity="1"}} onMouseLeave={e => {e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.opacity="0.7"}} />
+                       <div style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "4px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800, color: "#34d399", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", gap: 6 }}>
+                         <span style={{ width: 6, height: 6, background: "#ef4444", borderRadius: "50%", display: "inline-block" }} className="pulse"></span> REC 00{i+1}
+                       </div>
+                    </div>
+                 ))}
+               </div>
+            )}
+         </div>
+      </Modal>
+
+      {/* 3. TEST WIZARD (PLACEHOLDER) */}
+            {/* 🔴 FULL-SCREEN TEST CREATOR WIZARD 🔴 */}
+        {showWizard && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: C.bg, display: "flex", flexDirection: "column", animation: "slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+          
+          {/* Header Bar */}
+          <div style={{ padding: "16px 24px", background: C.surface, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <button className="btn btn-ghost" style={{ padding: "8px" }} onClick={() => { setShowWizard(false); setWizardStep(1); setRawCode(""); }}>
+                <Icon name="close" size={20} />
+              </button>
+              <div>
+                <h2 className="syne" style={{ fontSize: 18, fontWeight: 800, color: C.text, margin: 0, textTransform: "uppercase", letterSpacing: "1px" }}>Assessment Creator</h2>
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  {[1, 2, 3].map(s => (
+                    <span key={s} style={{ width: 30, height: 4, borderRadius: 2, background: wizardStep >= s ? C.primary : C.border, transition: "background 0.3s" }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+            {wizardStep === 3 && (
+              <button className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 24px", fontSize: 14, boxShadow: "0 4px 15px rgba(232,96,10,0.3)" }} onClick={handleFinalUpload} disabled={saving}>
+                {saving ? (
+                  <>
+                    {/* 🔴 NEW: Premium SVG Spinner */}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56">
+                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />
+                      </path>
+                    </svg>
+                    Publishing Database...
+                  </>
+                ) : (
+                  "Publish & Finalize Test"
+                )}
+              </button>
+            )}
+
+          </div>
+
+          {/* STEP 1: Select Method */}
+          {wizardStep === 1 && (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
+              <h3 className="syne" style={{ fontSize: 24, fontWeight: 800, marginBottom: 40, color: C.text }}>How would you like to build this test?</h3>
+              <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
+                
+                <div style={{ background: C.surface, border: `2px solid ${C.primary}55`, borderRadius: 24, padding: 32, width: 300, cursor: "pointer", transition: "transform 0.2s, boxShadow 0.2s", position: "relative", overflow: "hidden" }} 
+                     onMouseEnter={e => {e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow=`0 15px 30px ${C.primary}22`;}} 
+                     onMouseLeave={e => {e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none";}}
+                     onClick={() => { setWizardMethod('code'); setWizardStep(2); }}>
+                  <span style={{ position: "absolute", top: 0, right: 0, background: C.primary, color: "white", fontSize: 10, fontWeight: 800, padding: "4px 12px", borderBottomLeftRadius: 16 }}>FASTEST</span>
+                  <div style={{ width: 60, height: 60, background: `${C.primary}22`, color: C.primary, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                    <Icon name="setup" size={30} />
+                  </div>
+                  <h4 style={{ fontSize: 18, fontWeight: 800, color: C.text, margin: "0 0 8px 0" }}>JS Code Parser</h4>
+                  <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.5 }}>Paste raw `testDetails` and `mockQuestions` arrays directly from your editor. Auto-extracts metadata & structure.</p>
+                </div>
+
+                <div style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 24, padding: 32, width: 300, cursor: "pointer", transition: "transform 0.2s", position: "relative", overflow: "hidden" }}
+                     onMouseEnter={e => {e.currentTarget.style.borderColor=C.yellow; e.currentTarget.style.transform="translateY(-5px)";}} 
+                     onMouseLeave={e => {e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform="none";}}>
+                  <span style={{ position: "absolute", top: 0, right: 0, background: C.yellow, color: C.bg, fontSize: 10, fontWeight: 800, padding: "4px 12px", borderBottomLeftRadius: 16 }}>AI BETA</span>
+                  <div style={{ width: 60, height: 60, background: `${C.yellow}22`, color: C.yellow, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                    <Icon name="eye" size={30} />
+                  </div>
+                  <h4 style={{ fontSize: 18, fontWeight: 800, color: C.text, margin: "0 0 8px 0" }}>Smart OCR (PDF/IMG)</h4>
+                  <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.5 }}>Upload question papers. AI will auto-detect MCQs, text, and descriptive blocks. <br/><i>(Coming Soon)</i></p>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: JS Code Input (Hacker Theme) */}
+          {wizardStep === 2 && wizardMethod === 'code' && (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: 24, background: "#020617" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                 <div style={{ color: C.primary, fontSize: 12, fontWeight: 700, fontFamily: "monospace", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span className="pulse" style={{width:8, height:8, background:C.primary, borderRadius:"50%"}}></span> Awaiting Injection...
+                 </div>
+                 <button className="btn btn-primary" onClick={processJSCode} style={{ background: C.green, color: "white", boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}>
+                   Parse & Execute Array <Icon name="arrow_right" size={14} style={{display:"inline", marginLeft:6}}/>
+                 </button>
+              </div>
+              <textarea 
+                 value={rawCode} 
+                 onChange={e => setRawCode(e.target.value)} 
+                 placeholder="// Paste const testDetails = {...}; and const mockQuestions = [...]; here..."
+                 style={{ flex: 1, width: "100%", background: "#0f172a", border: "1px solid #1e293b", borderRadius: 16, padding: 24, color: "#10b981", fontFamily: "monospace", fontSize: 14, outline: "none", resize: "none", boxShadow: "inset 0 4px 20px rgba(0,0,0,0.5)" }}
+              />
+            </div>
+          )}
+
+          {/* STEP 3: Review & Edit (Split Screen) */}
+          {wizardStep === 3 && (
+            <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+              
+              {/* Left Panel: Meta Settings */}
+              <div style={{ width: 350, background: C.surface, borderRight: `1px solid ${C.border}`, overflowY: "auto", padding: 24 }} className="custom-scroll">
+                <h3 style={{ fontSize: 14, fontWeight: 800, color: C.text, textTransform: "uppercase", marginBottom: 20, letterSpacing: "1px" }}>Metadata Setup</h3>
+                
+                <FormRow label="Test ID / Code (Unique)"><input className="input" value={testMeta.testId} onChange={e => setTestMeta({...testMeta, testId: e.target.value})} style={{ fontFamily: "monospace", color: C.yellow, background: "#0f172a" }}/></FormRow>
+                <FormRow label="Test Title"><input className="input" value={testMeta.testName} onChange={e => setTestMeta({...testMeta, testName: e.target.value})} /></FormRow>
+                <FormRow label="Target Class"><input className="input" value={testMeta.classVal} onChange={e => setTestMeta({...testMeta, classVal: e.target.value})} /></FormRow>
+                <FormRow label="Subject"><input className="input" value={testMeta.subject} onChange={e => setTestMeta({...testMeta, subject: e.target.value})} /></FormRow>
+                <FormGrid cols={2}>
+                   <FormRow label="Ch No."><input className="input" value={testMeta.chapterNo} onChange={e => setTestMeta({...testMeta, chapterNo: e.target.value})} /></FormRow>
+                   <FormRow label="Time (Mins)"><input className="input" type="number" value={testMeta.duration} onChange={e => setTestMeta({...testMeta, duration: e.target.value})} /></FormRow>
+                </FormGrid>
+                <FormRow label="Chapter Name"><input className="input" value={testMeta.chapterName} onChange={e => setTestMeta({...testMeta, chapterName: e.target.value})} /></FormRow>
+                
+                <div style={{ marginTop: 24, padding: 16, background: `${C.blue}11`, borderRadius: 12, border: `1px solid ${C.blue}33` }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: C.blue }}>{parsedQuestions.length}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.blue, textTransform: "uppercase", letterSpacing: "1px" }}>Questions Parsed</div>
+                </div>
+              </div>
+
+                            {/* Right Panel: Question Editor List */}
+              <div style={{ flex: 1, background: C.bg, overflowY: "auto", padding: "24px 40px", position: "relative" }} className="custom-scroll">
+                
+                {/* 🔴 NEW: Premium Blur Overlay When Uploading */}
+                {saving && (
+                  <div style={{ position: "absolute", inset: 0, background: "rgba(15,17,23,0.7)", backdropFilter: "blur(4px)", zIndex: 50, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56">
+                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />
+                      </path>
+                    </svg>
+                    <h3 className="syne" style={{ color: "white", marginTop: 16, fontSize: 18 }}>Encrypting & Publishing Data...</h3>
+                    <p style={{ color: C.textMuted, fontSize: 12 }}>Please do not close this window.</p>
+                  </div>
+                )}
+
+                {parsedQuestions.map((q, i) => {
+
+                   
+                   // Dynamic Badges
+                   const typeColors = { MCQ: C.blue, TF: C.purple, FIB: C.yellow, DESC: C.green };
+                   const tColor = typeColors[q.type] || C.textMuted;
+
+                   return (
+                     <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, marginBottom: 20, position: "relative", transition: "border 0.2s" }} onFocus={e => e.currentTarget.style.borderColor = C.primary} onBlur={e => e.currentTarget.style.borderColor = C.border}>
+                        
+                        {/* Header Row */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                             <span style={{ background: C.surfaceAlt, color: C.textMuted, fontSize: 12, fontWeight: 800, padding: "4px 10px", borderRadius: 8 }}>Q {i + 1}</span>
+                             <select className="select" value={q.type} onChange={(e) => updateParsedQuestion(i, 'type', e.target.value)} style={{ background: `${tColor}11`, color: tColor, border: `1px solid ${tColor}44`, fontWeight: 800, fontSize: 10, padding: "4px 10px", width: "auto" }}>
+                                <option value="MCQ">Multiple Choice</option>
+                                <option value="TF">True / False</option>
+                                <option value="FIB">Fill in Blanks</option>
+                                <option value="DESC">Descriptive</option>
+                             </select>
+                           </div>
+                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                             <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase" }}>Marks:</span>
+                             <input type="number" className="input" value={q.marks} onChange={e => updateParsedQuestion(i, 'marks', parseFloat(e.target.value))} style={{ width: 60, padding: "4px 8px", textAlign: "center", fontWeight: 800, color: C.primary, background: `${C.primary}11`, border: "none" }} />
+                             <button style={{ background: "none", border: "none", color: C.red, cursor: "pointer", marginLeft: 8 }} onClick={() => setParsedQuestions(prev => prev.filter((_, idx) => idx !== i))}><Icon name="trash" size={16} /></button>
+                           </div>
+                        </div>
+
+                        {/* Question Text */}
+                        <textarea className="input" value={q.text} onChange={e => updateParsedQuestion(i, 'text', e.target.value)} placeholder="Type question here..." style={{ width: "100%", minHeight: 60, fontSize: 14, fontWeight: 600, marginBottom: 16, resize: "vertical" }} />
+
+                        {/* Dynamic Render based on Type */}
+                        <div style={{ padding: 16, background: C.surfaceAlt, borderRadius: 12, border: `1px solid ${C.border}` }}>
+                          
+                          {/* MCQ View */}
+                          {q.type === 'MCQ' && (
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                              {[0, 1, 2, 3].map(optIdx => (
+                                 <div key={optIdx} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                   <input type="radio" name={`correct-${i}`} checked={q.correctAnswer === q.options[optIdx] && q.options[optIdx] !== ""} onChange={() => updateParsedQuestion(i, 'correctAnswer', q.options[optIdx])} style={{ accentColor: C.green, width: 16, height: 16 }} />
+                                   <input className="input" value={q.options[optIdx]} onChange={(e) => {
+                                      const newOpts = [...q.options]; newOpts[optIdx] = e.target.value;
+                                      updateParsedQuestion(i, 'options', newOpts);
+                                   }} placeholder={`Option ${String.fromCharCode(65+optIdx)}`} style={{ flex: 1, fontSize: 12, background: q.correctAnswer === q.options[optIdx] && q.options[optIdx] !== "" ? `${C.green}11` : C.surface }} />
+                                 </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* True/False View */}
+                          {q.type === 'TF' && (
+                            <div style={{ display: "flex", gap: 16 }}>
+                              {['True', 'False'].map(opt => (
+                                 <label key={opt} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", background: q.correctAnswer === opt ? `${C.green}22` : C.surface, border: `1px solid ${q.correctAnswer === opt ? C.green : C.border}`, padding: "8px 16px", borderRadius: 8, fontWeight: 700, color: q.correctAnswer === opt ? C.green : C.text }}>
+                                   <input type="radio" name={`correct-tf-${i}`} checked={q.correctAnswer === opt} onChange={() => updateParsedQuestion(i, 'correctAnswer', opt)} style={{ accentColor: C.green }} /> {opt}
+                                 </label>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Fill in Blanks View */}
+                          {q.type === 'FIB' && (
+                             <div>
+                               <label style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Exact Answer (Case Insensitive)</label>
+                               <input className="input" value={q.correctAnswer} onChange={e => updateParsedQuestion(i, 'correctAnswer', e.target.value)} placeholder="e.g. Mitochondria" style={{ width: "100%", background: C.surface, color: C.green, fontWeight: 800 }} />
+                             </div>
+                          )}
+
+                          {/* Descriptive View */}
+                          {q.type === 'DESC' && (
+                             <div>
+                               <label style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Model Answer / Key Points</label>
+                               <textarea className="input" value={q.explanation} onChange={e => updateParsedQuestion(i, 'explanation', e.target.value)} placeholder="Teacher reference answer..." style={{ width: "100%", minHeight: 80, resize: "vertical", background: C.surface }} />
+                             </div>
+                          )}
+                        </div>
+
+                        {/* Global Explanation (Skip for DESC as it uses it as model answer) */}
+                        {q.type !== 'DESC' && (
+                          <div style={{ marginTop: 12 }}>
+                            <input className="input" value={q.explanation} onChange={e => updateParsedQuestion(i, 'explanation', e.target.value)} placeholder="Explanation (Optional)" style={{ width: "100%", fontSize: 11, border: "none", borderBottom: `1px dashed ${C.border}`, background: "transparent", padding: "4px 0" }} />
+                          </div>
+                        )}
+
+                     </div>
+                   );
+                })}
+              </div>
+
+            </div>
+          )}
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MATHJAX LOADER (For dynamically rendering LaTeX Math Equations)
+// ═══════════════════════════════════════════════════════════════
+
+const loadMathJax = () => {
+  return new Promise((resolve) => {
+    if (window.MathJax && window.MathJax.typesetPromise) return resolve();
+    
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+      },
+      startup: { typeset: false },
+    };
+    
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+    script.async = true;
+    script.onload = resolve;
+    document.head.appendChild(script);
+  });
+};
+
+// ═══════════════════════════════════════════════════════════════
+// NEW MODULE: PRINT PAPER WORKSPACE (Smart A4 Generator)
+// ═══════════════════════════════════════════════════════════════
+const PrintPaperWorkspace = ({ testData, school, onClose }) => {
+  // 1. Core States
+  const [printQs, setPrintQs] = useState([]);
+  const [instructions, setInstructions] = useState([
+    "All questions are compulsory.",
+    "Read the instructions carefully before answering.",
+    "Write neatly and legibly in the space provided."
+  ]);
+  const [sections, setSections] = useState([
+    { id: 'A', title: 'Objective Type Questions' },
+    { id: 'B', title: 'Short Answer Questions' },
+    { id: 'C', title: 'Long / Descriptive Questions' },
+    { id: 'D', title: 'Miscellaneous' }
+  ]);
+  
+  // 2. Paper Settings States
+  const [theme, setTheme] = useState("board");
+  const [mode, setMode] = useState("paper"); // 'paper' | 'worksheet'
+  const [lineMultiplier, setLineMultiplier] = useState(3); // 1 mark = X lines
+
+  // Fix: overflow:auto containers default scroll position to the LEFT edge, so a
+  // centered (margin:auto) child wider than the panel gets its left half clipped
+  // while empty space shows on the right. Force scroll to true center on mount/resize.
+  const rightPanelRef = useRef(null);
+  useEffect(() => {
+    const el = rightPanelRef.current;
+    if (!el) return;
+    const centerScroll = () => { el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2; };
+    centerScroll();
+    window.addEventListener("resize", centerScroll);
+    return () => window.removeEventListener("resize", centerScroll);
+  }, []);
+
+  // 3. Initialize Data & Map Default Sections
+  useEffect(() => {
+    if (testData?.questions) {
+      const mapped = testData.questions.map((q, i) => {
+        // Auto-assign default section based on type or marks
+        let defaultSec = 'A';
+        let qType = 'MCQ';
+        
+        // 🔴 FIX: Extract Type from ID because GAS appends it at the end
+        if (q.id && q.id.includes('_')) {
+          const parts = q.id.split('_');
+          qType = parts[parts.length - 1].toUpperCase();
+        } else if (q.type || q.qType) {
+          qType = String(q.type || q.qType).toUpperCase();
+        }
+
+        if (qType === 'DESC' || qType === 'DESCRIPTIVE') {
+          defaultSec = (q.marks || 1) >= 4 ? 'C' : 'B';
+        } else if (qType === 'FIB' || qType === 'TF') {
+          defaultSec = 'A';
+        }
+        
+        return { 
+          ...q, 
+          qType: qType, // Save extracted type for rendering
+          _printId: i, 
+          printSection: defaultSec, 
+          customLines: (q.marks || 1) * lineMultiplier 
+        };
+      });
+      setPrintQs(mapped);
+    }
+  }, [testData]); // eslint-disable-line
+
+   // 4. Trigger MathJax for rendering Equations 
+  useEffect(() => {
+    let timer;
+    loadMathJax().then(() => {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        timer = setTimeout(() => {
+          const container = document.getElementById('a4-preview-container');
+          if (container) {
+            window.MathJax.typesetPromise([container]).catch(err => console.log("MathJax Error:", err));
+          }
+        }, 500); 
+      }
+    });
+    return () => clearTimeout(timer);
+  }, [printQs, instructions, sections, theme, mode]);
+
+
+  // 5. Handlers
+
+  const handlePrint = () => {
+    const originalTitle = document.title;
+    const sanitize = (s) => String(s || "").trim().replace(/[^a-zA-Z0-9]+/g, "_");
+    const parts = [
+      sanitize(testData?.meta?.testId),
+      sanitize(testData?.meta?.subject),
+      sanitize(testData?.meta?.classVal || testData?.meta?.className),
+      sanitize(testData?.meta?.testName || "QuestionPaper"),
+    ].filter(Boolean);
+    document.title = parts.join("_") || "QuestionPaper";
+    window.print();
+    setTimeout(() => { document.title = originalTitle; }, 500);
+  };
+
+  const updateQSection = (idx, newSec) => {
+    setPrintQs(prev => prev.map((q, i) => i === idx ? { ...q, printSection: newSec } : q));
+  };
+
+  const updateQLines = (idx, lines) => {
+    setPrintQs(prev => prev.map((q, i) => i === idx ? { ...q, customLines: parseInt(lines) || 0 } : q));
+  };
+
+  // 6. Theme Engine
+  const THEMES = {
+    standard: {
+      wrap: { border: "1px solid #000", padding: 24 },
+      head: { borderBottom: "1px solid #000" },
+    },
+    board: {
+      wrap: { border: "5px double #000", padding: 24 },
+      head: { borderBottom: "3px solid #000" },
+    },
+    premium: {
+      wrap: { border: "2px solid #312e81", borderRadius: 16, padding: 24 },
+      head: { borderBottom: "2px solid #312e81", color: "#312e81" },
+    },
+    minimal: {
+      wrap: { padding: 24 },
+      head: { borderBottom: "1px solid #cbd5e1" },
+    },
+  };
+  const activeTheme = THEMES[theme];
+
+  const schoolNameLen = (school?.name || "").length;
+  const schoolNameFontSize =
+    schoolNameLen > 45 ? "13pt" :
+    schoolNameLen > 32 ? "16pt" :
+    schoolNameLen > 22 ? "19pt" : "24pt";
+
+  const contactLine = [school?.website, school?.email, school?.phone]
+    .filter(Boolean)
+    .join("   |   ");
+
+  return (
+    <div id="a4-outer-fullscreen" className="slide-in" style={{ position: "fixed", inset: 0, zIndex: 9999, background: C.bg, display: "flex", flexDirection: "column" }}>
+      {/* 🔴 PRINT CSS INJECTION 🔴 */}
+      <style>{`
+        .a4-shadow { box-shadow: 0 0 25px rgba(0,0,0,0.3); }
+        .lines-bg { background-image: repeating-linear-gradient(transparent, transparent 27px, #cbd5e1 28px); }
+        @media print {
+          body * { visibility: hidden; }
+          #a4-print-zone, #a4-print-zone * { visibility: visible; }
+          #a4-print-zone { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; background: white; }
+          @page { size: A4 portrait; margin: 10mm; }
+          .no-print { display: none !important; }
+          #a4-outer-fullscreen { position: static !important; height: auto !important; display: block !important; }
+          #a4-split-row { position: static !important; overflow: visible !important; height: auto !important; display: block !important; }
+          #a4-right-panel { position: static !important; overflow: visible !important; height: auto !important; padding: 0 !important; background: white !important; display: block !important; }
+          #a4-watermark { position: fixed !important; inset: 0 !important; }
+          #a4-preview-container {
+            -webkit-box-decoration-break: clone !important;
+            box-decoration-break: clone !important;
+          }
+        }
+      `}</style>
+
+      {/* TOP HEADER */}
+      <div className="no-print" style={{ padding: "12px 24px", background: C.surface, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button className="btn btn-ghost" onClick={onClose} style={{ padding: "8px 12px", background: C.surfaceAlt }}>
+            <Icon name="close" size={16} /> Close Studio
+          </button>
+          <div>
+            <h2 className="syne" style={{ fontSize: 18, fontWeight: 800, color: C.text, margin: 0 }}>Print Studio</h2>
+            <p style={{ fontSize: 11, color: C.primary, fontWeight: 700, margin: 0, textTransform: "uppercase" }}>{testData?.meta?.testName || 'Question Paper'}</p>
+          </div>
+        </div>
+        <button className="btn btn-primary" onClick={handlePrint} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px" }}>
+          <Icon name="download" size={16} /> Print / Save as PDF
+        </button>
+      </div>
+
+      {/* SPLIT SCREEN WORKSPACE */}
+      <div id="a4-split-row" style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        
+        {/* LEFT PANEL: CONTROLS */}
+        <div className="no-print custom-scroll" style={{ width: 420, background: C.surfaceAlt, borderRight: `1px solid ${C.border}`, overflowY: "auto", padding: 24 }}>
+          
+          <div style={{ background: C.surface, padding: 16, borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 20 }}>
+            <h3 style={{ fontSize: 12, fontWeight: 800, color: C.primary, textTransform: "uppercase", marginBottom: 12 }}>1. Paper Settings</h3>
+            <FormRow label="Design Theme">
+              <select className="select" value={theme} onChange={e => setTheme(e.target.value)}>
+                <option value="board">CBSE Board (Double Border)</option>
+                <option value="standard">Standard (Single Line)</option>
+                <option value="premium">Premium (Rounded Indigo)</option>
+                <option value="minimal">Minimal (No Border)</option>
+              </select>
+            </FormRow>
+            <FormRow label="Format Mode">
+              <select className="select" value={mode} onChange={e => setMode(e.target.value)}>
+                <option value="paper">Compact Question Paper</option>
+                <option value="worksheet">Worksheet (With Answer Spaces)</option>
+              </select>
+            </FormRow>
+
+            {mode === 'worksheet' && (
+              <div style={{ padding: "12px 0 0 0", marginTop: 12, borderTop: `1px solid ${C.border}66` }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: C.text, display: "block", marginBottom: 6 }}>Blank Lines per Mark</label>
+                <input type="range" min="1" max="10" value={lineMultiplier} onChange={e => {
+                  const val = Number(e.target.value);
+                  setLineMultiplier(val);
+                  setPrintQs(prev => prev.map(q => ({...q, customLines: (q.marks||1) * val})));
+                }} style={{ width: "100%", accentColor: C.primary }} />
+                <div style={{ textAlign: "right", fontSize: 11, fontWeight: 800, color: C.primary }}>{lineMultiplier} Lines / Mark</div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ background: C.surface, padding: 16, borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 20 }}>
+            <h3 style={{ fontSize: 12, fontWeight: 800, color: C.primary, textTransform: "uppercase", marginBottom: 12 }}>2. General Instructions</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {instructions.map((inst, i) => (
+                <div key={i} style={{ display: "flex", gap: 8 }}>
+                  <input className="input" value={inst} onChange={e => {
+                    const newI = [...instructions]; newI[i] = e.target.value; setInstructions(newI);
+                  }} style={{ flex: 1, fontSize: 12, padding: "6px 10px" }} />
+                  <button className="btn btn-danger" style={{ padding: "6px 8px" }} onClick={() => setInstructions(instructions.filter((_, idx) => idx !== i))}><Icon name="trash" size={14}/></button>
+                </div>
+              ))}
+              <button className="btn btn-ghost" style={{ fontSize: 11, padding: "6px" }} onClick={() => setInstructions([...instructions, ""])}>+ Add Instruction</button>
+            </div>
+          </div>
+
+          <div style={{ background: C.surface, padding: 16, borderRadius: 12, border: `1px solid ${C.border}` }}>
+            <h3 style={{ fontSize: 12, fontWeight: 800, color: C.primary, textTransform: "uppercase", marginBottom: 12 }}>3. Question Relocator</h3>
+            <p style={{ fontSize: 10, color: C.textMuted, marginBottom: 12 }}>Change the section or adjust the blank space for any specific question.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 400, overflowY: "auto", paddingRight: 4 }} className="custom-scroll">
+              {printQs.map((q, i) => (
+                <div key={i} style={{ background: C.surfaceAlt, padding: 12, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.text, marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    Q{i+1}: {q.text}
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <select className="select" value={q.printSection} onChange={e => updateQSection(i, e.target.value)} style={{ flex: 1, fontSize: 10, padding: "4px 8px" }}>
+                      {sections.map(s => <option key={s.id} value={s.id}>Move to Section {s.id}</option>)}
+                    </select>
+                    {mode === 'worksheet' && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, background: C.surface, padding: "0 8px", borderRadius: 6, border: `1px solid ${C.border}` }}>
+                        <span style={{ fontSize: 9, fontWeight: 800, color: C.textMuted }}>LINES:</span>
+                        <input type="number" min="0" value={q.customLines} onChange={e => updateQLines(i, e.target.value)} style={{ width: 30, background: "transparent", border: "none", color: C.text, fontSize: 11, fontWeight: 800, outline: "none", textAlign: "center", padding: 0 }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* RIGHT PANEL: LIVE A4 PREVIEW */}
+        <div id="a4-right-panel" ref={rightPanelRef} style={{ flex: 1, background: "#94a3b8", overflow: "auto", padding: "40px 20px" }} className="custom-scroll">
+          
+          <div id="a4-print-zone" className="a4-shadow" style={{ width: "210mm", minWidth: "210mm", margin: "0 auto", minHeight: "297mm", background: "white", color: "black", boxSizing: "border-box", fontFamily: "'Times New Roman', Times, serif" }}>
+            <div id="a4-preview-container" style={{ minHeight: "100%", boxSizing: "border-box", position: "relative", ...activeTheme.wrap }}>
+              
+              {/* WATERMARK */}
+               {school.watermark_url || school.logo_url ? (
+                <div id="a4-watermark" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.04, pointerEvents: "none", zIndex: 0 }}>
+                    <img src={school.watermark_url || school.logo_url} style={{ width: "60%", objectFit: "contain" }} alt="" />
+                </div>
+              ) : null}
+
+              {/* HEADER (Uses Local SaaS School Data) */}
+              <div style={{ paddingBottom: 16, marginBottom: 20, position: "relative", zIndex: 10, ...activeTheme.head }}>
+                <div style={{ textAlign: "right", fontSize: "9pt", fontWeight: "bold", color: "#475569", marginBottom: 4 }}>
+                  TEST CODE: {testData?.meta?.testId || 'T-XXX'}
+                </div>
+                
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+                  {school.logo_url ? (
+                    <img src={school.logo_url} style={{ width: 70, height: 70, objectFit: "contain", flexShrink: 0 }} alt="Logo" />
+                  ) : (
+                    <div style={{ width: 70, height: 70, flexShrink: 0, borderRadius: "50%", border: "2px solid #000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20pt", fontWeight: 900 }}>
+                      {(school?.name || "S")[0]}
+                    </div>
+                  )}
+                  <div style={{ flex: 1, textAlign: "center", padding: "0 12px" }}>
+                    <h1 style={{ fontSize: schoolNameFontSize, fontWeight: 900, margin: 0, textTransform: "uppercase", letterSpacing: "0.5px", lineHeight: 1.15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {school.name}
+                    </h1>
+                    <div style={{ fontSize: "9.5pt", fontWeight: 700, marginTop: 6, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                      {school.tagline || 'Education For Excellence'}
+                    </div>
+                    {(school.address_line1 || school.city) && (
+                      <div style={{ fontSize: "8pt", fontWeight: 500, marginTop: 3, color: "#334155" }}>
+                        {[school.address_line1, school.city, school.state, school.pincode].filter(Boolean).join(", ")}
+                      </div>
+                    )}
+                    {contactLine && (
+                      <div style={{ fontSize: "8pt", fontWeight: 600, marginTop: 2, color: "#334155" }}>
+                        {contactLine}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ width: 70, height: 70, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+                    {(school.affiliation_board || school.affiliation_no) && (
+                      <div style={{ fontSize: "6.5pt", fontWeight: 700, color: "#475569", lineHeight: 1.3 }}>
+                        {school.affiliation_board && <div>{school.affiliation_board}</div>}
+                        {school.affiliation_no && <div>{school.affiliation_no}</div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ textAlign: "center", marginTop: 16, fontWeight: 800, fontSize: "14pt", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  {testData?.meta?.testName || 'Assessment Paper'}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, fontSize: "11pt", fontWeight: "bold", borderTop: "1px solid #000", borderBottom: "1px solid #000", padding: "6px 0" }}>
+                  <div style={{ flex: 1, whiteSpace: "nowrap" }}>
+                    Class: {String(testData?.meta?.classVal || testData?.meta?.className || '_____').replace(/^class\s*/i, '')}
+                  </div>
+                  <div style={{ flex: 1, whiteSpace: "nowrap", textAlign: "center" }}>
+                    Subject: {testData?.meta?.subject || '_____'}
+                  </div>
+                  <div style={{ flex: 1, whiteSpace: "nowrap", textAlign: "center" }}>
+                    Time: {testData?.meta?.duration || '--'} Mins
+                  </div>
+                  <div style={{ flex: 1, whiteSpace: "nowrap", textAlign: "right" }}>
+                    M.M.: {testData?.questions?.reduce((sum, q) => sum + (Number(q.marks) || 1), 0) || 0}
+                  </div>
+                </div>
+              </div>
+
+              {/* INSTRUCTIONS */}
+              {instructions.filter(i => i.trim()).length > 0 && (
+                <div style={{ marginBottom: 24, fontSize: "11pt", position: "relative", zIndex: 10 }}>
+                  <div style={{ fontWeight: "bold", marginBottom: 6, fontStyle: "italic" }}>General Instructions:</div>
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    {instructions.filter(i => i.trim()).map((inst, i) => <li key={i} style={{ marginBottom: 4 }}>{inst}</li>)}
+                  </ul>
+                </div>
+              )}
+
+              {/* QUESTIONS BY SECTION */}
+              <div style={{ fontSize: "12pt", position: "relative", zIndex: 10 }}>
+                {sections.map(sec => {
+                  // Filter printQs mapped to this section
+                  const secQs = printQs.filter(q => q.printSection === sec.id);
+                  if (secQs.length === 0) return null;
+
+                  return (
+                    <div key={sec.id} style={{ marginBottom: 24 }}>
+                     <div style={{ textAlign: "center", fontWeight: 900, fontSize: "12pt", margin: "20px 0 16px 0", textTransform: "uppercase", background: "#f1f5f9", padding: "6px", borderTop: "1.5px solid #000", borderBottom: "1.5px solid #000", pageBreakAfter: "avoid", breakAfter: "avoid" }}>
+                        SECTION {sec.id} <span style={{ fontSize: "10pt", fontWeight: "bold", marginLeft: 8 }}>({sec.title})</span>
+                      </div>
+                      
+                      {secQs.map((q, idx) => (               
+                         <div key={idx} style={{ marginBottom: mode === 'worksheet' ? 12 : 16, pageBreakInside: "avoid" }}>
+
+                          <div style={{ display: "flex", gap: 12 }}>
+                            <div style={{ fontWeight: "bold", width: 35, fontSize: "12pt" }}>Q.{q._printId + 1}</div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                <div style={{ flex: 1, paddingRight: 20, whiteSpace: "pre-wrap", lineHeight: 1.4 }} dangerouslySetInnerHTML={{ __html: q.text.replace(/___+/g, '_____________') }}></div>
+                                <div style={{ fontWeight: "bold", whiteSpace: "nowrap", fontSize: "11pt" }}>[{q.marks || 1}]</div>
+                              </div>
+                              
+                              {q.image && <img src={q.image} style={{ maxHeight: 160, display: "block", marginBottom: 12, border: "1px solid #ccc" }} alt="Question Graphic" />}
+
+                              {String(q.type || q.qType).toUpperCase() === 'MCQ' && q.options && (
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px", marginBottom: 12, fontSize: "11pt" }}>
+                                  {q.options.map((opt, oIdx) => opt && opt !== "N/A" ? (
+                                    <div key={oIdx} style={{ display: "flex", gap: 8 }}>
+                                      <span style={{ fontWeight: "bold" }}>({String.fromCharCode(65+oIdx)})</span>
+                                      <span dangerouslySetInnerHTML={{ __html: opt }}></span>
+                                    </div>
+                                  ) : null)}
+                                </div>
+                              )}
+
+                              {String(q.type || q.qType).toUpperCase() === 'TF' && (
+                                <div style={{ fontWeight: "bold", color: "#555", marginBottom: 12, fontSize: "11pt" }}>( True / False )</div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* DYNAMIC WORKSHEET SPACING */}
+                          {mode === 'worksheet' && q.customLines > 0 && (
+                            <div className="lines-bg" style={{ 
+                              width: "100%", 
+                              height: q.customLines * 28, // 28px height per ruled line
+                              border: "1px solid #94a3b8", 
+                              borderRadius: 4, 
+                              marginBottom: 16,
+                              marginTop: 8
+                            }}></div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* FOOTER */}
+              <div style={{ textAlign: "center", marginTop: 40, borderTop: "1.5px solid black", paddingTop: 10, fontWeight: "bold", fontSize: "10pt", position: "relative", zIndex: 10 }}>
+                *** END OF QUESTION PAPER ***
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// HOMEWORK MODULE — Library-style, SaaS-aware, real backend (Azure SQL + Blob)
+// ═══════════════════════════════════════════════════════════════
+const HomeworkModule = ({ school }) => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+
+  const [homeworks, setHomeworks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [grades, setGrades] = useState([]);
+  const [sections, setSections] = useState([]);
+
+  const [viewState, setViewState] = useState("classes"); // classes -> list
+  const [activeClass, setActiveClass] = useState(null);
+  const [subjectFilter, setSubjectFilter] = useState("ALL");
+
+  const [showEditor, setShowEditor] = useState(false);
+  const [editing, setEditing] = useState(null); // null = create, object = edit
+
+  const [showAttachments, setShowAttachments] = useState(false);
+  const [activeAttachments, setActiveAttachments] = useState([]);
+  const [activeHwTitle, setActiveHwTitle] = useState("");
+
+  // ── Editor form state ──
+  const [form, setForm] = useState({ title: "", description: "", given_date: todayISO(), due_date: "" });
+  const [targets, setTargets] = useState([]); // [{section_id, section_name, class_name, subject_id, subject_name}]
+  const [pickGrade, setPickGrade] = useState("");
+  const [pickSection, setPickSection] = useState("");
+  const [pickSubject, setPickSubject] = useState("");
+  const [gradeSubjects, setGradeSubjects] = useState([]);
+  const [loadingGradeSubjects, setLoadingGradeSubjects] = useState(false);
+  const [files, setFiles] = useState([]);
+
+  // ── Initial load: grades + sections + homework list (school-wide, SaaS scoped by JWT) ──
+  const loadBase = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const [gRes, secRes, hwRes] = await Promise.all([
+        apiRequest("/setup/grades"),
+        apiRequest("/setup/sections"),
+        apiRequest("/homework"),
+      ]);
+      setGrades(gRes?.data || []);
+      setSections(secRes?.data || []);
+      setHomeworks(Array.isArray(hwRes?.data) ? hwRes.data : []);
+    } catch (e) {
+      dialogAlert("Failed to load homework data: " + e.message, "Sync Error");
+    } finally {
+      setLoading(false);
+    }
+  }, [dialogAlert]);
+
+  useEffect(() => { loadBase(); }, [loadBase]);
+
+  // ── Auto-fetch subjects for the grade picked inside the target-builder ──
+  useEffect(() => {
+    if (!pickGrade) { setGradeSubjects([]); setPickSubject(""); return; }
+    setLoadingGradeSubjects(true);
+    apiRequest(`/setup/grade-subjects?grade_id=${pickGrade}`)
+      .then((res) => setGradeSubjects(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => setGradeSubjects([]))
+      .finally(() => setLoadingGradeSubjects(false));
+  }, [pickGrade]);
+
+  const filteredSectionsForPick = sections.filter((s) => s.grade_id === pickGrade);
+
+  // ── KPIs ──
+  const kpis = React.useMemo(() => {
+    const total = homeworks.length;
+    const visible = homeworks.filter((h) => h.is_visible).length;
+    const hidden = total - visible;
+    const attachments = homeworks.reduce((sum, h) => sum + (h.attachments?.length || 0), 0);
+    return { total, visible, hidden, attachments };
+  }, [homeworks]);
+
+  // ── Library hierarchy: group by class_name (a homework can appear in multiple classes) ──
+  const classMap = React.useMemo(() => {
+    const map = {};
+    homeworks.forEach((hw) => {
+      const seen = new Set();
+      (hw.targets || []).forEach((t) => {
+        const cls = t.class_name || "General";
+        if (seen.has(cls)) return;
+        seen.add(cls);
+        if (!map[cls]) map[cls] = [];
+        map[cls].push(hw);
+      });
+    });
+    return map;
+  }, [homeworks]);
+
+  const classSubjectsInView = React.useMemo(() => {
+    if (!activeClass) return [];
+    const set = new Set();
+    (classMap[activeClass] || []).forEach((hw) =>
+      (hw.targets || []).filter((t) => t.class_name === activeClass).forEach((t) => t.subject_name && set.add(t.subject_name))
+    );
+    return Array.from(set).sort();
+  }, [activeClass, classMap]);
+
+  const listInView = React.useMemo(() => {
+    if (!activeClass) return [];
+    let list = classMap[activeClass] || [];
+    if (subjectFilter !== "ALL") {
+      list = list.filter((hw) => (hw.targets || []).some((t) => t.class_name === activeClass && t.subject_name === subjectFilter));
+    }
+    return [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }, [activeClass, subjectFilter, classMap]);
+
+  // ── Editor helpers ──
+  const openCreate = () => {
+    setEditing(null);
+    setForm({ title: "", description: "", given_date: todayISO(), due_date: "" });
+    setTargets([]);
+    setPickGrade(""); setPickSection(""); setPickSubject("");
+    setFiles([]);
+    setShowEditor(true);
+  };
+
+  const openEdit = (hw) => {
+    setEditing(hw);
+    setForm({ title: hw.title, description: hw.description || "", given_date: hw.given_date?.slice(0, 10) || todayISO(), due_date: hw.due_date?.slice(0, 10) || "" });
+    setTargets((hw.targets || []).map((t) => ({ section_id: t.section_id, section_name: t.section_name, class_name: t.class_name, subject_id: t.subject_id, subject_name: t.subject_name })));
+    setPickGrade(""); setPickSection(""); setPickSubject("");
+    setFiles([]);
+    setShowEditor(true);
+  };
+
+  const addTarget = () => {
+    if (!pickGrade || !pickSection) return dialogAlert("Select Class and Section first.", "Missing Selection");
+    const grade = grades.find((g) => g.id === pickGrade);
+    const section = sections.find((s) => s.id === pickSection);
+    const subject = gradeSubjects.find((s) => s.id === pickSubject);
+    const key = `${pickSection}_${pickSubject || "ALL"}`;
+    if (targets.some((t) => `${t.section_id}_${t.subject_id || "ALL"}` === key)) {
+      return dialogAlert("This class/section + subject is already added.", "Duplicate");
+    }
+    setTargets((prev) => [...prev, {
+      section_id: pickSection,
+      section_name: section?.name || "",
+      class_name: grade?.name || "",
+      subject_id: pickSubject || null,
+      subject_name: subject?.name || "All Subjects",
+    }]);
+    setPickSection(""); setPickSubject("");
+  };
+
+  const removeTarget = (idx) => setTargets((prev) => prev.filter((_, i) => i !== idx));
+
+  const handleSave = async () => {
+    if (!form.title.trim()) return dialogAlert("Homework title is required.", "Missing Info");
+    if (targets.length === 0) return dialogAlert("Add at least one Class/Section target.", "Missing Target");
+
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append("title", form.title);
+      fd.append("description", form.description);
+      fd.append("given_date", form.given_date);
+      fd.append("due_date", form.due_date || "");
+      fd.append("targets", JSON.stringify(targets.map((t) => ({ section_id: t.section_id, subject_id: t.subject_id }))));
+      files.forEach((f) => fd.append("files", f));
+
+      if (editing) {
+        await apiRequest(`/homework/${editing.id}`, "PUT", fd, true);
+        await dialogAlert("Homework updated successfully.", "Saved");
+      } else {
+        await apiRequest("/homework", "POST", fd, true);
+        await dialogAlert("Homework assigned successfully.", "Published");
+      }
+      setShowEditor(false);
+      loadBase();
+    } catch (e) {
+      dialogAlert("Save failed: " + e.message, "Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleVisibility = async (hw) => {
+    const nextVal = !hw.is_visible;
+    setHomeworks((prev) => prev.map((h) => (h.id === hw.id ? { ...h, is_visible: nextVal } : h)));
+    try {
+      await apiRequest(`/homework/${hw.id}/visibility`, "PATCH", { is_visible: nextVal });
+    } catch (e) {
+      dialogAlert("Visibility toggle failed.", "Error");
+      loadBase();
+    }
+  };
+
+  const handleDelete = async (hw) => {
+    if (!(await dialogConfirm(`Permanently delete "${hw.title}"? This also removes its files.`, "Delete Homework"))) return;
+    try {
+      setHomeworks((prev) => prev.filter((h) => h.id !== hw.id));
+      await apiRequest(`/homework/${hw.id}`, "DELETE");
+    } catch (e) {
+      dialogAlert("Delete failed: " + e.message, "Error");
+      loadBase();
+    }
+  };
+
+  const dueBadge = (due_date) => {
+    if (!due_date) return { label: "No Deadline", color: C.textMuted };
+    const diff = Math.ceil((new Date(due_date) - new Date(todayISO())) / 86400000);
+    if (diff < 0) return { label: "Overdue", color: C.red };
+    if (diff === 0) return { label: "Due Today", color: C.yellow };
+    if (diff <= 2) return { label: `Due in ${diff}d`, color: C.yellow };
+    return { label: `Due in ${diff}d`, color: C.green };
+  };
+
+  // ── RENDER: Classes grid (library home) ──
+  const renderClasses = () => {
+    if (loading) return <div className="card pulse" style={{ padding: 60, textAlign: "center", color: C.primary }}>Loading Homework Library...</div>;
+    const classes = Object.keys(classMap).sort();
+    if (classes.length === 0) return <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>No homework assigned yet. Create one to begin.</div>;
+
+    const gradients = [
+      `linear-gradient(135deg, ${C.blue}, #7c3aed)`, `linear-gradient(135deg, ${C.green}, #10b981)`,
+      `linear-gradient(135deg, ${C.red}, #f97316)`, `linear-gradient(135deg, ${C.yellow}, #fbbf24)`,
+      `linear-gradient(135deg, ${C.purple || "#8b5cf6"}, ${C.primary})`,
+    ];
+
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }} className="slide-in">
+        {classes.map((cls, i) => (
+          <div key={cls}
+            style={{ background: gradients[i % gradients.length], borderRadius: 24, padding: 24, color: "white", cursor: "pointer", position: "relative", overflow: "hidden", minHeight: 170, display: "flex", flexDirection: "column", justifyContent: "space-between", boxShadow: "0 10px 20px rgba(0,0,0,0.1)" }}
+            onClick={() => { setActiveClass(cls); setSubjectFilter("ALL"); setViewState("list"); }}>
+            <div style={{ position: "absolute", bottom: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
+            <div style={{ position: "relative", zIndex: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                <div style={{ background: "rgba(255,255,255,0.2)", width: 44, height: 44, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }}><Icon name="homework" size={22} color="white" /></div>
+                <span style={{ background: "rgba(255,255,255,0.2)", padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700 }}>{classMap[cls].length} Assigned</span>
+              </div>
+              <h3 className="syne" style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>{cls}</h3>
+              <p style={{ fontSize: 12, opacity: 0.85, marginTop: 4, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>View Homework <Icon name="arrow_right" size={12} /></p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // ── RENDER: Homework list for a class (with subject filter chips) ──
+  const renderList = () => (
+    <div className="slide-in pb-10">
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18, background: C.surfaceAlt, padding: "12px 16px", borderRadius: 16, border: `1px solid ${C.border}`, flexWrap: "wrap" }}>
+        <button className="btn btn-ghost" style={{ padding: "8px 12px", background: C.surface }} onClick={() => { setViewState("classes"); setActiveClass(null); }}>
+          <Icon name="arrow_right" size={14} style={{ transform: "rotate(180deg)" }} />
+        </button>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <h2 className="syne" style={{ fontSize: 20, fontWeight: 800, color: C.text, margin: 0 }}>{activeClass}</h2>
+          <p style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", margin: "2px 0 0 0" }}>{listInView.length} Homework Items</p>
+        </div>
+        <select className="select" style={{ fontSize: 12, maxWidth: 200 }} value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
+          <option value="ALL">All Subjects</option>
+          {classSubjectsInView.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+
+      {listInView.length === 0 ? (
+        <div className="card" style={{ padding: 40, textAlign: "center", color: C.textMuted }}>No homework matches this filter.</div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+          {listInView.map((hw) => {
+            const badge = dueBadge(hw.due_date);
+            const relevantTargets = (hw.targets || []).filter((t) => t.class_name === activeClass);
+            return (
+              <div key={hw.id} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", opacity: hw.is_visible ? 1 : 0.55 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <div style={{ flex: 1, paddingRight: 10 }}>
+                    <h5 style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>{hw.title}</h5>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, marginTop: 4 }}>By {hw.teacher_name || "—"}</p>
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 6, background: `${badge.color}22`, color: badge.color, border: `1px solid ${badge.color}44`, whiteSpace: "nowrap" }}>{badge.label}</span>
+                </div>
+
+                {hw.description && <p style={{ fontSize: 12, color: C.textMuted, margin: "0 0 10px 0", lineHeight: 1.4 }}>{hw.description}</p>}
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                  {relevantTargets.map((t, i) => (
+                    <span key={i} style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: `${C.primary}15`, color: C.primary, border: `1px solid ${C.primary}33` }}>
+                      {t.section_name} • {t.subject_name}
+                    </span>
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: C.surfaceAlt, padding: "8px 12px", borderRadius: 10, marginBottom: 12, border: `1px solid ${C.border}` }}>
+                  <button className="btn btn-ghost" style={{ fontSize: 10, fontWeight: 700, padding: "4px 8px", display: "flex", alignItems: "center", gap: 4 }}
+                    onClick={() => { setActiveAttachments(hw.attachments || []); setActiveHwTitle(hw.title); setShowAttachments(true); }}>
+                    <Icon name="file" size={12} color={C.primary} /> {hw.attachments?.length || 0} Files
+                  </button>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
+                    <Icon name="calendar" size={12} /> {hw.due_date ? new Date(hw.due_date).toLocaleDateString() : "—"}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, marginTop: "auto", paddingTop: 10, borderTop: `1px solid ${C.border}66` }}>
+                  <button className="btn btn-ghost" style={{ flex: 1, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }} onClick={() => openEdit(hw)}>
+                    <Icon name="edit" size={12} /> Edit
+                  </button>
+                  <button className="btn btn-ghost" style={{ flex: 1, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, color: hw.is_visible ? C.green : C.textMuted }} onClick={() => handleToggleVisibility(hw)}>
+                    <Icon name="eye" size={12} /> {hw.is_visible ? "Visible" : "Hidden"}
+                  </button>
+                  <button className="btn btn-ghost" style={{ padding: "6px 10px", color: C.red }} onClick={() => handleDelete(hw)}>
+                    <Icon name="trash" size={13} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 className="syne" style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: 0 }}>Homework Library</h1>
+          <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Organised by class — assign, manage visibility, and track submissions from one place.</p>
+        </div>
+        <button className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={openCreate}>
+          <Icon name="plus" size={14} /> Assign Homework
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 24 }}>
+        <KpiCard label="Total Homework" value={kpis.total} icon="homework" color={C.primary} />
+        <KpiCard label="Visible to Students" value={kpis.visible} icon="eye" color={C.green} />
+        <KpiCard label="Hidden" value={kpis.hidden} icon="eye" color={C.textMuted} />
+        <KpiCard label="Total Attachments" value={kpis.attachments} icon="file" color={C.blue} />
+      </div>
+
+      {viewState === "classes" ? renderClasses() : renderList()}
+
+      {/* ── CREATE / EDIT MODAL ── */}
+      <Modal open={showEditor} onClose={() => setShowEditor(false)} title={editing ? "Edit Homework" : "Assign New Homework"} width={680}>
+        <FormRow label="Title">
+          <input className="input" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="e.g. Chapter 4 — Algebra Worksheet" />
+        </FormRow>
+        <FormRow label="Description">
+          <textarea className="input" rows={3} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} placeholder="Instructions for students..." />
+        </FormRow>
+        <FormGrid cols={2}>
+          <FormRow label="Given Date">
+            <input className="input" type="date" value={form.given_date} onChange={(e) => setForm((p) => ({ ...p, given_date: e.target.value }))} />
+          </FormRow>
+          <FormRow label="Due Date">
+            <input className="input" type="date" value={form.due_date} onChange={(e) => setForm((p) => ({ ...p, due_date: e.target.value }))} />
+          </FormRow>
+        </FormGrid>
+
+        <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginTop: 6, marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.primary, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>Assign To (Class + Section + Subject)</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+            <select className="select" style={{ flex: 1, minWidth: 120 }} value={pickGrade} onChange={(e) => { setPickGrade(e.target.value); setPickSection(""); }}>
+              <option value="">Select Class</option>
+              {grades.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+            <select className="select" style={{ flex: 1, minWidth: 120 }} value={pickSection} onChange={(e) => setPickSection(e.target.value)} disabled={!pickGrade}>
+              <option value="">Select Section</option>
+              {filteredSectionsForPick.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <select className="select" style={{ flex: 1, minWidth: 140 }} value={pickSubject} onChange={(e) => setPickSubject(e.target.value)} disabled={!pickGrade || loadingGradeSubjects}>
+              <option value="">{loadingGradeSubjects ? "Loading..." : "All Subjects"}</option>
+              {gradeSubjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <button className="btn btn-ghost" onClick={addTarget} disabled={!pickGrade || !pickSection}>
+              <Icon name="plus" size={14} />
+            </button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {targets.length === 0 && <span style={{ fontSize: 11, color: C.textMuted }}>No targets added yet.</span>}
+            {targets.map((t, i) => (
+              <span key={i} style={{ fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 20, background: `${C.primary}15`, color: C.primary, border: `1px solid ${C.primary}33`, display: "flex", alignItems: "center", gap: 6 }}>
+                {t.class_name} {t.section_name} • {t.subject_name}
+                <span style={{ cursor: "pointer", fontWeight: 900 }} onClick={() => removeTarget(i)}>×</span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <FormRow label={editing ? "Add More Files (optional)" : "Attachments"}>
+          <input type="file" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png"
+            onChange={(e) => setFiles(Array.from(e.target.files || []))} />
+          {files.length > 0 && <p style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>{files.length} file(s) selected</p>}
+          {editing && editing.attachments?.length > 0 && (
+            <p style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>{editing.attachments.length} existing file(s) will be kept.</p>
+          )}
+        </FormRow>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
+          <button className="btn btn-ghost" onClick={() => setShowEditor(false)}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : editing ? "Save Changes" : "Assign Homework"}
+          </button>
+        </div>
+      </Modal>
+
+      {/* ── ATTACHMENTS MODAL ── */}
+      <Modal open={showAttachments} onClose={() => setShowAttachments(false)} title={`Files — ${activeHwTitle}`} width={480}>
+        {activeAttachments.length === 0 ? (
+          <p style={{ fontSize: 13, color: C.textMuted, textAlign: "center", padding: 20 }}>No attachments for this homework.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {activeAttachments.map((f) => (
+              <a key={f.id} href={f.file_url} target="_blank" rel="noreferrer"
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: C.surfaceAlt, borderRadius: 10, border: `1px solid ${C.border}`, textDecoration: "none", color: C.text }}>
+                <Icon name="file" size={16} color={C.primary} />
+                <span style={{ fontSize: 13, fontWeight: 600, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.file_name}</span>
+                <Icon name="download" size={14} color={C.textMuted} />
+              </a>
+            ))}
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// AUTHENTICATION LOGIC & LOGIN UI (ADDED AT BOTTOM)
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// MODULE: ANALYTICS
+// ═══════════════════════════════════════════════════════════════
+
+const AnalyticsModule = () => {
+  const [selClass, setSelClass] = useState("Class 9");
+  const [selSection, setSelSection] = useState("A");
+
+  const classStudents = STUDENTS.filter(
+    (s) => s.class === selClass && s.section === selSection
+  );
+  const subjects = CLASS_SUBJECTS[selClass] || [];
+
+  const subjectStats = subjects.map((sub) => {
+    const marks = classStudents.map(
+      (s) => MARKS_DATA[s.id]?.[sub]?.annual || 0
+    );
+    const avg = marks.length
+      ? Math.round(marks.reduce((s, v) => s + v, 0) / marks.length)
+      : 0;
+    const max = marks.length ? Math.max(...marks) : 0;
+    const min = marks.length ? Math.min(...marks) : 0;
+    const pass = marks.filter((v) => v >= 33).length;
+    return { sub, avg, max, min, pass, total: marks.length };
+  });
+
+  const getScore = (s) => {
+    let total = 0,
+      max = 0;
+    subjects.forEach((sub) => {
+      total += MARKS_DATA[s.id]?.[sub]?.annual || 0;
+      max += 100;
+    });
+    return max > 0 ? Math.round((total / max) * 100) : 0;
+  };
+
+  const scoreCategories = [
+    { label: "Outstanding (90-100%)", min: 90, max: 100, color: C.green },
+    { label: "Excellent (75-89%)", min: 75, max: 89, color: C.cyan },
+    { label: "Good (60-74%)", min: 60, max: 74, color: C.blue },
+    { label: "Average (45-59%)", min: 45, max: 59, color: C.yellow },
+    { label: "Below Average (<45%)", min: 0, max: 44, color: C.red },
+  ].map((cat) => ({
+    ...cat,
+    count: classStudents.filter((s) => {
+      const sc = getScore(s);
+      return sc >= cat.min && sc <= cat.max;
+    }).length,
+  }));
+
+  const trajectoryData = ["UT1", "UT2", "Half Yearly", "Annual"].map(
+    (exam, ei) => {
+      const key = ["ut1", "ut2", "half", "annual"][ei];
+      const max = [20, 20, 80, 100][ei];
+      const avg = Math.round(
+        classStudents.reduce(
+          (s, st) =>
+            s +
+            subjects.reduce(
+              (ss, sub) => ss + (MARKS_DATA[st.id]?.[sub]?.[key] || 0),
+              0
+            ) /
+              Math.max(subjects.length, 1),
+          0
+        ) / Math.max(classStudents.length, 1)
+      );
+      return { exam, avg, max, pct: Math.round((avg / max) * 100) };
+    }
+  );
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Academic Analytics"
+        sub="Deep performance insights, trends and subject analysis"
+      />
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <select
+            className="select"
+            style={{ width: 140 }}
+            value={selClass}
+            onChange={(e) => setSelClass(e.target.value)}
+          >
+            {CLASSES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+          <select
+            className="select"
+            style={{ width: 130 }}
+            value={selSection}
+            onChange={(e) => setSelSection(e.target.value)}
+          >
+            {(SECTIONS[selClass] || []).map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4,1fr)",
+          gap: 16,
+          marginBottom: 20,
+        }}
+        className="grid-4"
+      >
+        <KpiCard
+          label="Class Strength"
+          value={classStudents.length}
+          icon="students"
+          color={C.blue}
+        />
+        <KpiCard
+          label="Class Average"
+          value={`${Math.round(
+            classStudents.reduce((s, st) => s + getScore(st), 0) /
+              Math.max(classStudents.length, 1)
+          )}%`}
+          icon="chart"
+          color={C.primary}
+        />
+        <KpiCard
+          label="Topper"
+          value={
+            classStudents.length
+              ? Math.max(...classStudents.map(getScore)) + "%"
+              : "—"
+          }
+          icon="trophy"
+          color={C.yellow}
+        />
+        <KpiCard
+          label="Pass Rate"
+          value={`${Math.round(
+            (classStudents.filter((s) => getScore(s) >= 33).length /
+              Math.max(classStudents.length, 1)) *
+              100
+          )}%`}
+          icon="check"
+          color={C.green}
+        />
+      </div>
+
+      <div
+        className="grid-2"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 20,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+          >
+            Academic Trajectory
+          </h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={trajectoryData}>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis
+                dataKey="exam"
+                tick={{ fill: C.textMuted, fontSize: 10 }}
+              />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fill: C.textMuted, fontSize: 10 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  color: C.text,
+                }}
+                formatter={(v) => `${v}%`}
+              />
+              <Line
+                type="monotone"
+                dataKey="pct"
+                stroke={C.primary}
+                strokeWidth={3}
+                dot={{ r: 5, fill: C.primary }}
+                name="Class Avg %"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card">
+          <h3
+            className="syne"
+            style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+          >
+            Student Distribution
+          </h3>
+          <div style={{ maxHeight: 200, overflowY: "auto" }}>
+            {scoreCategories.map((cat, i) => (
+              <div key={i} style={{ marginBottom: 12 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 5,
+                  }}
+                >
+                  <span
+                    style={{ fontSize: 12, color: cat.color, fontWeight: 600 }}
+                  >
+                    {cat.label}
+                  </span>
+                  <span className="syne" style={{ fontWeight: 700 }}>
+                    {cat.count}
+                  </span>
+                </div>
+                <div className="progress-bar">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${
+                        classStudents.length > 0
+                          ? (cat.count / classStudents.length) * 100
+                          : 0
+                      }%`,
+                      background: cat.color,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h3
+          className="syne"
+          style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+        >
+          Subject-wise Analysis
+        </h3>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Average</th>
+                <th>Highest</th>
+                <th>Lowest</th>
+                <th>Pass Rate</th>
+                <th>Performance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subjectStats.map((s) => {
+                const passRate =
+                  s.total > 0 ? Math.round((s.pass / s.total) * 100) : 0;
+                return (
+                  <tr key={s.sub}>
+                    <td style={{ fontWeight: 600 }}>{s.sub}</td>
+                    <td>
+                      <span
+                        className="syne"
+                        style={{
+                          fontWeight: 700,
+                          color:
+                            s.avg >= 60
+                              ? C.green
+                              : s.avg >= 40
+                              ? C.yellow
+                              : C.red,
+                        }}
+                      >
+                        {s.avg}/100
+                      </span>
+                    </td>
+                    <td style={{ color: C.green, fontWeight: 600 }}>{s.max}</td>
+                    <td style={{ color: C.red, fontWeight: 600 }}>{s.min}</td>
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <div className="progress-bar" style={{ width: 60 }}>
+                          <div
+                            className="progress-fill"
+                            style={{
+                              width: `${passRate}%`,
+                              background:
+                                passRate >= 80
+                                  ? C.green
+                                  : passRate >= 60
+                                  ? C.yellow
+                                  : C.red,
+                            }}
+                          />
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color:
+                              passRate >= 80
+                                ? C.green
+                                : passRate >= 60
+                                ? C.yellow
+                                : C.red,
+                          }}
+                        >
+                          {passRate}%
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", gap: 3 }}>
+                        {["Top", "Good", "Avg", "Low"].map((l, i) => {
+                          const ranges = [
+                            [80, 100],
+                            [60, 79],
+                            [40, 59],
+                            [0, 39],
+                          ];
+                          const cnt = classStudents.filter((st) => {
+                            const m = MARKS_DATA[st.id]?.[s.sub]?.annual || 0;
+                            return m >= ranges[i][0] && m <= ranges[i][1];
+                          }).length;
+                          const colors = [C.green, C.cyan, C.yellow, C.red];
+                          return cnt > 0 ? (
+                            <span
+                              key={l}
+                              style={{
+                                fontSize: 9,
+                                background: `${colors[i]}22`,
+                                color: colors[i],
+                                border: `1px solid ${colors[i]}44`,
+                                borderRadius: 4,
+                                padding: "1px 5px",
+                              }}
+                            >
+                              {cnt}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3
+          className="syne"
+          style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}
+        >
+          Top Performers
+        </h3>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))",
+            gap: 12,
+          }}
+        >
+          {[...classStudents]
+            .sort((a, b) => getScore(b) - getScore(a))
+            .slice(0, 6)
+            .map((s, i) => (
+              <div
+                key={s.id}
+                style={{
+                  background: C.surfaceAlt,
+                  border: `1px solid ${
+                    i < 3
+                      ? [C.yellow, C.textMuted + "88", C.primary + "66"][i]
+                      : C.border
+                  }`,
+                  borderRadius: 12,
+                  padding: 12,
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: 24, marginBottom: 4 }}>
+                  {["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"][i]}
+                </div>
+                <div style={{ fontSize: 22 }}>{s.photo}</div>
+                <div
+                  className="syne"
+                  style={{ fontWeight: 700, fontSize: 13, marginTop: 6 }}
+                >
+                  {s.name.split(" ")[0]}
+                </div>
+                <div style={{ color: C.textMuted, fontSize: 11 }}>
+                  Roll #{s.rollNo}
+                </div>
+                <div
+                  className="syne"
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color:
+                      i < 3 ? [C.yellow, C.textMuted, C.primary][i] : C.primary,
+                    marginTop: 4,
+                  }}
+                >
+                  {getScore(s)}%
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+//============================================================
+// USER MANAGEMENT 
+//====================================================
+
+const PERMISSION_MODULES = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "setup", label: "School Setup" },
+  { id: "students", label: "Students" },
+  { id: "teachers", label: "Teachers" },
+  { id: "attendance", label: "Attendance" },
+  { id: "timetable", label: "Timetable" },
+  { id: "tests", label: "Quick Tests" },
+  { id: "fees", label: "Fee Management" },
+  { id: "exams", label: "Exam Management" },
+  { id: "results", label: "Results" },
+  { id: "leaderboard", label: "Leaderboard" },
+  { id: "analytics", label: "Academic Analytics" },
+];
+
+const ROLE_META = {
+  school_admin: { label: "Super Admin", color: C.primary },
+  teacher: { label: "Teacher", color: C.blue },
+  accountant: { label: "Accountant", color: C.green },
+  staff: { label: "Staff", color: C.textMuted },
+};
+
+const UserManagementModule = () => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+  const [mode, setMode] = useState("staff"); // 'staff' | 'students'
+
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  const [studentsOverview, setStudentsOverview] = useState(null);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+
+  const [studentsList, setStudentsList] = useState([]);
+  const [loadingStudentsList, setLoadingStudentsList] = useState(true);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentFilterGrade, setStudentFilterGrade] = useState("");
+  const [studentFilterStatus, setStudentFilterStatus] = useState("");
+  const [studentGrades, setStudentGrades] = useState([]);
+  const [authorizeModal, setAuthorizeModal] = useState(null); // student row being authorized
+  const [authIdentifierType, setAuthIdentifierType] = useState("phone");
+  const [authIdentifierValue, setAuthIdentifierValue] = useState("");
+  const [authPwMode, setAuthPwMode] = useState("auto");
+  const [authPwValue, setAuthPwValue] = useState("");
+  const [authResult, setAuthResult] = useState(null);
+  const [savingAuth, setSavingAuth] = useState(false);
+  const [studentPwModal, setStudentPwModal] = useState(null);
+  const [studentPwMode, setStudentPwMode] = useState("auto");
+  const [studentPwValue, setStudentPwValue] = useState("");
+  const [studentPwResult, setStudentPwResult] = useState(null);
+  const [savingStudentPw, setSavingStudentPw] = useState(false);
+
+  const [permModal, setPermModal] = useState(null);
+  const [permSelected, setPermSelected] = useState(new Set());
+  const [savingPerm, setSavingPerm] = useState(false);
+
+  const [pwModal, setPwModal] = useState(null);
+  const [pwMode, setPwMode] = useState("auto");
+  const [pwValue, setPwValue] = useState("");
+  const [pwResult, setPwResult] = useState(null);
+  const [savingPw, setSavingPw] = useState(false);
+
+  const [roleModal, setRoleModal] = useState(null);
+  const [roleValue, setRoleValue] = useState("teacher");
+  const [savingRole, setSavingRole] = useState(false);
+
+
+
+  useEffect(() => { loadStaff(); loadStudentsOverview(); }, []);
+
+  useEffect(() => {
+    apiRequest("/setup/grades").then((r) => setStudentGrades(r?.data || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (mode === "students") loadStudentsForAuth();
+  }, [mode, studentSearch, studentFilterGrade, studentFilterStatus]); 
+
+  const filtered = staff.filter((s) => {
+    const q = search.trim().toLowerCase();
+    const matchSearch = !q || s.full_name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q);
+    const matchRole = !filterRole || s.role === filterRole;
+    const matchStatus = filterStatus === "active" ? s.is_active : filterStatus === "blocked" ? !s.is_active : true;
+    return matchSearch && matchRole && matchStatus;
+  });
+
+  const kpi = {
+    total: staff.length,
+    active: staff.filter((s) => s.is_active).length,
+    blocked: staff.filter((s) => !s.is_active).length,
+    admins: staff.filter((s) => s.role === "school_admin").length,
+  };
+
+  const loadStudentsForAuth = async () => {
+    setLoadingStudentsList(true);
+    try {
+      const params = new URLSearchParams({
+        search: studentSearch || "",
+        grade_id: studentFilterGrade || "",
+        status: studentFilterStatus || "",
+      });
+      const res = await apiRequest(`/admin/users/students?${params.toString()}`);
+      setStudentsList(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) { console.error(e); } finally { setLoadingStudentsList(false); }
+  };
+
+  const loadStaff = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest("/admin/users/staff");
+      setStaff(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+
+  const loadStudentsOverview = async () => {
+    setLoadingStudents(true);
+    try {
+      const res = await apiRequest("/admin/users/students-overview");
+      setStudentsOverview(res?.data || null);
+    } catch (e) { console.error(e); } finally { setLoadingStudents(false); }
+  };
+
+  const openAuthorizeModal = (student) => {
+    setAuthorizeModal(student);
+    setAuthIdentifierType("phone");
+    setAuthIdentifierValue(student.guardian_phone || "");
+    setAuthPwMode("auto");
+    setAuthPwValue("");
+    setAuthResult(null);
+  };
+
+  const handleAuthorize = async () => {
+    if (!authorizeModal) return;
+    if (!authIdentifierValue.trim()) return dialogAlert("Enter a value for the selected login ID type.", "Missing Info");
+    setSavingAuth(true);
+    try {
+      const res = await apiRequest(`/admin/users/students/${authorizeModal.student_id}/authorize`, "POST", {
+        identifier_type: authIdentifierType,
+        identifier_value: authIdentifierValue.trim(),
+        newPassword: undefined,
+        password: authPwMode === "custom" ? authPwValue.trim() : undefined,
+      });
+      setAuthResult(res?.data?.temporaryPassword || (authPwMode === "custom" ? authPwValue.trim() : null));
+      await loadStudentsForAuth();
+      await loadStudentsOverview();
+    } catch (e) { dialogAlert("Failed: " + e.message, "Error"); } finally { setSavingAuth(false); }
+  };
+
+  const handleToggleStudentLogin = async (row) => {
+    const nextActive = row.login_status !== "active";
+    const msg = nextActive ? `Unblock login for ${row.first_name}?` : `Block login for ${row.first_name}? They'll be logged out immediately.`;
+    if (!(await dialogConfirm(msg, nextActive ? "Unblock Login" : "Block Login"))) return;
+    try {
+      await apiRequest(`/admin/users/students/${row.student_id}/status`, "PUT", { is_active: nextActive });
+      await loadStudentsForAuth();
+      await loadStudentsOverview();
+    } catch (e) { dialogAlert("Failed: " + e.message, "Error"); }
+  };
+
+  const openStudentPwModal = (row) => {
+    setStudentPwModal(row); setStudentPwMode("auto"); setStudentPwValue(""); setStudentPwResult(null);
+  };
+
+  const handleResetStudentPw = async () => {
+    if (!studentPwModal) return;
+    if (studentPwMode === "custom" && studentPwValue.trim().length < 6) {
+      return dialogAlert("Password must be at least 6 characters.", "Too Short");
+    }
+    setSavingStudentPw(true);
+    try {
+      const res = await apiRequest(`/admin/users/students/${studentPwModal.student_id}/reset-password`, "POST", {
+        newPassword: studentPwMode === "custom" ? studentPwValue.trim() : undefined,
+      });
+      setStudentPwResult(res?.data?.temporaryPassword || (studentPwMode === "custom" ? studentPwValue.trim() : null));
+    } catch (e) { dialogAlert("Failed: " + e.message, "Error"); } finally { setSavingStudentPw(false); }
+  };
+
+  const handleToggleBlock = async (row) => {
+    const nextActive = !row.is_active;
+    const confirmMsg = nextActive
+      ? `Unblock ${row.full_name}? They will be able to log in again.`
+      : `Block ${row.full_name}? They will be logged out and unable to access the system.`;
+    if (!(await dialogConfirm(confirmMsg, nextActive ? "Unblock User" : "Block User"))) return;
+    try {
+      await apiRequest(`/admin/users/${row.member_id}/status`, "PUT", { is_active: nextActive });
+      await loadStaff();
+    } catch (e) { dialogAlert("Failed: " + e.message, "Error"); }
+  };
+
+  const openRoleModal = (row) => { setRoleValue(row.role); setRoleModal(row); };
+
+  const handleSaveRole = async () => {
+    if (!roleModal) return;
+    if (roleValue === "school_admin" && roleModal.role !== "school_admin") {
+      const ok = await dialogConfirm(
+        `Make ${roleModal.full_name} a Super Admin? They will get full access to everything, including User Management.`,
+        "Confirm Promotion"
+      );
+      if (!ok) return;
+    }
+    setSavingRole(true);
+    try {
+      await apiRequest(`/admin/users/${roleModal.member_id}/role`, "PUT", { role: roleValue });
+      setRoleModal(null);
+      await loadStaff();
+    } catch (e) { dialogAlert("Failed: " + e.message, "Error"); } finally { setSavingRole(false); }
+  };
+
+  const openPermModal = (row) => {
+    setPermSelected(new Set(row.permissions?.modules || []));
+    setPermModal(row);
+  };
+
+  const togglePermModule = (id) => {
+    setPermSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleSavePerm = async () => {
+    if (!permModal) return;
+    setSavingPerm(true);
+    try {
+      await apiRequest(`/admin/users/${permModal.member_id}/permissions`, "PUT", { modules: Array.from(permSelected) });
+      setPermModal(null);
+      await loadStaff();
+    } catch (e) { dialogAlert("Failed: " + e.message, "Error"); } finally { setSavingPerm(false); }
+  };
+
+  const openPwModal = (row) => { setPwMode("auto"); setPwValue(""); setPwResult(null); setPwModal(row); };
+
+  const handleResetPw = async () => {
+    if (!pwModal) return;
+    if (pwMode === "custom" && pwValue.trim().length < 6) {
+      dialogAlert("Password must be at least 6 characters.", "Too Short");
+      return;
+    }
+    setSavingPw(true);
+    try {
+      const res = await apiRequest(`/admin/users/${pwModal.member_id}/reset-password`, "POST", {
+        newPassword: pwMode === "custom" ? pwValue.trim() : undefined,
+      });
+      setPwResult(res?.data?.temporaryPassword || (pwMode === "custom" ? pwValue.trim() : null));
+    } catch (e) { dialogAlert("Failed: " + e.message, "Error"); } finally { setSavingPw(false); }
+  };
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="User Management"
+        sub="Super Admin only — manage every staff account, access level, and login credentials"
+        action={
+          <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+            {[{ id: "staff", label: "Staff", icon: "teachers" }, { id: "students", label: "Students", icon: "students" }].map((m) => (
+              <button key={m.id} onClick={() => setMode(m.id)} style={{
+                display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", border: "none", cursor: "pointer",
+                fontFamily: "'DM Sans',sans-serif", fontWeight: 700, fontSize: 13,
+                background: mode === m.id ? C.primary : "transparent", color: mode === m.id ? "white" : C.textMuted,
+              }}>
+                <Icon name={m.icon} size={14} /> {m.label}
+              </button>
+            ))}
+          </div>
+        }
+      />
+
+      {mode === "staff" ? (
+        <>
+          <div className="grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
+            <KpiCard label="Total Staff" value={loading ? "—" : kpi.total} icon="teachers" color={C.blue} />
+            <KpiCard label="Active" value={loading ? "—" : kpi.active} icon="check" color={C.green} />
+            <KpiCard label="Blocked" value={loading ? "—" : kpi.blocked} icon="warning" color={C.red} />
+            <KpiCard label="Super Admins" value={loading ? "—" : kpi.admins} icon="setup" color={C.primary} />
+          </div>
+
+          <div className="card" style={{ marginBottom: 16, padding: "12px 16px" }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+                <Icon name="search" size={14} color={C.textMuted} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <input className="input" placeholder="Search by name or email…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ paddingLeft: 32 }} />
+              </div>
+              <select className="select" style={{ width: 160 }} value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
+                <option value="">All Roles</option>
+                {Object.entries(ROLE_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              </select>
+              <select className="select" style={{ width: 140 }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="blocked">Blocked</option>
+              </select>
+              <button className="btn btn-ghost" onClick={loadStaff} style={{ padding: "8px 10px" }}><Icon name="attendance" size={14} /></button>
+              <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}>{filtered.length} found</div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+            {loading ? (
+              <div className="pulse" style={{ padding: 50, textAlign: "center", color: C.primary, fontWeight: 600 }}>Loading staff accounts…</div>
+            ) : filtered.length === 0 ? (
+              <div style={{ padding: 50, textAlign: "center", color: C.textMuted }}>No staff found.</div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table className="table">
+                  <thead>
+                    <tr><th>Staff</th><th>Role</th><th>Access</th><th>Status</th><th>Last Login</th><th style={{ textAlign: "center" }}>Actions</th></tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((s) => {
+                      const rMeta = ROLE_META[s.role] || { label: s.role, color: C.textMuted };
+                      const modCount = s.permissions?.modules?.length || 0;
+                      return (
+                        <tr key={s.member_id}>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              {s.avatar_url ? (
+                                <img src={s.avatar_url} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />
+                              ) : (
+                                <div style={{ width: 34, height: 34, borderRadius: "50%", background: `${rMeta.color}33`, color: rMeta.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
+                                  {(s.full_name?.[0] || "?").toUpperCase()}
+                                </div>
+                              )}
+                              <div>
+                                <div style={{ fontWeight: 600, fontSize: 13 }}>{s.full_name}{s.is_self && <span style={{ color: C.textMuted, fontWeight: 500 }}> (You)</span>}</div>
+                                <div style={{ fontSize: 11, color: C.textMuted }}>{s.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td><span className="badge" style={{ background: `${rMeta.color}22`, color: rMeta.color }}>{rMeta.label}</span></td>
+                          <td>
+                            {s.role === "school_admin" ? (
+                              <span style={{ fontSize: 12, color: C.textMuted }}>Full access</span>
+                            ) : modCount === 0 ? (
+                              <span style={{ fontSize: 12, color: C.yellow }}>No modules set</span>
+                            ) : (
+                              <span style={{ fontSize: 12, color: C.text }}>{modCount} module{modCount !== 1 ? "s" : ""}</span>
+                            )}
+                          </td>
+                          <td><span className={`badge ${s.is_active ? "badge-green" : "badge-red"}`}>{s.is_active ? "Active" : "Blocked"}</span></td>
+                          <td style={{ fontSize: 12, color: C.textMuted }}>{s.last_login_at ? new Date(s.last_login_at).toLocaleDateString("en-IN") : "Never"}</td>
+                          <td>
+                            <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
+                              <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Change Role" onClick={() => openRoleModal(s)} disabled={s.is_self}><Icon name="setup" size={13} /></button>
+                              <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Module Access" onClick={() => openPermModal(s)} disabled={s.role === "school_admin"}><Icon name="eye" size={13} /></button>
+                              <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Reset Password" onClick={() => openPwModal(s)}><Icon name="edit" size={13} /></button>
+                              {s.is_active ? (
+                                <button className="btn btn-danger" style={{ padding: "5px 9px" }} title="Block" onClick={() => handleToggleBlock(s)} disabled={s.is_self}><Icon name="warning" size={13} /></button>
+                              ) : (
+                                <button className="btn btn-success" style={{ padding: "5px 9px" }} title="Unblock" onClick={() => handleToggleBlock(s)}><Icon name="check" size={13} /></button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+            ) : (
+              <div>
+                <div className="grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 20 }}>
+                  <KpiCard label="Total Students" value={loadingStudents ? "—" : studentsOverview?.total || 0} icon="students" color={C.blue} />
+                  <KpiCard label="Active" value={loadingStudents ? "—" : studentsOverview?.active || 0} icon="check" color={C.green} />
+                  <KpiCard label="Login Enabled" value={loadingStudents ? "—" : studentsOverview?.login_enabled || 0} icon="setup" color={C.primary} />
+                </div>
+      
+                <div className="card" style={{ marginBottom: 16, padding: "12px 16px" }}>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                    <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
+                      <Icon name="search" size={14} color={C.textMuted} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                      <input className="input" placeholder="Search by name or admission no…" value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} style={{ paddingLeft: 32 }} />
+                    </div>
+                    <select className="select" style={{ width: 160 }} value={studentFilterGrade} onChange={(e) => setStudentFilterGrade(e.target.value)}>
+                      <option value="">All Classes</option>
+                      {studentGrades.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                    </select>
+                    <select className="select" style={{ width: 160 }} value={studentFilterStatus} onChange={(e) => setStudentFilterStatus(e.target.value)}>
+                      <option value="">All Status</option>
+                      <option value="authorized">Authorized</option>
+                      <option value="blocked">Blocked</option>
+                      <option value="not_authorized">Not Authorized</option>
+                    </select>
+                  </div>
+                </div>
+      
+                <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+                  {loadingStudentsList ? (
+                    <div className="pulse" style={{ padding: 50, textAlign: "center", color: C.primary, fontWeight: 600 }}>Loading students…</div>
+                  ) : studentsList.length === 0 ? (
+                    <div style={{ padding: 50, textAlign: "center", color: C.textMuted }}>No students found.</div>
+                  ) : (
+                    <div style={{ overflowX: "auto" }}>
+                      <table className="table">
+                        <thead>
+                          <tr><th>Student</th><th>Class</th><th>Login ID</th><th>Status</th><th>Last Login</th><th style={{ textAlign: "center" }}>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                          {studentsList.map((s) => (
+                            <tr key={s.student_id}>
+                              <td>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  {s.photo_url ? (
+                                    <img src={s.photo_url} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />
+                                  ) : (
+                                    <div style={{ width: 34, height: 34, borderRadius: "50%", background: `${C.blue}33`, color: C.blue, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
+                                      {(s.first_name?.[0] || "?").toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div>
+                                    <div style={{ fontWeight: 600, fontSize: 13 }}>{s.first_name} {s.last_name}</div>
+                                    <div style={{ fontSize: 11, color: C.textMuted }}>Adm# {s.admission_no}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ fontSize: 12 }}>{s.class_name} {s.section_name} {s.roll_no ? `· Roll ${s.roll_no}` : ""}</td>
+                              <td style={{ fontSize: 12 }}>
+                                {s.login_status === "not_authorized" ? "—" : (
+                                  <span>
+                                    {s.login_phone || s.login_email || s.login_identifier}
+                                    <span className="badge badge-blue" style={{ marginLeft: 6, fontSize: 9 }}>{s.identifier_type}</span>
+                                  </span>
+                                )}
+                              </td>
+                              <td>
+                                <span className={`badge ${s.login_status === "active" ? "badge-green" : s.login_status === "blocked" ? "badge-red" : "badge-yellow"}`}>
+                                  {s.login_status === "active" ? "Authorized" : s.login_status === "blocked" ? "Blocked" : "Not Authorized"}
+                                </span>
+                              </td>
+                              <td style={{ fontSize: 12, color: C.textMuted }}>{s.last_login_at ? new Date(s.last_login_at).toLocaleDateString("en-IN") : "Never"}</td>
+                              <td>
+                                <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
+                                  {s.login_status === "not_authorized" ? (
+                                    <button className="btn btn-primary" style={{ padding: "5px 12px", fontSize: 11 }} onClick={() => openAuthorizeModal(s)}>Authorize</button>
+                                  ) : (
+                                    <>
+                                      <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Reset Password" onClick={() => openStudentPwModal(s)}><Icon name="edit" size={13} /></button>
+                                      {s.login_status === "active" ? (
+                                        <button className="btn btn-danger" style={{ padding: "5px 9px" }} title="Block" onClick={() => handleToggleStudentLogin(s)}><Icon name="warning" size={13} /></button>
+                                      ) : (
+                                        <button className="btn btn-success" style={{ padding: "5px 9px" }} title="Unblock" onClick={() => handleToggleStudentLogin(s)}><Icon name="check" size={13} /></button>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+      <Modal open={!!roleModal} onClose={() => setRoleModal(null)} title="Change Role" width={420}>
+        {roleModal && (
+          <div>
+            <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>Changing role for <b style={{ color: C.text }}>{roleModal.full_name}</b></div>
+            <FormRow label="Role">
+              <select className="select" value={roleValue} onChange={(e) => setRoleValue(e.target.value)}>
+                {Object.entries(ROLE_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              </select>
+            </FormRow>
+            {roleValue === "school_admin" && (
+              <div style={{ padding: 12, background: `${C.primary}11`, border: `1px solid ${C.primary}33`, borderRadius: 10, fontSize: 12, color: C.primary, marginBottom: 8 }}>
+                ⚠ Super Admins get full, unrestricted access to every module including User Management.
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
+              <button className="btn btn-ghost" onClick={() => setRoleModal(null)} disabled={savingRole}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveRole} disabled={savingRole}>{savingRole ? "Saving…" : "Save Role"}</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!permModal} onClose={() => setPermModal(null)} title="Module Access" width={480}>
+        {permModal && (
+          <div>
+            <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>
+              Choose which modules <b style={{ color: C.text }}>{permModal.full_name}</b> can access. Changes apply on their next login.
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+              {PERMISSION_MODULES.map((m) => {
+                const checked = permSelected.has(m.id);
+                return (
+                  <label key={m.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 9, cursor: "pointer", border: `1.5px solid ${checked ? C.primary : C.border}`, background: checked ? `${C.primary}11` : C.surfaceAlt }}>
+                    <input type="checkbox" checked={checked} onChange={() => togglePermModule(m.id)} style={{ width: 15, height: 15, accentColor: C.primary }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: checked ? C.primary : C.text }}>{m.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button className="btn btn-ghost" onClick={() => setPermModal(null)} disabled={savingPerm}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSavePerm} disabled={savingPerm}>{savingPerm ? "Saving…" : "Save Access"}</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!pwModal} onClose={() => setPwModal(null)} title="Reset Password" width={420}>
+        {pwModal && (
+          pwResult ? (
+            <div style={{ textAlign: "center", padding: "8px 0" }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
+              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 14 }}>Password reset for <b style={{ color: C.text }}>{pwModal.full_name}</b>. Share this with them securely:</div>
+              <div style={{ fontFamily: "monospace", fontSize: 18, fontWeight: 800, color: C.primary, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>{pwResult}</div>
+              <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setPwModal(null)}>Done</button>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>Resetting password for <b style={{ color: C.text }}>{pwModal.full_name}</b></div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                {[["auto", "Auto-generate"], ["custom", "Set custom"]].map(([v, l]) => (
+                  <button key={v} onClick={() => setPwMode(v)} style={{ flex: 1, padding: "9px", borderRadius: 9, cursor: "pointer", fontWeight: 700, fontSize: 12.5, border: `1.5px solid ${pwMode === v ? C.primary : C.border}`, background: pwMode === v ? `${C.primary}22` : C.surfaceAlt, color: pwMode === v ? C.primary : C.textMuted }}>{l}</button>
+                ))}
+              </div>
+              {pwMode === "custom" && (
+                <FormRow label="New Password">
+                  <input className="input" type="text" value={pwValue} onChange={(e) => setPwValue(e.target.value)} placeholder="Minimum 6 characters" />
+                </FormRow>
+              )}
+                            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
+                <button className="btn btn-ghost" onClick={() => setPwModal(null)} disabled={savingPw}>Cancel</button>
+                <button className="btn btn-primary" onClick={handleResetPw} disabled={savingPw}>{savingPw ? "Resetting…" : "Reset Password"}</button>
+              </div>
+            </div>
+          )
+        )}
+      </Modal>
+
+      <Modal open={!!authorizeModal} onClose={() => setAuthorizeModal(null)} title="Authorize Student Login" width={440}>
+        {authorizeModal && (
+          authResult !== null ? (
+            <div style={{ textAlign: "center", padding: "8px 0" }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
+              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 14 }}>Login enabled for <b style={{ color: C.text }}>{authorizeModal.first_name}</b>. Share these securely:</div>
+              <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 4 }}>Login ID: <b style={{ color: C.text }}>{authIdentifierValue}</b></div>
+              {authResult && <div style={{ fontFamily: "monospace", fontSize: 18, fontWeight: 800, color: C.primary, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 16px", marginTop: 8, marginBottom: 16 }}>{authResult}</div>}
+              <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setAuthorizeModal(null)}>Done</button>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>Choose how <b style={{ color: C.text }}>{authorizeModal.first_name}</b> will log in to the Student App.</div>
+              <FormRow label="Login ID Type">
+                <select className="select" value={authIdentifierType} onChange={(e) => {
+                  const t = e.target.value; setAuthIdentifierType(t);
+                  setAuthIdentifierValue(t === "phone" ? (authorizeModal.guardian_phone || "") : t === "admission_no" ? authorizeModal.admission_no || "" : t === "roll_no" ? authorizeModal.roll_no || "" : "");
+                }}>
+                  <option value="phone">Phone Number</option>
+                  <option value="admission_no">Admission Number</option>
+                  <option value="roll_no">Roll Number</option>
+                  <option value="email">Email</option>
+                </select>
+              </FormRow>
+              <FormRow label="Value">
+                <input className="input" value={authIdentifierValue} onChange={(e) => setAuthIdentifierValue(e.target.value)} />
+              </FormRow>
+              <div style={{ display: "flex", gap: 8, marginBottom: 16, marginTop: 4 }}>
+                {[["auto", "Auto-generate"], ["custom", "Set custom"]].map(([v, l]) => (
+                  <button key={v} onClick={() => setAuthPwMode(v)} style={{ flex: 1, padding: "9px", borderRadius: 9, cursor: "pointer", fontWeight: 700, fontSize: 12.5, border: `1.5px solid ${authPwMode === v ? C.primary : C.border}`, background: authPwMode === v ? `${C.primary}22` : C.surfaceAlt, color: authPwMode === v ? C.primary : C.textMuted }}>{l}</button>
+                ))}
+              </div>
+              {authPwMode === "custom" && (
+                <FormRow label="Password">
+                  <input className="input" type="text" value={authPwValue} onChange={(e) => setAuthPwValue(e.target.value)} placeholder="Minimum 6 characters" />
+                </FormRow>
+              )}
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
+                <button className="btn btn-ghost" onClick={() => setAuthorizeModal(null)} disabled={savingAuth}>Cancel</button>
+                <button className="btn btn-primary" onClick={handleAuthorize} disabled={savingAuth}>{savingAuth ? "Authorizing…" : "Authorize Login"}</button>
+              </div>
+            </div>
+          )
+        )}
+      </Modal>
+
+      <Modal open={!!studentPwModal} onClose={() => setStudentPwModal(null)} title="Reset Student Password" width={420}>
+        {studentPwModal && (
+          studentPwResult !== null ? (
+            <div style={{ textAlign: "center", padding: "8px 0" }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
+              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 14 }}>Password reset for <b style={{ color: C.text }}>{studentPwModal.first_name}</b>. Share this securely:</div>
+              {studentPwResult && <div style={{ fontFamily: "monospace", fontSize: 18, fontWeight: 800, color: C.primary, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>{studentPwResult}</div>}
+              <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setStudentPwModal(null)}>Done</button>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>Resetting password for <b style={{ color: C.text }}>{studentPwModal.first_name}</b></div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                {[["auto", "Auto-generate"], ["custom", "Set custom"]].map(([v, l]) => (
+                  <button key={v} onClick={() => setStudentPwMode(v)} style={{ flex: 1, padding: "9px", borderRadius: 9, cursor: "pointer", fontWeight: 700, fontSize: 12.5, border: `1.5px solid ${studentPwMode === v ? C.primary : C.border}`, background: studentPwMode === v ? `${C.primary}22` : C.surfaceAlt, color: studentPwMode === v ? C.primary : C.textMuted }}>{l}</button>
+                ))}
+              </div>
+              {studentPwMode === "custom" && (
+                <FormRow label="New Password">
+                  <input className="input" type="text" value={studentPwValue} onChange={(e) => setStudentPwValue(e.target.value)} placeholder="Minimum 6 characters" />
+                </FormRow>
+              )}
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
+                <button className="btn btn-ghost" onClick={() => setStudentPwModal(null)} disabled={savingStudentPw}>Cancel</button>
+                <button className="btn btn-primary" onClick={handleResetStudentPw} disabled={savingStudentPw}>{savingStudentPw ? "Resetting…" : "Reset Password"}</button>
+              </div>
+            </div>
+          )
+        )}
+      </Modal>
+    </div>
+  );
+};
+
+const AUDIT_ACTION_META = {
+  LOGIN: { label: "Login", color: C.green, icon: "check" },
+  LOGOUT: { label: "Logout", color: C.textMuted, icon: "user" },
+  LOGIN_FAILED: { label: "Failed Login", color: C.red, icon: "warning" },
+  ATTENDANCE_MARKED: { label: "Attendance Marked", color: C.blue, icon: "attendance" },
+  STAFF_ATTENDANCE_MARKED: { label: "Staff Attendance", color: C.blue, icon: "attendance" },
+  FEE_PAID: { label: "Fee Collected", color: C.primary, icon: "fee" },
+  NOTICE_CREATED: { label: "Notice Created", color: C.yellow, icon: "warning" },
+  TEST_CREATED: { label: "Test Created", color: C.purple, icon: "test" },
+  EXAM_CREATED: { label: "Exam Created", color: C.purple, icon: "test" },
+  STUDENT_ADDED: { label: "Student Added", color: C.cyan, icon: "students" },
+  HOMEWORK_ASSIGNED: { label: "Homework Assigned", color: C.cyan, icon: "timetable" },
+  USER_BLOCKED: { label: "User Blocked", color: C.red, icon: "warning" },
+  USER_UNBLOCKED: { label: "User Unblocked", color: C.green, icon: "check" },
+  USER_ROLE_CHANGED: { label: "Role Changed", color: C.yellow, icon: "setup" },
+  USER_PERMISSIONS_CHANGED: { label: "Permissions Changed", color: C.yellow, icon: "eye" },
+  USER_PASSWORD_RESET: { label: "Password Reset", color: C.red, icon: "edit" },
+  AUDIT_CLEANUP: { label: "Logs Cleaned Up", color: C.textMuted, icon: "trash" },
+  API_CALL: { label: "API Call", color: C.textMuted, icon: "chart" },
+};
+
+const getAuditMeta = (type) => AUDIT_ACTION_META[type] || { label: type, color: C.textMuted, icon: "chart" };
+
+const AuditLogModule = () => {
+  const { dialogAlert, dialogConfirm } = useDialog();
+  const [tab, setTab] = useState("system"); // 'system' | 'whatsapp' | 'razorpay'
+
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
+  const [page, setPage] = useState(1);
+
+  const [search, setSearch] = useState("");
+  const [actionType, setActionType] = useState("");
+  const [userRole, setUserRole] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [includeApiCalls, setIncludeApiCalls] = useState(false);
+
+  const [stats, setStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  const [cleanupModal, setCleanupModal] = useState(false);
+  const [cleanupMonths, setCleanupMonths] = useState(6);
+  const [cleaning, setCleaning] = useState(false);
+
+  const loadStats = async () => {
+    setLoadingStats(true);
+    try {
+      const res = await apiRequest("/audit/stats");
+      setStats(res?.data || null);
+    } catch (e) { console.error(e); } finally { setLoadingStats(false); }
+  };
+
+  const loadLogs = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page, limit: 30,
+        search: search || "", actionType: actionType || "", userRole: userRole || "",
+        from: from || "", to: to || "",
+        includeApiCalls: includeApiCalls ? "1" : "0",
+      });
+      const res = await apiRequest(`/audit?${params.toString()}`);
+      setLogs(Array.isArray(res?.data) ? res.data : []);
+      setPagination(res?.pagination || { total: 0, page: 1, pages: 1 });
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+
+  useEffect(() => { loadStats(); }, []);
+  useEffect(() => { setPage(1); }, [search, actionType, userRole, from, to, includeApiCalls]);
+  useEffect(() => { loadLogs(); }, [page, search, actionType, userRole, from, to, includeApiCalls]); // eslint-disable-line
+
+  const handleCleanup = async () => {
+    setCleaning(true);
+    try {
+      const res = await apiRequest("/audit/cleanup", "DELETE", { months: cleanupMonths });
+      await dialogAlert(`${res?.data?.deleted || 0} old log(s) deleted successfully.`, "Cleanup Complete");
+      setCleanupModal(false);
+      await loadStats();
+      await loadLogs();
+    } catch (e) { dialogAlert("Cleanup failed: " + e.message, "Error"); } finally { setCleaning(false); }
+  };
+
+  return (
+    <div className="slide-in">
+      <SectionHeader
+        title="Audit Logs"
+        sub="Super Admin only — full visibility into every important action taken across the school"
+        action={
+          <button className="btn btn-danger" onClick={() => setCleanupModal(true)} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Icon name="trash" size={14} /> Clean Up Old Logs
+          </button>
+        }
+      />
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        {[
+          { id: "system", label: "System Activity" },
+          { id: "whatsapp", label: "WhatsApp Logs", soon: true },
+          { id: "razorpay", label: "Razorpay Logs", soon: true },
+        ].map((t) => (
+          <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {t.label}
+            {t.soon && <span style={{ fontSize: 9, fontWeight: 800, background: `${C.yellow}22`, color: C.yellow, padding: "1px 6px", borderRadius: 8 }}>SOON</span>}
+          </button>
+        ))}
+      </div>
+
+      {tab !== "system" ? (
+        <div className="card" style={{ padding: 50, textAlign: "center" }}>
+          <div style={{ fontSize: 44, marginBottom: 12 }}>{tab === "whatsapp" ? "💬" : "💳"}</div>
+          <div className="syne" style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>
+            {tab === "whatsapp" ? "WhatsApp Delivery Logs" : "Razorpay Payment Gateway Logs"}
+          </div>
+          <div style={{ color: C.textMuted, fontSize: 13, maxWidth: 420, margin: "0 auto" }}>
+            Coming soon — this tab will show a dedicated audit trail for every {tab === "whatsapp" ? "WhatsApp OTP/notification sent" : "Razorpay order and payment event"},
+            alongside Email logs once that channel is integrated.
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
+            <KpiCard label="Total Logs" value={loadingStats ? "—" : stats?.totalLogs || 0} icon="chart" color={C.blue} />
+            <KpiCard label="Today" value={loadingStats ? "—" : stats?.todayCount || 0} icon="check" color={C.green} />
+            <KpiCard label="Failed Logins (7d)" value={loadingStats ? "—" : stats?.failedLogins7d || 0} icon="warning" color={C.red} />
+            <KpiCard
+              label="Older than 6 Months"
+              value={loadingStats ? "—" : stats?.oldLogsCount || 0}
+              sub={stats?.oldestLog ? `Oldest: ${new Date(stats.oldestLog).toLocaleDateString("en-IN")}` : undefined}
+              icon="attendance" color={C.yellow}
+            />
+          </div>
+
+          {!loadingStats && stats?.breakdown?.length > 0 && (
+            <div className="card" style={{ marginBottom: 20 }}>
+              <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Activity Breakdown (Last 30 Days)</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={stats.breakdown.map((b) => ({ name: getAuditMeta(b.action_type).label, count: b.cnt }))} barSize={22}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                  <XAxis dataKey="name" tick={{ fill: C.textMuted, fontSize: 10 }} angle={-20} textAnchor="end" height={60} />
+                  <YAxis tick={{ fill: C.textMuted, fontSize: 10 }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text }} />
+                  <Bar dataKey="count" fill={C.primary} radius={[5, 5, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          <div className="card" style={{ marginBottom: 14, padding: "12px 16px" }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
+                <Icon name="search" size={14} color={C.textMuted} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <input className="input" placeholder="Search by user or endpoint…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ paddingLeft: 32 }} />
+              </div>
+              <select className="select" style={{ width: 180 }} value={actionType} onChange={(e) => setActionType(e.target.value)}>
+                <option value="">All Action Types</option>
+                {Object.keys(AUDIT_ACTION_META).filter((k) => k !== "API_CALL").map((k) => (
+                  <option key={k} value={k}>{AUDIT_ACTION_META[k].label}</option>
+                ))}
+              </select>
+              <select className="select" style={{ width: 140 }} value={userRole} onChange={(e) => setUserRole(e.target.value)}>
+                <option value="">All Roles</option>
+                <option value="school_admin">Super Admin</option>
+                <option value="teacher">Teacher</option>
+                <option value="accountant">Accountant</option>
+                <option value="staff">Staff</option>
+              </select>
+              <input className="input" type="date" style={{ width: 150 }} value={from} onChange={(e) => setFrom(e.target.value)} />
+              <input className="input" type="date" style={{ width: 150 }} value={to} onChange={(e) => setTo(e.target.value)} />
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: C.textMuted, cursor: "pointer" }}>
+                <input type="checkbox" checked={includeApiCalls} onChange={(e) => setIncludeApiCalls(e.target.checked)} style={{ accentColor: C.primary }} />
+                Show raw API calls
+              </label>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+            {loading ? (
+              <div className="pulse" style={{ padding: 50, textAlign: "center", color: C.primary, fontWeight: 600 }}>Loading logs…</div>
+            ) : logs.length === 0 ? (
+              <div style={{ padding: 50, textAlign: "center", color: C.textMuted }}>No logs match these filters.</div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table className="table">
+                  <thead>
+                    <tr><th>Action</th><th>User</th><th>Role</th><th>Details</th><th>Endpoint</th><th>When</th></tr>
+                  </thead>
+                  <tbody>
+                    {logs.map((log) => {
+                      const meta = getAuditMeta(log.action_type);
+                      return (
+                        <tr key={log.id}>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ background: `${meta.color}22`, color: meta.color, borderRadius: 7, padding: 6, display: "flex" }}>
+                                <Icon name={meta.icon} size={13} />
+                              </div>
+                              <span style={{ fontSize: 12.5, fontWeight: 700 }}>{meta.label}</span>
+                            </div>
+                          </td>
+                          <td style={{ fontSize: 12.5, fontWeight: 600 }}>{log.user_name || "System"}</td>
+                          <td>
+                            {log.user_role && <span className="badge badge-blue" style={{ fontSize: 10 }}>{log.user_role}</span>}
+                          </td>
+                          <td style={{ fontSize: 11.5, color: C.textMuted, maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={log.details ? JSON.stringify(log.details) : ""}>
+                            {log.details ? Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).join(" · ") : "—"}
+                          </td>
+                          <td style={{ fontSize: 11, color: C.textMuted, fontFamily: "monospace" }}>
+                            {log.method ? `${log.method} ` : ""}{log.endpoint || "—"}
+                            {log.status_code && <span style={{ marginLeft: 6, color: log.status_code >= 400 ? C.red : C.green }}>[{log.status_code}]</span>}
+                          </td>
+                          <td style={{ fontSize: 11.5, color: C.textMuted, whiteSpace: "nowrap" }}>{new Date(log.created_at).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {pagination.pages > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderTop: `1px solid ${C.border}33` }}>
+                <div style={{ fontSize: 12, color: C.textMuted }}>Page {pagination.page} of {pagination.pages} · {pagination.total} total logs</div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button className="btn btn-ghost" style={{ padding: "5px 12px", fontSize: 12 }} onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>← Prev</button>
+                  <button className="btn btn-ghost" style={{ padding: "5px 12px", fontSize: 12 }} onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))} disabled={page === pagination.pages}>Next →</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      <Modal open={cleanupModal} onClose={() => setCleanupModal(false)} title="Clean Up Old Logs" width={440}>
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
+          <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 18, lineHeight: 1.6 }}>
+            This permanently deletes audit log entries older than the selected period, freeing up database space.
+            This cannot be undone.
+          </div>
+          <FormRow label="Delete logs older than">
+            <select className="select" value={cleanupMonths} onChange={(e) => setCleanupMonths(Number(e.target.value))}>
+              <option value={3}>3 months</option>
+              <option value={6}>6 months</option>
+              <option value={12}>12 months</option>
+              <option value={24}>24 months</option>
+            </select>
+          </FormRow>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 10 }}>
+            <button className="btn btn-ghost" onClick={() => setCleanupModal(false)} disabled={cleaning}>Cancel</button>
+            <button className="btn btn-danger" onClick={handleCleanup} disabled={cleaning} style={{ minWidth: 140 }}>{cleaning ? "Deleting…" : "Delete Old Logs"}</button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════════════
+
+
+
+
+
+const SchoolERP = () => {
+  const { user, logout } = useAuth();
+  const { academicYears, academicYearId, setAcademicYearId, sessionLoading } = useSession();
+  const [activeModule, setActiveModule] = useState("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [school, setSchool] = useState(SCHOOL_CONFIG);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest("/setup/school");
+        const d = res?.data;
+        if (d) {
+          setSchool((prev) => ({
+            ...prev,
+            name: d.name || prev.name,
+            tagline: d.tagline || prev.tagline,
+            address:
+              [d.address_line1, d.city, d.state].filter(Boolean).join(", ") ||
+              prev.address,
+            phone: d.phone || prev.phone,
+            email: d.email || prev.email,
+            logo_url: d.logo_url || prev.logo_url,
+            watermark_url: d.watermark_url || prev.watermark_url,
+            address_line1: d.address_line1 || prev.address_line1,
+            city: d.city || prev.city,
+            state: d.state || prev.state,
+            pincode: d.pincode || prev.pincode,
+            website: d.website || prev.website,
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to load school info", e);
+      }
+    })();
+  }, []);
+
+  const renderModule = () => {
+    switch (activeModule) {
+      case "dashboard":
+        return <DashboardModule school={school} />;
+      case "setup":
+        return (
+          <SetupModule
+            school={school}
+            onUpdateSchool={(s) => {
+              setSchool(s);
+            }}
+          />
+        );
+      case "students":
+        return <StudentsModule />;
+      case "teachers":
+        return <TeachersModule />;
+      case "attendance":
+        return <AttendanceModule />;
+      case "arrangement":
+          return <ArrangementModule school={school} />;
+      case "exams":
+        return <ExamManagementModule />;
+        case "fees":
+          return <FeesModule school={school} />;
+        case "payroll":
+            return <PayrollModule school={school} />;
+        case "results":
+          return <ResultsModule school={school} />;
+      case "leaderboard":
+        return <LeaderboardModule />;
+      case "analytics":
+        return <AnalyticsModule />;
+      case "timetable":
+        return <TimetableModule />;
+        case "tests":
+          return <TestsModule school={school} />;
+        case "homework":
+          return <HomeworkModule school={school} />;
+        case "usermanagement":
+            return <UserManagementModule />;
+          case "auditlogs":
+            return <AuditLogModule />;
+      default:
+        return <DashboardModule school={school} />;
+    }
+  };
+
+  const handleNav = (id) => {
+    setActiveModule(id);
+    setMobileSidebarOpen(false);
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        fontFamily: "'DM Sans',sans-serif",
+        background: C.bg,
+      }}
+    >
+      {/* Desktop Sidebar */}
+      <div className="sidebar-desktop" style={{ flexShrink: 0 }}>
+        <Sidebar
+          active={activeModule}
+          onNav={handleNav}
+          collapsed={sidebarCollapsed}
+          school={school}
+          userRole={user?.role}
+        />
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex" }}
+        >
+          <div
+            style={{ background: "#00000077", flex: 1 }}
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <div
+            style={{
+              width: 240,
+              background: C.surface,
+              height: "100%",
+              overflowY: "auto",
+            }}
+          >
+            <Sidebar
+              active={activeModule}
+              onNav={handleNav}
+              collapsed={false}
+              school={school}
+              userRole={user?.role}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {/* Topbar */}
+        <div
+          style={{
+            background: C.surface,
+            borderBottom: `1px solid ${C.border}`,
+            padding: "12px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexShrink: 0,
+          }}
+        >
+          <button
+            className="mobile-menu-btn btn btn-ghost"
+            style={{ padding: "7px 9px" }}
+            onClick={() => setMobileSidebarOpen(true)}
+          >
+            <Icon name="menu" size={18} />
+          </button>
+          <button
+            className="hide-mobile btn btn-ghost"
+            style={{ padding: "7px 9px" }}
+            onClick={() => setSidebarCollapsed((p) => !p)}
+          >
+            <Icon name="menu" size={18} />
+          </button>
+          <div style={{ flex: 1 }}>
+            <div
+              className="syne"
+              style={{ fontSize: 14, fontWeight: 700, color: C.text }}
+            >
+              {NAV_ITEMS.flatMap((g) => g.items).find(
+                (i) => i.id === activeModule
+              )?.label || "Dashboard"}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {!sessionLoading && academicYears.length > 0 && (
+              <select
+                className="select"
+                style={{ width: 150 }}
+                value={academicYearId}
+                onChange={(e) => setAcademicYearId(e.target.value)}
+                title="Academic Session"
+              >
+                {academicYears.map((y) => (
+                  <option key={y.id} value={y.id}>
+                    {y.name}
+                    {y.is_current ? " (Current)" : ""}
+                  </option>
+                ))}
+              </select>
+            )}
+            <div style={{ position: "relative" }}>
+              <button
+                className="btn btn-ghost"
+                style={{ padding: "7px 9px", position: "relative" }}
+              >
+                <Icon name="bell" size={17} />
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 5,
+                    right: 5,
+                    width: 7,
+                    height: 7,
+                    background: C.red,
+                    borderRadius: "50%",
+                  }}
+                />
+              </button>
+            </div>
+            <div
+              onClick={() => setShowProfileModal(true)}
+              title="View / Edit Profile"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: C.surfaceAlt,
+                borderRadius: 10,
+                padding: "6px 12px",
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = C.border)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = C.surfaceAlt)}
+            >
+              <span style={{ fontSize: 18 }}>👨‍💼</span>
+              <div className="hide-mobile">
+                <div style={{ fontSize: 12, fontWeight: 600 }}>Principal</div>
+                <div style={{ fontSize: 10, color: C.textMuted }}>
+                  {school.name.split(" ")[0]}
+                </div>
+              </div>
+            </div>
+            <button
+              className="btn btn-danger"
+              onClick={logout}
+              style={{ padding: "6px 12px", fontSize: 12, marginLeft: 8 }}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+
+         {/* Module Area */}
+         <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+          {renderModule()}
+        </div>
+      </div>
+
+      <ProfileModal open={showProfileModal} onClose={() => setShowProfileModal(false)} />
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// AUTHENTICATION LOGIC & LOGIN UI (ADDED AT BOTTOM)
+// ═══════════════════════════════════════════════════════════════
+
+const API_BASE_URL =
+  "https://waapi-h6e7b5g9cmfthkhn.centralindia-01.azurewebsites.net/api"; // 🔴 YAHAN APNI AZURE WEB APP KI LINK DAALEIN
+
+  let authLogoutRef = null; // module-level, AuthProvider isko set karega
+
+  export const apiRequest = async (endpoint, method = "GET", body = null, isFormData = false) => {
+    try {
+      const token = localStorage.getItem("erp_token");
+      const headers = { Accept: "application/json" };
+      if (!isFormData) headers["Content-Type"] = "application/json";
+      if (token && token !== "undefined" && token !== "null") {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+  
+      const config = { method, headers };
+      if (body) config.body = isFormData ? body : JSON.stringify(body);
+  
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      if (response.status === 204) return null;
+      const data = await response.json();
+  
+      if (response.status === 401) {
+        localStorage.removeItem("erp_token");
+        if (authLogoutRef) authLogoutRef();       // React state se logout
+        // 🔴 window.location.reload() fallback HATA DIYA — ye hi reload-loop
+        // ka source tha. Ab error throw hoga, jo AuthProvider ke apne
+        // try/catch mein already handle ho raha hai (token clear + setUser(null)
+        // + setLoading(false)) — koi hard page-reload ki zaroorat nahi.
+        throw new Error("Session expired. Please login again.");
+      }
+  
+      if (!response.ok) throw new Error(data.message || data.error || "API Error");
+      return data;
+    } catch (error) {
+      console.error(`Error on ${endpoint}:`, error.message);
+      throw error;
+    }
+  };
+
+  const AuthContext = createContext();
+  const DataContext = createContext(); // 🔴 SMART GLOBAL DATA CONTEXT
+  const SessionContext = createContext();
+  
+  export const useData = () => useContext(DataContext);
+  export const useSession = () => useContext(SessionContext);
+
+// Image ko upload se pehle chhota (compress) karne ka function
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 300;
+        const MAX_HEIGHT = 300;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            resolve(new File([blob], file.name, { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          0.7 // 70% Quality — size drops from 5MB to ~40KB
+        );
+      };
+    };
+  });
+};
+
+export const uploadToCloudinary = async (file) => {
+  const CLOUD_NAME = "vosr6w5p"; // Apna Cloud Name
+  const UPLOAD_PRESET = "school_erp_files"; // Apna Unsigned Preset
+
+  // Step A: Instant Compress
+  const compressedFile = await compressImage(file);
+
+  const formData = new FormData();
+  formData.append("file", compressedFile);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (data.secure_url) return data.secure_url;
+  throw new Error(data.error?.message || "Upload failed");
+};
+
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const logout = React.useCallback(() => {
+    localStorage.removeItem("erp_token");
+    setUser(null);
+  }, []);
+
+  // 🔴 apiRequest ko is logout ka reference de do (reload ki jagah)
+  useEffect(() => { authLogoutRef = logout; }, [logout]);
+
+  useEffect(() => {
+    (async () => {
+      const token = localStorage.getItem("erp_token");
+      if (!token || token === "undefined" || token === "null") {
+        setLoading(false);
+        return;
+      }
+
+      // 🔴 WATCHDOG: agar 5 second mein server response nahi aata (hung request,
+      // slow network, dead API), to token clean karke login screen pe bhej do —
+      // splash kabhi hamesha ke liye atkega nahi.
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Auth check timed out")), 5000)
+      );
+
+      try {
+        // 🔴 Server se actually verify karo ki token valid hai — race against 5s timeout
+        const res = await Promise.race([apiRequest("/auth/me"), timeout]);
+        const d = res?.data || res;
+        setUser({ id: d.id, role: d.role, name: d.full_name || "Principal", schoolId: d.school_id });
+      } catch (e) {
+        // Invalid/expired token OR timed out — silently clear, login screen dikhao
+        localStorage.removeItem("erp_token");
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      // API call
+      const response = await apiRequest("/auth/login", "POST", {
+        email,
+        password,
+      });
+  
+      // 🔥 THE FIX: Agar backend { success: true, data: {...} } bhejta hai, toh use parse karein
+      // Warna direct response use karein.
+      const payload = response.data ? response.data : response;
+  
+      if (!payload.token) {
+        console.error("No token received:", response);
+        throw new Error("Invalid response from server. Token missing.");
+      }
+  
+      // ✅ Perfectly save the token
+      localStorage.setItem("erp_token", payload.token);
+  
+            // ✅ Set User State gracefully (Handles both nested 'user' obj and flat response)
+            setUser({
+              id: payload.userId || payload.user?.id,
+              role: payload.role || payload.user?.role,
+              name: payload.name || payload.user?.fullName || "Principal",
+              schoolId: payload.schoolId || payload.user?.school?.id,
+            });
+    } catch (error) {
+      throw { response: { data: { error: error.message || "Login failed" } } };
+    }
+  };
+  if (loading) return <SplashScreen />; 
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+const useAuth = () => useContext(AuthContext);
+
+
+
+
+
+// 🟢 NEW: SECURE AZURE PROXY API (For Quick Tests)
+export const gasRequest = async (action, payload = {}) => {
+  try {
+    // Frontend अब सीधे अपने ही Azure Backend को कॉल करेगा
+    // Azure बैकग्राउंड में GAS से बात करके रिज़ल्ट लाएगा
+    const data = await apiRequest("/quick-tests/gas-sync", "POST", {
+      action: action,
+      payload: payload
+    });
+    
+    if (!data.status && !data.success) {
+      throw new Error(data.message || "Proxy API Error");
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`Secure Proxy Error on [${action}]:`, error.message);
+    throw error;
+  }
+};
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// MULTI-STEP SIGNUP COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
+
+
+
+
+const premiumInputStyle = {
+  width: "100%",
+  background: "#1A1D27",
+  border: "1.5px solid #2D3250",
+  borderRadius: "12px",
+  padding: "14px 18px",
+  color: "#E8EAF6",
+  fontSize: "14px",
+  fontWeight: 500,
+  outline: "none",
+  boxSizing: "border-box",
+  transition: "all 0.3s ease",
+  fontFamily: "'DM Sans', sans-serif",
+};
+
+const handleFocus = (e) => {
+  e.target.style.borderColor = "#E8600A";
+  e.target.style.boxShadow = "0 0 0 4px rgba(232, 96, 10, 0.15)";
+};
+const handleBlur = (e) => {
+  e.target.style.borderColor = "#2D3250";
+  e.target.style.boxShadow = "none";
+};
+const MultiStepSignup = ({ onSwitchToLogin }) => {
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    schoolName: "",
+    affiliationNo: "",
+    addressLine1: "",
+    city: "",
+    state: "",
+    adminName: "",
+    phone: "",
+    email: "",
+    password: "",
+  });
+
+  // 🔴 Modern 6-Box Split OTP State & Refs
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const otpRefs = [
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+  ];
+
+  // Auto-verify triggered exactly when 6 digits are reached
+  useEffect(() => {
+    const otpValue = otp.join("");
+    if (otpValue.length === 6 && step === 3 && !loading) {
+      handleVerifyAndRegister(otpValue);
+    }
+  }, [otp]);
+
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    // Shift focus to next box seamlessly
+    if (value !== "" && index < 5) {
+      otpRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    // Backspace handling to shift focus backwards
+    if (e.key === "Backspace" && otp[index] === "" && index > 0) {
+      otpRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handleSendOTP = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      // 🟢 API Call: Uncomment this in production
+      await apiRequest("/auth/signup/send-otp", "POST", { phone: form.phone });
+
+      // Fake delay for UI testing
+      await new Promise((r) => setTimeout(r, 1000));
+
+      setStep(3);
+    } catch (err) {
+      setError(err.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndRegister = async (otpValue) => {
+    setError("");
+    setLoading(true);
+    try {
+      // 🟢 API Calls: Uncomment these in production
+      await apiRequest("/auth/signup/verify-otp", "POST", {
+        phone: form.phone,
+        otp: otpValue,
+      });
+      await apiRequest("/auth/signup/register", "POST", form);
+
+      // 🔴 Success UI पर मूव करें
+      setStep(4);
+    } catch (err) {
+      setError(err.message || "Verification failed. Invalid OTP.");
+      setOtp(["", "", "", "", "", ""]); // Reset boxes on error
+      otpRefs[0].current?.focus();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 500,
+        background: "#0F1117",
+        borderRadius: 24,
+        padding: "40px 32px",
+        border: "1px solid #2D3250",
+        boxShadow: "0 20px 50px rgba(0,0,0,0.8)",
+        margin: "auto",
+        position: "relative",
+        boxSizing: "border-box", // Ensures padding doesn't break mobile view
+      }}
+    >
+      {/* BRANDING LOGO & TAGLINE (Hide on Step 4 for cleaner look) */}
+      {step < 4 && (
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ marginBottom: 12 }}>
+             <BrandLogo size={85} />
+          </div>
+          <h1
+            className="syne"
+            style={{
+              fontSize: 26,
+              fontWeight: 900,
+              color: "#E8EAF6",
+              margin: 0,
+              letterSpacing: "1px",
+            }}
+          >
+            SCHOOL OFFICE
+          </h1>
+          <p
+            style={{
+              color: "#E8600A",
+              fontSize: 11,
+              fontWeight: 700,
+              marginTop: 4,
+              letterSpacing: "2px",
+            }}
+          >
+            SEAMLESS WORKING...
+          </p>
+        </div>
+      )}
+
+      {/* PROGRESS TRACKER (Hide on Step 4) */}
+      {step < 4 && (
+        <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                height: 4,
+                borderRadius: 4,
+                background: step >= i ? "#E8600A" : "#2D3250",
+                transition: "all 0.3s",
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div
+          style={{
+            background: "rgba(239, 68, 68, 0.1)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            borderRadius: 10,
+            padding: "12px",
+            color: "#EF4444",
+            fontSize: 13,
+            fontWeight: 600,
+            marginBottom: 20,
+            textAlign: "center",
+          }}
+        >
+          ⚠ {error}
+        </div>
+      )}
+
+      {/* --- STEP 1 --- */}
+      {step === 1 && (
+        <div className="slide-in">
+          <h3
+            className="syne"
+            style={{ fontSize: 17, color: "#fff", marginBottom: 20 }}
+          >
+            School Credentials
+          </h3>
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#8B92B8",
+                marginBottom: 6,
+              }}
+            >
+              SCHOOL NAME *
+            </label>
+            <input
+              style={premiumInputStyle}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              value={form.schoolName}
+              onChange={(e) => setForm({ ...form, schoolName: e.target.value })}
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#8B92B8",
+                marginBottom: 6,
+              }}
+            >
+              AFFILIATION CODE / REG NO. *
+            </label>
+            <input
+              style={premiumInputStyle}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              placeholder="Strictly required to onboard"
+              value={form.affiliationNo}
+              onChange={(e) =>
+                setForm({ ...form, affiliationNo: e.target.value })
+              }
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#8B92B8",
+                marginBottom: 6,
+              }}
+            >
+              STREET ADDRESS *
+            </label>
+            <input
+              style={premiumInputStyle}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              value={form.addressLine1}
+              onChange={(e) =>
+                setForm({ ...form, addressLine1: e.target.value })
+              }
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              marginBottom: 24,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: "120px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#8B92B8",
+                  marginBottom: 6,
+                }}
+              >
+                CITY *
+              </label>
+              <input
+                style={premiumInputStyle}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: "120px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#8B92B8",
+                  marginBottom: 6,
+                }}
+              >
+                STATE *
+              </label>
+              <input
+                style={premiumInputStyle}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                value={form.state}
+                onChange={(e) => setForm({ ...form, state: e.target.value })}
+              />
+            </div>
+          </div>
+          <button
+            style={{
+              width: "100%",
+              background: "#E8600A",
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              padding: "14px",
+              fontSize: 15,
+              fontWeight: 700,
+              cursor:
+                !form.schoolName ||
+                !form.affiliationNo ||
+                !form.addressLine1 ||
+                !form.city ||
+                !form.state
+                  ? "not-allowed"
+                  : "pointer",
+              opacity:
+                !form.schoolName ||
+                !form.affiliationNo ||
+                !form.addressLine1 ||
+                !form.city ||
+                !form.state
+                  ? 0.5
+                  : 1,
+            }}
+            onClick={() => setStep(2)}
+            disabled={
+              !form.schoolName ||
+              !form.affiliationNo ||
+              !form.addressLine1 ||
+              !form.city ||
+              !form.state
+            }
+          >
+            Continue to Admin Setup →
+          </button>
+        </div>
+      )}
+
+      {/* --- STEP 2 --- */}
+      {step === 2 && (
+        <div className="slide-in">
+          <h3
+            className="syne"
+            style={{ fontSize: 17, color: "#fff", marginBottom: 20 }}
+          >
+            Administrator Profile
+          </h3>
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#8B92B8",
+                marginBottom: 6,
+              }}
+            >
+              ADMIN FULL NAME *
+            </label>
+            <input
+              style={premiumInputStyle}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              value={form.adminName}
+              onChange={(e) => setForm({ ...form, adminName: e.target.value })}
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#8B92B8",
+                marginBottom: 6,
+              }}
+            >
+              EMAIL ADDRESS *
+            </label>
+            <input
+              style={premiumInputStyle}
+              type="email"
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#8B92B8",
+                marginBottom: 6,
+              }}
+            >
+              SECURE PASSWORD *
+            </label>
+            <input
+              style={premiumInputStyle}
+              type="password"
+              placeholder="••••••••"
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#8B92B8",
+                marginBottom: 6,
+              }}
+            >
+              WHATSAPP NUMBER *
+            </label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div
+                style={{
+                  background: "#1A1D27",
+                  border: "1.5px solid #2D3250",
+                  borderRadius: 12,
+                  padding: "0 16px",
+                  color: "#8B92B8",
+                  display: "flex",
+                  alignItems: "center",
+                  fontWeight: 600,
+                }}
+              >
+                +91
+              </div>
+              <input
+                style={{ ...premiumInputStyle, flex: 1 }}
+                type="tel"
+                maxLength={10}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                value={form.phone}
+                onChange={(e) =>
+                  setForm({ ...form, phone: e.target.value.replace(/\D/g, "") })
+                }
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 8,
+                fontSize: 11,
+                color: "#22C55E",
+                fontWeight: 600,
+              }}
+            >
+              <span>💬</span> 6-Digit identity OTP will drop on WhatsApp
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              style={{
+                background: "transparent",
+                color: "#8B92B8",
+                border: "1.5px solid #2D3250",
+                borderRadius: 12,
+                padding: "14px 20px",
+                fontWeight: 700,
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.5 : 1,
+              }}
+              onClick={() => setStep(1)}
+              disabled={loading}
+            >
+              Back
+            </button>
+            <button
+              style={{
+                flex: 1,
+                background: "#E8600A",
+                color: "#fff",
+                border: "none",
+                borderRadius: 12,
+                padding: "14px",
+                fontSize: 14,
+                fontWeight: 700,
+                cursor:
+                  loading ||
+                  form.phone.length < 10 ||
+                  !form.adminName ||
+                  !form.email ||
+                  !form.password
+                    ? "not-allowed"
+                    : "pointer",
+                opacity:
+                  loading ||
+                  form.phone.length < 10 ||
+                  !form.adminName ||
+                  !form.email ||
+                  !form.password
+                    ? 0.5
+                    : 1,
+              }}
+              onClick={handleSendOTP}
+              disabled={
+                loading ||
+                form.phone.length < 10 ||
+                !form.adminName ||
+                !form.email ||
+                !form.password
+              }
+            >
+              {loading ? "Requesting..." : "Send Verification Code"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- STEP 3: HIGHLY INTERACTIVE 6-DIGIT OTP SPLIT --- */}
+      {step === 3 && (
+        <div className="slide-in" style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 42, marginBottom: 12 }}>🛡️</div>
+          <h3
+            className="syne"
+            style={{ fontSize: 18, color: "#fff", margin: 0 }}
+          >
+            Security Verification
+          </h3>
+          <p
+            style={{
+              color: "#8B92B8",
+              fontSize: 13,
+              marginTop: 6,
+              marginBottom: 24,
+            }}
+          >
+            Enter the 6-digit WhatsApp code sent to +91 {form.phone}
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: 8,
+              marginBottom: 24,
+              flexWrap: "wrap",
+            }}
+          >
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={otpRefs[index]}
+                type="text"
+                maxLength={1}
+                value={digit}
+                disabled={loading}
+                onChange={(e) => handleOtpChange(index, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                style={{
+                  width: 44,
+                  height: 54,
+                  background: "#1A1D27",
+                  border: digit ? "2px solid #E8600A" : "1.5px solid #2D3250",
+                  borderRadius: 12,
+                  textAlign: "center",
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "#fff",
+                  outline: "none",
+                  transition: "all 0.2s",
+                  opacity: loading ? 0.6 : 1,
+                }}
+                onFocus={(e) => {
+                  e.target.style.boxShadow =
+                    "0 0 0 4px rgba(232, 96, 10, 0.15)";
+                  e.target.style.borderColor = "#E8600A";
+                }}
+                onBlur={(e) => {
+                  e.target.style.boxShadow = "none";
+                  if (!digit) e.target.style.borderColor = "#2D3250";
+                }}
+              />
+            ))}
+          </div>
+
+          <button
+            style={{
+              width: "100%",
+              background: "#E8600A",
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              padding: "14px",
+              fontSize: 14,
+              fontWeight: 700,
+              marginBottom: 16,
+              opacity: loading ? 1 : 0.5,
+            }}
+            disabled
+          >
+            {loading ? "Validating secure session..." : "Awaiting entry..."}
+          </button>
+
+          <button
+            style={{
+              background: "none",
+              border: "none",
+              color: "#8B92B8",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: loading ? "not-allowed" : "pointer",
+              textDecoration: "underline",
+              opacity: loading ? 0.5 : 1,
+            }}
+            disabled={loading}
+            onClick={() => {
+              setStep(2);
+              setOtp(["", "", "", "", "", ""]);
+            }}
+          >
+            Modify WhatsApp Number
+          </button>
+        </div>
+      )}
+
+      {/* --- STEP 4: PREMIUM SUCCESS SCREEN --- */}
+      {step === 4 && (
+        <div
+          className="slide-in"
+          style={{ textAlign: "center", padding: "20px 0" }}
+        >
+          <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
+          <h3
+            className="syne"
+            style={{ fontSize: 24, color: "#fff", margin: 0, fontWeight: 900 }}
+          >
+            Registration Successful!
+          </h3>
+          <p
+            style={{
+              color: "#8B92B8",
+              fontSize: 14,
+              marginTop: 12,
+              marginBottom: 32,
+              lineHeight: "1.6",
+            }}
+          >
+            Your school has been securely onboarded to the <b>School Office</b>{" "}
+            ecosystem. You can now login to your admin dashboard.
+          </p>
+
+          <button
+            style={{
+              width: "100%",
+              background: "#E8600A",
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              padding: "16px",
+              fontSize: 15,
+              fontWeight: 800,
+              cursor: "pointer",
+              boxShadow: "0 8px 20px rgba(232, 96, 10, 0.3)",
+            }}
+            onClick={() => {
+              if (typeof onSwitchToLogin === "function") {
+                onSwitchToLogin();
+              } else {
+                window.location.reload();
+              }
+            }}
+          >
+            Go to Login Page →
+          </button>
+        </div>
+      )}
+
+      {/* RETURN LINK (Hide on Step 4) */}
+      {step < 4 && (
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: 30,
+            paddingTop: 20,
+            borderTop: "1px solid #2D3250",
+          }}
+        >
+          <span style={{ color: "#8B92B8", fontSize: 13 }}>
+            Already onboarded?{" "}
+          </span>
+          <button
+            onClick={() => {
+              if (typeof onSwitchToLogin === "function") {
+                onSwitchToLogin();
+              } else {
+                window.location.reload();
+              }
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#E8600A",
+              fontWeight: 800,
+              cursor: "pointer",
+              fontSize: 13,
+            }}
+          >
+            Log In Here
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+const ForgotPassword = ({ onBackToLogin }) => {
+  const [step, setStep] = useState(1);
+  const [method, setMethod] = useState("email"); // 🔴 'email' or 'whatsapp'
+  const [identifier, setIdentifier] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetToken, setResetToken] = useState(""); // 🔴 Token from verification
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
+
+  // 6-Box OTP State & Refs
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const otpRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
+
+  // Auto-verify OTP when 6 digits are entered
+  useEffect(() => {
+    const otpValue = otp.join("");
+    if (otpValue.length === 6 && step === 2 && !loading) {
+      handleVerifyOtp(otpValue);
+    }
+  }, [otp]); // eslint-disable-line
+
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value !== "" && index < 5) otpRefs[index + 1].current?.focus();
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && otp[index] === "" && index > 0) {
+      otpRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handleSendOtp = async (e) => {
+    e?.preventDefault();
+    if (!identifier.trim()) return setError(`Please enter your ${method === "email" ? "email" : "WhatsApp number"}.`);
+    setError("");
+    setLoading(true);
+    try {
+      // 🟢 Send OTP with selected method
+      await apiRequest("/auth/forgot-password/send-otp", "POST", { 
+        identifier: identifier.trim(),
+        method: method
+      });
+      setStep(2);
+    } catch (err) {
+      setError(err.message || "Failed to send OTP. Check your details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (otpValue) => {
+    setError("");
+    setLoading(true);
+    try {
+      // 🟢 Verify OTP and capture the resetToken
+      const res = await apiRequest("/auth/forgot-password/verify-otp", "POST", { 
+        identifier: identifier.trim(), 
+        otp: otpValue 
+      });
+      setResetToken(res.resetToken); // Store token for next step
+      setStep(3);
+    } catch (err) {
+      setError(err.message || "Invalid OTP. Please try again.");
+      setOtp(["", "", "", "", "", ""]);
+      otpRefs[0].current?.focus();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e?.preventDefault();
+    if (newPassword.length < 6) return setError("Password must be at least 6 characters.");
+    setError("");
+    setLoading(true);
+    try {
+      // 🟢 Final Reset using the resetToken
+      await apiRequest("/auth/forgot-password/reset", "POST", { 
+        resetToken: resetToken,
+        newPassword: newPassword 
+      });
+      setStep(4);
+    } catch (err) {
+      setError(err.message || "Failed to reset password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="slide-in" style={{ width: "100%", maxWidth: 420, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 24, padding: 36, boxShadow: "0 25px 60px rgba(0,0,0,0.5)", position: "relative", zIndex: 10 }}>
+      
+      {/* Dynamic Header */}
+      {step < 4 && (
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: 42, marginBottom: 8 }}>{step === 1 ? "🔐" : step === 2 ? "🛡️" : "🔑"}</div>
+          <h1 className="syne" style={{ fontSize: 22, fontWeight: 800, color: C.text, margin: 0 }}>
+            {step === 1 ? "Forgot Password?" : step === 2 ? "Verify Identity" : "New Password"}
+          </h1>
+          <p style={{ color: C.textMuted, fontSize: 13, marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>
+            {step === 1 ? "Choose how you want to receive your reset code." 
+            : step === 2 ? `Enter the 6-digit code sent to ${identifier}` 
+            : "Create a strong and memorable new password."}
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ background: `${C.red}15`, border: `1px solid ${C.red}33`, borderRadius: 8, padding: "10px 14px", color: C.red, fontSize: 13, fontWeight: 600, marginBottom: 20, textAlign: "center" }}>
+          ⚠ {error}
+        </div>
+      )}
+
+      {/* STEP 1: Request OTP */}
+      {step === 1 && (
+        <form onSubmit={handleSendOtp}>
+          <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+            <button
+              type="button"
+              onClick={() => { setMethod("email"); setIdentifier(""); setError(""); }}
+              style={{
+                flex: 1, padding: "10px", borderRadius: 12, border: `1.5px solid ${method === "email" ? C.primary : C.border}`,
+                background: method === "email" ? `${C.primary}22` : C.surfaceAlt,
+                color: method === "email" ? C.primary : C.textMuted,
+                fontWeight: 700, fontSize: 13, cursor: "pointer", transition: "0.2s"
+              }}
+            >
+              ✉️ Email
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMethod("whatsapp"); setIdentifier(""); setError(""); }}
+              style={{
+                flex: 1, padding: "10px", borderRadius: 12, border: `1.5px solid ${method === "whatsapp" ? C.green : C.border}`,
+                background: method === "whatsapp" ? `${C.green}22` : C.surfaceAlt,
+                color: method === "whatsapp" ? C.green : C.textMuted,
+                fontWeight: 700, fontSize: 13, cursor: "pointer", transition: "0.2s"
+              }}
+            >
+              💬 WhatsApp
+            </button>
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              {method === "email" ? "Registered Email *" : "WhatsApp Number *"}
+            </label>
+            <input
+              style={{ ...premiumInputStyle, padding: "12px 16px" }}
+              type={method === "email" ? "email" : "tel"}
+              onFocus={handleFocus} onBlur={handleBlur}
+              placeholder={method === "email" ? "admin@school.com" : "9876543210"}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+            />
+          </div>
+          <button type="submit" disabled={loading || !identifier} style={{ width: "100%", background: loading ? C.primaryDark : C.primary, color: "white", border: "none", borderRadius: 10, padding: "14px 20px", fontSize: 14, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading || !identifier ? 0.7 : 1, transition: "0.2s" }}>
+            {loading ? "Sending Code..." : "Send Reset Code"}
+          </button>
+        </form>
+      )}
+
+      {/* STEP 2: Verify OTP */}
+      {step === 2 && (
+        <div style={{ textAlign: "center" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+            {otp.map((digit, index) => (
+              <input
+                key={index} ref={otpRefs[index]} type="text" maxLength={1} value={digit} disabled={loading}
+                onChange={(e) => handleOtpChange(index, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                style={{ width: 42, height: 50, background: C.surfaceAlt, border: digit ? `2px solid ${C.primary}` : `1.5px solid ${C.border}`, borderRadius: 12, textAlign: "center", fontSize: 20, fontWeight: 800, color: "#fff", outline: "none", transition: "all 0.2s", opacity: loading ? 0.6 : 1 }}
+                onFocus={(e) => { e.target.style.boxShadow = `0 0 0 4px ${C.primary}22`; e.target.style.borderColor = C.primary; }}
+                onBlur={(e) => { e.target.style.boxShadow = "none"; if (!digit) e.target.style.borderColor = C.border; }}
+              />
+            ))}
+          </div>
+          <button disabled style={{ width: "100%", background: C.surfaceAlt, color: C.textMuted, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px", fontSize: 14, fontWeight: 700, opacity: loading ? 1 : 0.5 }}>
+            {loading ? "Verifying code..." : "Awaiting entry..."}
+          </button>
+        </div>
+      )}
+
+      {/* STEP 3: Set New Password */}
+      {step === 3 && (
+        <form onSubmit={handleResetPassword}>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>New Password *</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPass ? "text" : "password"}
+                style={{ ...premiumInputStyle, padding: "12px 44px 12px 16px" }}
+                onFocus={handleFocus} onBlur={handleBlur}
+                placeholder="Min. 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+              <button type="button" onClick={() => setShowPass((p) => !p)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.textMuted, fontSize: 14 }}>
+                {showPass ? "🙈" : "👁"}
+              </button>
+            </div>
+          </div>
+          <button type="submit" disabled={loading || newPassword.length < 6} style={{ width: "100%", background: loading ? C.green : C.primary, color: "white", border: "none", borderRadius: 10, padding: "14px 20px", fontSize: 14, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading || newPassword.length < 6 ? 0.7 : 1, transition: "0.2s" }}>
+            {loading ? "Updating..." : "Update Password"}
+          </button>
+        </form>
+      )}
+
+      {/* STEP 4: Success Screen */}
+      {step === 4 && (
+        <div style={{ textAlign: "center", padding: "20px 0" }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
+          <h3 className="syne" style={{ fontSize: 24, color: C.green, margin: 0, fontWeight: 900 }}>Password Updated!</h3>
+          <p style={{ color: C.textMuted, fontSize: 14, marginTop: 12, marginBottom: 32, lineHeight: 1.6 }}>
+            Your account has been secured with the new password. You can now log in normally.
+          </p>
+          <button onClick={onBackToLogin} style={{ width: "100%", background: C.green, color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: `0 8px 20px ${C.green}33` }}>
+            Return to Login →
+          </button>
+        </div>
+      )}
+
+      {/* Footer Navigation (Hide on Success) */}
+      {step < 4 && (
+        <div style={{ textAlign: "center", marginTop: 24, paddingTop: 20, borderTop: `1px solid ${C.border}` }}>
+          <button type="button" onClick={onBackToLogin} style={{ background: "none", border: "none", color: C.textMuted, fontWeight: 600, cursor: "pointer", fontSize: 13, transition: "0.2s" }} onMouseEnter={e => e.target.style.color = C.text} onMouseLeave={e => e.target.style.color = C.textMuted}>
+            ← Back to Login Page
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+const LoginPage = () => {
+  const { login } = useAuth();
+  const [isSignup, setIsSignup] = useState(false);
+  const [isForgot, setIsForgot] = useState(false); 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!email || !password) {
+      setError("Please enter email and password");
+      return;
+    }
+    setLoading(true);
+    try {
+      await login(email.trim(), password);
+    } catch (err) {
+      setError(err?.response?.data?.error || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: C.bg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+        fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
+      {/* Background Glow */}
+      <div
+        style={{
+          position: "fixed",
+          top: -100,
+          right: -100,
+          width: 400,
+          height: 400,
+          borderRadius: "50%",
+          background: `${C.primary}15`,
+          pointerEvents: "none",
+          filter: "blur(60px)",
+        }}
+      />
+
+      {/* 🔴 Toggle between Views */}
+      {isSignup ? (
+        <MultiStepSignup onSwitchToLogin={() => setIsSignup(false)} />
+      ) : isForgot ? (
+        <ForgotPassword onBackToLogin={() => setIsForgot(false)} />
+      ) : (
+        <div
+          className="slide-in"
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 24,
+            padding: 36,
+            boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
+            position: "relative",
+            zIndex: 10,
+          }}
+        >
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ marginBottom: 16 }}>
+              <BrandLogo size={78} />
+            </div>
+            <h1
+              className="syne"
+              style={{
+                fontSize: 26,
+                fontWeight: 900,
+                color: C.text,
+                margin: 0,
+                letterSpacing: "0.5px",
+              }}
+            >
+              SchoolOffice
+            </h1>
+            <p
+              style={{
+                color: C.textMuted,
+                fontSize: 13,
+                marginTop: 6,
+                marginBottom: 0,
+                fontWeight: 500,
+                letterSpacing: "0.5px",
+              }}
+            >
+              Smart ERP for Smart Schools
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 16 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: C.textMuted,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                }}
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@sunriseschool.edu"
+                style={{
+                  width: "100%",
+                  background: C.surfaceAlt,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 10,
+                  padding: "11px 14px",
+                  color: C.text,
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = C.primary)}
+                onBlur={(e) => (e.target.style.borderColor = C.border)}
+              />
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: C.textMuted,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                }}
+              >
+                Password
+              </label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPass ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  style={{
+                    width: "100%",
+                    background: C.surfaceAlt,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 10,
+                    padding: "11px 44px 11px 14px",
+                    color: C.text,
+                    fontSize: 14,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = C.primary)}
+                  onBlur={(e) => (e.target.style.borderColor = C.border)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass((p) => !p)}
+                  style={{
+                    position: "absolute",
+                    right: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: C.textMuted,
+                    fontSize: 14,
+                    padding: 0,
+                  }}
+                >
+                  {showPass ? "🙈" : "👁"}
+                </button>
+              </div>
+              {/* 🔴 Forgot Password Link (इनपुट के ठीक नीचे) */}
+              <div style={{ textAlign: "right", marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsForgot(true)} 
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: C.primary,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div
+                style={{
+                  background: `${C.red}15`,
+                  border: `1px solid ${C.red}33`,
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  marginBottom: 16,
+                  color: C.red,
+                  fontSize: 13,
+                  fontWeight: 500,
+                }}
+              >
+                ⚠ {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%",
+                background: loading ? C.primaryDark : C.primary,
+                color: "white",
+                border: "none",
+                borderRadius: 10,
+                padding: "12px 20px",
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.8 : 1,
+              }}
+            >
+              {loading ? "⏳ Signing in..." : "→ Sign In"}
+            </button>
+          </form>
+
+          {/* 🔴 Signup Link */}
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: 24,
+              paddingTop: 20,
+              borderTop: `1px solid ${C.border}`,
+            }}
+          >
+            <span style={{ color: C.textMuted, fontSize: 13 }}>
+              Not registered yet?{" "}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsSignup(true)}
+              style={{
+                background: "none",
+                border: "none",
+                color: C.primary,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+                            Create Account
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🔴 Powered By Footer — subtle platform credit, outside the card */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 5,
+          opacity: 0.85,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 18px",
+            borderRadius: 14,
+            background: "rgba(11,18,36,0.6)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            backdropFilter: "blur(6px)",
+          }}
+        >
+          <Mark size={26} />
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 600,
+                fontSize: 12,
+                letterSpacing: "-0.01em",
+                lineHeight: 1,
+              }}
+            >
+              <span style={{ color: "#F4F6FB" }}>School</span>
+              <span style={{ color: "#E8600A" }}>Office</span>
+            </div>
+            <div
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 9,
+                color: "#8891A8",
+                marginTop: 2,
+              }}
+            >
+              smart ERP for Smart Schools
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProfileModal = ({ open, onClose }) => {
+  const { dialogAlert } = useDialog();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [form, setForm] = useState({
+    full_name: "", phone: "", date_of_birth: "", gender: "", avatar_url: "",
+  });
+  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [savingPw, setSavingPw] = useState(false);
+
+  const loadProfile = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest("/auth/me");
+      const data = res?.data || res;
+      setProfile(data);
+      setForm({
+        full_name: data.full_name || "",
+        phone: data.phone || "",
+        date_of_birth: data.date_of_birth ? data.date_of_birth.split("T")[0] : "",
+        gender: data.gender || "",
+        avatar_url: data.avatar_url || "",
+      });
+    } catch (e) {
+      console.error("Failed to load profile", e);
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    if (open) loadProfile();
+  }, [open]); // eslint-disable-line
+
+  const setF = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setF("avatar_url", url);
+    } catch (err) {
+      dialogAlert("Photo upload failed. Please try again.", "Error");
+    } finally { setUploadingPhoto(false); }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!form.full_name.trim()) {
+      dialogAlert("Full name is required.", "Missing Info");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await apiRequest("/auth/me", "PUT", {
+        fullName: form.full_name.trim(),
+        phone: form.phone || null,
+        dateOfBirth: form.date_of_birth || null,
+        gender: form.gender || null,
+        avatarUrl: form.avatar_url || null,
+      });
+      const data = res?.data || res;
+      setProfile(data);
+      setForm({
+        full_name: data.full_name || "",
+        phone: data.phone || "",
+        date_of_birth: data.date_of_birth ? data.date_of_birth.split("T")[0] : "",
+        gender: data.gender || "",
+        avatar_url: data.avatar_url || "",
+      });
+      await dialogAlert("Profile updated successfully!", "Success");
+    } catch (e) {
+      dialogAlert("Failed to update profile: " + e.message, "Error");
+    } finally { setSaving(false); }
+  };
+
+  const handleChangePassword = async () => {
+    if (!pwForm.currentPassword || !pwForm.newPassword) {
+      dialogAlert("Please fill in both current and new password.", "Missing Info");
+      return;
+    }
+    if (pwForm.newPassword.length < 6) {
+      dialogAlert("New password must be at least 6 characters.", "Too Short");
+      return;
+    }
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      dialogAlert("New passwords do not match.", "Mismatch");
+      return;
+    }
+    setSavingPw(true);
+    try {
+      await apiRequest("/auth/change-password", "POST", {
+        currentPassword: pwForm.currentPassword,
+        newPassword: pwForm.newPassword,
+      });
+      await dialogAlert("Password changed successfully!", "Success");
+      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (e) {
+      dialogAlert("Failed to change password: " + e.message, "Error");
+    } finally { setSavingPw(false); }
+  };
+
+  const handleClose = () => {
+    setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    onClose();
+  };
+
+  return (
+    <Modal open={open} onClose={handleClose} title="My Profile" width={560}>
+      {loading ? (
+        <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 40, fontWeight: 600 }}>
+          Loading your profile…
+        </div>
+      ) : (
+        <div>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 16, padding: 16,
+            background: C.surfaceAlt, borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 20,
+          }}>
+            {form.avatar_url ? (
+              <img src={form.avatar_url} alt="" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: `2px solid ${C.primary}` }} />
+            ) : (
+              <div style={{
+                width: 64, height: 64, borderRadius: "50%", background: `${C.primary}22`, color: C.primary,
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800,
+              }}>
+                {(form.full_name?.[0] || "?").toUpperCase()}
+              </div>
+            )}
+            <div style={{ flex: 1 }}>
+              <input
+                type="file"
+                id="profile-photo-upload"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handlePhotoUpload}
+                disabled={uploadingPhoto}
+              />
+              <label
+                htmlFor="profile-photo-upload"
+                className="btn btn-primary"
+                style={{ cursor: uploadingPhoto ? "wait" : "pointer", fontSize: 12, padding: "7px 14px", display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                {uploadingPhoto ? "Uploading…" : "📷 Change Photo"}
+              </label>
+              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>
+                {profile?.email} · <span className="badge badge-blue" style={{ fontSize: 10 }}>{ROLE_META?.[profile?.role]?.label || profile?.role}</span>
+              </div>
+            </div>
+          </div>
+
+          <FormGrid cols={2}>
+            <FormRow label="Full Name *">
+              <input className="input" value={form.full_name} onChange={(e) => setF("full_name", e.target.value)} />
+            </FormRow>
+            <FormRow label="Phone">
+              <input className="input" type="tel" value={form.phone} onChange={(e) => setF("phone", e.target.value)} />
+            </FormRow>
+          </FormGrid>
+          <FormGrid cols={2}>
+            <FormRow label="Date of Birth">
+              <input className="input" type="date" value={form.date_of_birth} onChange={(e) => setF("date_of_birth", e.target.value)} />
+            </FormRow>
+            <FormRow label="Gender">
+              <select className="select" value={form.gender} onChange={(e) => setF("gender", e.target.value)}>
+                <option value="">-- Select --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </FormRow>
+          </FormGrid>
+          <FormRow label="Email (cannot be changed)">
+            <input className="input" value={profile?.email || ""} disabled style={{ opacity: 0.6 }} />
+          </FormRow>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8, marginBottom: 24, borderBottom: `1px solid ${C.border}33`, paddingBottom: 20 }}>
+            <button className="btn btn-primary" onClick={handleSaveProfile} disabled={saving} style={{ minWidth: 160, opacity: saving ? 0.7 : 1 }}>
+              {saving ? "Saving…" : "Save Profile"}
+            </button>
+          </div>
+
+          <h4 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: C.primary }}>
+            <Icon name="setup" size={14} /> Change Password
+          </h4>
+          <FormRow label="Current Password">
+            <input className="input" type="password" value={pwForm.currentPassword} onChange={(e) => setPwForm((f) => ({ ...f, currentPassword: e.target.value }))} />
+          </FormRow>
+          <FormGrid cols={2}>
+            <FormRow label="New Password">
+              <input className="input" type="password" value={pwForm.newPassword} onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))} />
+            </FormRow>
+            <FormRow label="Confirm New Password">
+              <input className="input" type="password" value={pwForm.confirmPassword} onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))} />
+            </FormRow>
+          </FormGrid>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button className="btn btn-ghost" onClick={handleChangePassword} disabled={savingPw} style={{ minWidth: 160 }}>
+              {savingPw ? "Updating…" : "Update Password"}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+};
+
+// 🔴 SESSION PROVIDER: Ek hi jagah academic-years fetch, poori app me current session share
+const SessionProvider = ({ children }) => {
+  const { user } = useAuth();
+  const [academicYears, setAcademicYears] = useState([]);
+  const [academicYearId, setAcademicYearId] = useState("");
+  const [sessionLoading, setSessionLoading] = useState(true);
+
+  const loadAcademicYears = async () => {
+    try {
+      const res = await apiRequest("/setup/academic-years");
+      const years = res?.data || [];
+      setAcademicYears(years);
+      setAcademicYearId((prev) => {
+        if (prev && years.some((y) => y.id === prev)) return prev; // user ka manual selection preserve karo
+        const current = years.find((y) => y.is_current) || years[0];
+        return current?.id || "";
+      });
+    } catch (e) {
+      console.error("Failed to load academic years:", e.message);
+    } finally {
+      setSessionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) loadAcademicYears();
+  }, [user]);
+
+  const currentYear = academicYears.find((y) => y.id === academicYearId) || null;
+
+  return (
+    <SessionContext.Provider
+      value={{
+        academicYears,
+        academicYearId,
+        setAcademicYearId,
+        currentYear,
+        sessionLoading,
+        reloadAcademicYears: loadAcademicYears,
+      }}
+    >
+      {children}
+    </SessionContext.Provider>
+  );
+};
+
+// Gatekeeper Component: Check karta hai user logged in hai ya nahi
+// 🔴 DATA PROVIDER: Fetch once from Azure, use everywhere
+const DataProvider = ({ children }) => {
+  const { user } = useAuth();
+  const [appData, setAppData] = useState({
+    students: STUDENTS, // Fallback to global mock data so nothing breaks
+    teachers: TEACHERS,
+    loading: true,
+  });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchAllData = async () => {
+      try {
+        // Fetch real data from Azure backend
+        const [realStudents, realTeachers] = await Promise.all([
+          apiRequest("/students"),
+          apiRequest("/teachers"),
+        ]);
+
+        setAppData({
+          students: realStudents.length > 0 ? realStudents : STUDENTS,
+          teachers: realTeachers.length > 0 ? realTeachers : TEACHERS,
+          loading: false,
+        });
+      } catch (err) {
+        console.warn(
+          "Using fallback Mock Data. API failed or not ready yet:",
+          err.message
+        );
+        setAppData((prev) => ({ ...prev, loading: false }));
+      }
+    };
+
+    fetchAllData();
+  }, [user]);
+
+  return (
+    <DataContext.Provider value={appData}>{children}</DataContext.Provider>
+  );
+};
+
+// Gatekeeper Component: Check karta hai user logged in hai ya nahi
+const MainLayout = () => {
+  const { user } = useAuth();
+  const [showSplash, setShowSplash] = useState(false);
+  const hadUserRef = useRef(false);
+
+  useEffect(() => {
+    // Sirf login ke moment pe (no-user -> user transition) splash dikhao,
+    // page refresh ka case AuthProvider ke apne loading state se already handle hai.
+    if (user && !hadUserRef.current) {
+      setShowSplash(true);
+      hadUserRef.current = true;
+      const t = setTimeout(() => setShowSplash(false), 2200);
+      return () => clearTimeout(t);
+    }
+    if (!user) hadUserRef.current = false;
+  }, [user]);
+
+  if (!user) return <LoginPage />;
+  if (showSplash) return <SplashScreen />;
+  return <SchoolERP />;
+};
+
+// Naya Main App Export
+export default function App() {
+  return (
+    <AuthProvider>
+      <DataProvider>
+        <SessionProvider>
+          <DialogProvider>
+            <MainLayout />
+          </DialogProvider>
+        </SessionProvider>
+      </DataProvider>
+    </AuthProvider>
+  );
+}
