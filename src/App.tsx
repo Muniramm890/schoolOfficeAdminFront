@@ -1,4 +1,3 @@
-// full aplication
 import React, {
   useState,
   useRef,
@@ -724,6 +723,8 @@ const Icon = ({ name, size = 16, color }) => {
         "M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z",
      close:
         "M18 6L6 18M6 6l12 12",
+     logout:
+            "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9",
  };
   return (
     <svg
@@ -1684,6 +1685,7 @@ const NAV_ITEMS = [
       { id: "setup", label: "School Setup", icon: "setup" },
       { id: "students", label: "Students", icon: "students" },
       { id: "teachers", label: "Teachers", icon: "teachers" },
+      { id: "promotion", label: "Promotion & TC", icon: "arrow_right" },
     ],
   },
   {
@@ -2493,7 +2495,104 @@ const useAutoScroll = (dependency) => {
 };
 
 
-const StudentCard = ({ s, gradeName, secName, onView, onEdit, onDelete }) => {
+// 🔴 Issue TC / mark-as-left modal — single-student exit, wired from Students grid
+const IssueTCModal = ({ student, onClose, onDone }) => {
+  const [reason, setReason] = useState("");
+  const [exitType, setExitType] = useState("tc");
+  const [tcNumber, setTcNumber] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (student) {
+      setReason("");
+      setExitType("tc");
+      setTcNumber("");
+      setError("");
+    }
+  }, [student]);
+
+  const handleSubmit = async () => {
+    if (!reason.trim()) { setError("Reason likhna zaroori hai"); return; }
+    setSaving(true);
+    setError("");
+    try {
+      await apiRequest(`/students/${student.id}/tc`, "POST", {
+        exit_type: exitType,
+        reason: reason.trim(),
+        tc_number: tcNumber.trim() || null,
+      });
+      onDone();
+    } catch (e) {
+      setError(e.message || "TC issue nahi ho paya");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal open={!!student} onClose={onClose} title="Issue TC / Mark as Left" width={460}>
+      {student && (
+        <div>
+          <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>
+            <strong style={{ color: C.text }}>
+              {student.first_name} {student.last_name}
+            </strong>{" "}
+            ({student.admission_no}) ko school se exit mark karne wale hain — yeh
+            action <strong>reverse nahi ho sakta</strong> normal flow se.
+          </div>
+
+          <FormGrid cols={1}>
+            <FormRow label="Exit Type">
+              <select className="select" value={exitType} onChange={(e) => setExitType(e.target.value)}>
+                <option value="tc">Transfer Certificate (TC)</option>
+                <option value="graduated">Graduated / Passed Out</option>
+                <option value="expelled">Expelled</option>
+              </select>
+            </FormRow>
+            <FormRow label="TC Number (optional)">
+              <input
+                className="input"
+                value={tcNumber}
+                onChange={(e) => setTcNumber(e.target.value)}
+                placeholder="e.g. TC/2026/045"
+              />
+            </FormRow>
+            <FormRow label="Reason">
+              <textarea
+                className="input"
+                rows={3}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Reason for leaving..."
+              />
+            </FormRow>
+          </FormGrid>
+
+          {error && (
+            <div style={{ color: C.red, fontSize: 12.5, marginTop: 8 }}>{error}</div>
+          )}
+
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+            <button className="btn btn-ghost" onClick={onClose} disabled={saving}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-danger"
+              onClick={handleSubmit}
+              disabled={saving}
+              style={{ minWidth: 130, opacity: saving ? 0.7 : 1 }}
+            >
+              {saving ? "Processing…" : "Confirm Exit"}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+};
+
+const StudentCard = ({ s, gradeName, secName, onView, onEdit, onDelete, onIssueTC }) => {
   const enr = s.enrolment;
   const primary = s.guardians?.[0];
   const fullName = [s.first_name, s.middle_name, s.last_name]
@@ -2699,6 +2798,16 @@ const StudentCard = ({ s, gradeName, secName, onView, onEdit, onDelete }) => {
           >
             <Icon name="edit" size={12} /> Edit
           </button>
+          {s.is_active && onIssueTC && (
+            <button
+              className="btn btn-ghost"
+              onClick={() => onIssueTC(s)}
+              style={{ fontSize: 11, padding: "6px 8px", color: C.red }}
+              title="Issue TC / Mark as Left"
+            >
+              <Icon name="file" size={12} />
+            </button>
+          )}
           <button
             className="btn btn-danger"
             onClick={() => onDelete(s)}
@@ -2751,6 +2860,7 @@ const StudentsModule = () => {
 
   // Modals
   const [modal, setModal] = useState(null); // 'add' | 'edit' | 'view' | 'delete' | 'bulk'
+  const [tcStudent, setTcStudent] = useState(null); // 🔴 Issue TC modal target
   const [activeTab, setActiveTab] = useState("personal");
   const [selected, setSelected] = useState(null);
 
@@ -3992,6 +4102,7 @@ const StudentsModule = () => {
               onView: openView,
               onEdit: openEdit,
               onDelete: openDel,
+              onIssueTC: setTcStudent,
             })
           )}
         </div>
@@ -4142,6 +4253,16 @@ const StudentsModule = () => {
                           >
                             <Icon name="edit" size={13} />
                           </button>
+                          {s.is_active && (
+                            <button
+                              className="btn btn-ghost"
+                              title="Issue TC / Mark as Left"
+                              style={{ padding: "5px 8px", color: C.red }}
+                              onClick={() => setTcStudent(s)}
+                            >
+                              <Icon name="file" size={13} />
+                            </button>
+                          )}
                           <button
                             className="btn btn-danger"
                             title="Delete"
@@ -4612,6 +4733,16 @@ const StudentsModule = () => {
           </div>
         )}
       </Modal>
+
+      {/* ════════ MODAL: ISSUE TC ════════ */}
+      <IssueTCModal
+        student={tcStudent}
+        onClose={() => setTcStudent(null)}
+        onDone={() => {
+          setTcStudent(null);
+          loadAll();
+        }}
+      />
 
       {/* ════════ MODAL: BULK IMPORT ════════ */}
       <Modal
@@ -8220,7 +8351,584 @@ const TeachersModule = () => {
 // end TeachersModule
 
 
+// 🔴 PROMOTION & SESSION-TRANSITION MODULE — year-end promote/retain/TC, full stats
+const PromotionModule = () => {
+  const { academicYears, currentYear } = useSession();
+  const [tab, setTab] = useState("overview"); // 'overview' | 'promote' | 'history'
 
+  const [fromYearId, setFromYearId] = useState("");
+  const [toYearId, setToYearId] = useState("");
+
+  useEffect(() => {
+    if (currentYear && !fromYearId) setFromYearId(currentYear.id);
+  }, [currentYear]); // eslint-disable-line
+
+  // ── Overview state ──
+  const [overview, setOverview] = useState(null);
+  const [ovLoading, setOvLoading] = useState(true);
+
+  const loadOverview = async () => {
+    if (!fromYearId) return;
+    setOvLoading(true);
+    try {
+      const qs = new URLSearchParams({ from_academic_year_id: fromYearId });
+      if (toYearId) qs.set("to_academic_year_id", toYearId);
+      const res = await apiRequest(`/promotion/overview?${qs.toString()}`);
+      setOverview(res?.data || null);
+    } catch (e) {
+      console.error(e.message);
+    } finally {
+      setOvLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === "overview") loadOverview();
+  }, [tab, fromYearId, toYearId]); // eslint-disable-line
+
+  // ── History state ──
+  const [history, setHistory] = useState([]);
+  const [histLoading, setHistLoading] = useState(true);
+
+  const loadHistory = async () => {
+    setHistLoading(true);
+    try {
+      const res = await apiRequest(`/promotion/history`);
+      setHistory(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) {
+      console.error(e.message);
+    } finally {
+      setHistLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === "history") loadHistory();
+  }, [tab]); // eslint-disable-line
+
+  const t = overview?.totals || { total: 0, processed: 0, pending: 0, promoted: 0, retained: 0, tc: 0, graduated: 0 };
+
+  return (
+    <div>
+      <SectionHeader
+        title="Promotion & Session Transition"
+        sub="Year-end promote/retain students, issue TC, and track full history — session-safe, nothing overwritten."
+      />
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, borderBottom: `1px solid ${C.border}` }}>
+        {[
+          { id: "overview", label: "Overview" },
+          { id: "promote", label: "Promote Students" },
+          { id: "transfer", label: "Section Transfer" },
+          { id: "history", label: "History" },
+        ].map((tb) => (
+          <button
+            key={tb.id}
+            onClick={() => setTab(tb.id)}
+            className={tab === tb.id ? "tab-active" : "tab-inactive"}
+            style={{
+              padding: "10px 16px",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: 13.5,
+              color: tab === tb.id ? C.blue : C.textMuted,
+              borderBottom: tab === tb.id ? `2px solid ${C.blue}` : "2px solid transparent",
+            }}
+          >
+            {tb.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Year selector row — shared across Overview + Promote */}
+      {tab !== "history" && (
+        <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+          <FormRow label="From Session (current class list)">
+            <select className="select" value={fromYearId} onChange={(e) => setFromYearId(e.target.value)}>
+              <option value="">Select session</option>
+              {academicYears.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.name}
+                  {y.is_current ? " (Current)" : ""}
+                </option>
+              ))}
+            </select>
+          </FormRow>
+          <FormRow label="To Session (promote into)">
+            <select className="select" value={toYearId} onChange={(e) => setToYearId(e.target.value)}>
+              <option value="">Select session</option>
+              {academicYears
+                .filter((y) => y.id !== fromYearId)
+                .map((y) => (
+                  <option key={y.id} value={y.id}>
+                    {y.name}
+                  </option>
+                ))}
+            </select>
+          </FormRow>
+        </div>
+      )}
+
+      {tab === "overview" && (
+        <PromotionOverviewTab
+          overview={overview}
+          loading={ovLoading}
+          totals={t}
+          toYearId={toYearId}
+          onPromoteSection={() => setTab("promote")}
+        />
+      )}
+
+      {tab === "promote" && (
+        <PromoteStudentsTab
+          fromYearId={fromYearId}
+          toYearId={toYearId}
+          onDone={() => {
+            setTab("overview");
+            loadOverview();
+          }}
+        />
+      )}
+
+      {tab === "transfer" && <SectionTransferTab />}
+      {tab === "history" && <PromotionHistoryTab history={history} loading={histLoading} />}
+    </div>
+  );
+};
+
+const PromotionOverviewTab = ({ overview, loading, totals, toYearId, onPromoteSection }) => {
+  const [gradeFilter, setGradeFilter] = useState("");
+  const rows = overview?.by_grade_section || [];
+  const filteredRows = gradeFilter ? rows.filter((r) => r.grade_id === gradeFilter) : rows;
+  const grades = [...new Map(rows.map((r) => [r.grade_id, r.grade_name])).entries()];
+
+  if (loading) return <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>Loading overview…</div>;
+  if (!overview) return <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>Session select karo upar se.</div>;
+
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 24 }}>
+        <KpiCard label="Total Students" value={totals.total} icon="students" color={C.blue} />
+        <KpiCard label="Pending" value={totals.pending} icon="warning" color={C.orange || C.red} />
+        <KpiCard label="Promoted" value={totals.promoted} icon="arrow_right" color={C.green} />
+        <KpiCard label="Retained" value={totals.retained} icon="refresh" color={C.purple || C.blue} />
+        <KpiCard label="TC Issued" value={totals.tc} icon="file" color={C.red} />
+        <KpiCard label="Graduated" value={totals.graduated} icon="trophy" color={C.green} />
+      </div>
+
+      {!toYearId && (
+        <div style={{ padding: "10px 14px", background: `${C.orange || C.red}11`, border: `1px solid ${C.orange || C.red}33`, borderRadius: 10, marginBottom: 16, fontSize: 12.5, color: C.textMuted }}>
+          "To Session" select nahi kiya — promoted/retained/TC breakdown sirf tab dikhega jab dono session select honge. Grade-wise pending count phir bhi neeche visible hai.
+        </div>
+      )}
+
+      <div style={{ marginBottom: 16 }}>
+        <select className="select" style={{ width: 220 }} value={gradeFilter} onChange={(e) => setGradeFilter(e.target.value)}>
+          <option value="">All Grades</option>
+          {grades.map(([id, name]) => (
+            <option key={id} value={id}>{name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Grade</th>
+                <th>Section</th>
+                <th>Total</th>
+                <th>Processed</th>
+                <th>Pending</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((r) => (
+                <tr key={r.section_id}>
+                  <td>{r.grade_name}</td>
+                  <td>{r.section_name}</td>
+                  <td>{r.total_students}</td>
+                  <td>{r.processed}</td>
+                  <td>
+                    <span style={{ fontWeight: 700, color: r.pending > 0 ? (C.orange || C.red) : C.green }}>
+                      {r.pending}
+                    </span>
+                  </td>
+                  <td>
+                    {r.pending > 0 && (
+                      <button className="btn btn-ghost" style={{ fontSize: 12, padding: "5px 10px" }} onClick={onPromoteSection}>
+                        Promote This Section →
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {filteredRows.length === 0 && (
+                <tr><td colSpan={6} style={{ textAlign: "center", padding: 30, color: C.textMuted }}>Koi section nahi mila</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PromoteStudentsTab = ({ fromYearId, toYearId, onDone }) => {
+  const [sections, setSections] = useState([]);
+  const [sectionId, setSectionId] = useState("");
+  const [students, setStudents] = useState([]);
+  const [suggestedSection, setSuggestedSection] = useState(null);
+  const [toSections, setToSections] = useState([]); // sections available in the "to" year
+  const [rowActions, setRowActions] = useState({}); // { student_id: { action, to_section_id, roll_no, reason, enrolment_id } }
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!fromYearId) return;
+    apiRequest(`/setup/sections?academic_year_id=${fromYearId}`)
+      .then((res) => setSections(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => setSections([]));
+  }, [fromYearId]);
+
+  useEffect(() => {
+    if (!toYearId) { setToSections([]); return; }
+    apiRequest(`/setup/sections?academic_year_id=${toYearId}`)
+      .then((res) => setToSections(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => setToSections([]));
+  }, [toYearId]);
+
+  const loadStudents = async () => {
+    if (!sectionId || !fromYearId) return;
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await apiRequest(`/promotion/section-students?section_id=${sectionId}&academic_year_id=${fromYearId}`);
+      const list = res?.data?.students || [];
+      setStudents(list);
+      setSuggestedSection(res?.data?.suggested_next_section || null);
+      const defaultActions = {};
+      list.forEach((s) => {
+        defaultActions[s.student_id] = {
+          action: "promote",
+          to_section_id: res?.data?.suggested_next_section?.id || "",
+          roll_no: s.roll_no || "",
+          reason: "",
+          enrolment_id: s.enrolment_id,
+        };
+      });
+      setRowActions(defaultActions);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadStudents(); }, [sectionId]); // eslint-disable-line
+
+  const setAction = (studentId, patch) => {
+    setRowActions((prev) => ({ ...prev, [studentId]: { ...prev[studentId], ...patch } }));
+  };
+
+  const applyToAll = (action) => {
+    setRowActions((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((sid) => {
+        next[sid] = { ...next[sid], action, to_section_id: suggestedSection?.id || next[sid].to_section_id };
+      });
+      return next;
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (!fromYearId || !toYearId) { setError("From aur To dono session select karo"); return; }
+    const actions = Object.entries(rowActions).map(([student_id, a]) => ({
+      student_id,
+      enrolment_id: a.enrolment_id,
+      action: a.action,
+      to_section_id: a.action === "promote" ? a.to_section_id : undefined,
+      roll_no: a.roll_no,
+      reason: a.reason,
+    }));
+    const invalidPromote = actions.find((a) => a.action === "promote" && !a.to_section_id);
+    if (invalidPromote) { setError("Kuch students ke liye 'Promote to Section' select nahi hua"); return; }
+
+    setSaving(true);
+    setError("");
+    try {
+      const res = await apiRequest("/promotion/run", "POST", {
+        from_academic_year_id: fromYearId,
+        to_academic_year_id: toYearId,
+        actions,
+      });
+      setResult(res?.data?.counts || null);
+      setStudents([]);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <FormRow label="Section (from current session)">
+          <select className="select" value={sectionId} onChange={(e) => setSectionId(e.target.value)}>
+            <option value="">Select section</option>
+            {sections.map((s) => (
+              <option key={s.id} value={s.id}>{s.grade_name ? `${s.grade_name} - ${s.name}` : s.name}</option>
+            ))}
+          </select>
+        </FormRow>
+        {students.length > 0 && (
+          <>
+            <button className="btn btn-ghost" onClick={() => applyToAll("promote")}>Set all → Promote</button>
+            <button className="btn btn-ghost" onClick={() => applyToAll("retain")}>Set all → Retain</button>
+          </>
+        )}
+      </div>
+
+      {error && <div style={{ color: C.red, fontSize: 12.5, marginBottom: 12 }}>{error}</div>}
+
+      {result && (
+        <div style={{ padding: 14, background: `${C.green}11`, border: `1px solid ${C.green}33`, borderRadius: 10, marginBottom: 16, fontSize: 13 }}>
+          ✅ Done — Promoted: <strong>{result.promoted}</strong>, Retained: <strong>{result.retained}</strong>, TC: <strong>{result.tc}</strong>, Graduated: <strong>{result.graduated}</strong>
+          {result.skipped > 0 && <span> ({result.skipped} skipped — already processed)</span>}
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>Loading students…</div>
+      ) : students.length === 0 ? (
+        <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
+          {sectionId ? "Sab students is section ke already processed hain." : "Ek section select karo upar se."}
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Roll</th>
+                  <th>Student</th>
+                  <th>Last Result</th>
+                  <th>Action</th>
+                  <th>Promote To Section</th>
+                  <th>New Roll No</th>
+                  <th>Reason (TC/Graduate)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((s) => {
+                  const a = rowActions[s.student_id] || {};
+                  return (
+                    <tr key={s.student_id}>
+                      <td>{s.roll_no}</td>
+                      <td>{s.first_name} {s.last_name}</td>
+                      <td>{s.percentage != null ? `${s.percentage}% (${s.result_grade || "-"})` : "—"}</td>
+                      <td>
+                        <select className="select" style={{ width: 120 }} value={a.action} onChange={(e) => setAction(s.student_id, { action: e.target.value })}>
+                          <option value="promote">Promote</option>
+                          <option value="retain">Retain</option>
+                          <option value="tc">Issue TC</option>
+                          <option value="graduate">Graduate</option>
+                        </select>
+                      </td>
+                      <td>
+                        {a.action === "promote" ? (
+                          <select className="select" style={{ width: 150 }} value={a.to_section_id || ""} onChange={(e) => setAction(s.student_id, { to_section_id: e.target.value })}>
+                            <option value="">Select</option>
+                            {toSections.map((ts) => (
+                              <option key={ts.id} value={ts.id}>{ts.grade_name ? `${ts.grade_name} - ${ts.name}` : ts.name}</option>
+                            ))}
+                          </select>
+                        ) : "—"}
+                      </td>
+                      <td>
+                        {(a.action === "promote" || a.action === "retain") ? (
+                          <input className="input" style={{ width: 70 }} value={a.roll_no || ""} onChange={(e) => setAction(s.student_id, { roll_no: e.target.value })} />
+                        ) : "—"}
+                      </td>
+                      <td>
+                        {(a.action === "tc" || a.action === "graduate") ? (
+                          <input className="input" style={{ width: 160 }} value={a.reason || ""} placeholder="Reason" onChange={(e) => setAction(s.student_id, { reason: e.target.value })} />
+                        ) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ padding: 16, display: "flex", justifyContent: "flex-end" }}>
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={saving} style={{ minWidth: 180, opacity: saving ? 0.7 : 1 }}>
+              {saving ? "Processing…" : `Confirm for ${students.length} Students`}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SectionTransferTab = () => {
+  const { currentYear } = useSession();
+  const [sections, setSections] = useState([]);
+  const [fromSectionId, setFromSectionId] = useState("");
+  const [students, setStudents] = useState([]);
+  const [moves, setMoves] = useState({}); // { student_id: { to_section_id, roll_no, enrolment_id } }
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (!currentYear) return;
+    apiRequest(`/setup/sections?academic_year_id=${currentYear.id}`)
+      .then((res) => setSections(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => setSections([]));
+  }, [currentYear]);
+
+  const loadStudents = async () => {
+    if (!fromSectionId || !currentYear) return;
+    setLoading(true);
+    setMsg("");
+    try {
+      const res = await apiRequest(`/promotion/section-students?section_id=${fromSectionId}&academic_year_id=${currentYear.id}`);
+      const list = res?.data?.students || [];
+      setStudents(list);
+      const m = {};
+      list.forEach((s) => { m[s.student_id] = { to_section_id: "", roll_no: s.roll_no || "", enrolment_id: s.enrolment_id }; });
+      setMoves(m);
+    } catch (e) {
+      setMsg(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadStudents(); }, [fromSectionId]); // eslint-disable-line
+
+  const setMove = (sid, patch) => setMoves((p) => ({ ...p, [sid]: { ...p[sid], ...patch } }));
+
+  const handleTransfer = async (studentId) => {
+    const m = moves[studentId];
+    if (!m?.to_section_id) return;
+    try {
+      await apiRequest("/promotion/section-change", "POST", {
+        student_id: studentId,
+        enrolment_id: m.enrolment_id,
+        to_section_id: m.to_section_id,
+        roll_no: m.roll_no,
+      });
+      setStudents((prev) => prev.filter((s) => s.student_id !== studentId));
+      setMsg("Section update ho gaya ✅");
+    } catch (e) {
+      setMsg(e.message);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 16, fontSize: 12.5, color: C.textMuted }}>
+        Isi session ke andar student ko ek section se doosre section me move karo — koi nayi history entry nahi banti, sirf current section badalta hai.
+      </div>
+      <FormRow label="From Section">
+        <select className="select" value={fromSectionId} onChange={(e) => setFromSectionId(e.target.value)}>
+          <option value="">Select section</option>
+          {sections.map((s) => (
+            <option key={s.id} value={s.id}>{s.grade_name ? `${s.grade_name} - ${s.name}` : s.name}</option>
+          ))}
+        </select>
+      </FormRow>
+
+      {msg && <div style={{ fontSize: 12.5, color: C.textMuted, margin: "10px 0" }}>{msg}</div>}
+
+      {loading ? (
+        <div style={{ padding: 30, textAlign: "center", color: C.textMuted }}>Loading…</div>
+      ) : students.length > 0 && (
+        <div className="card" style={{ padding: 0, overflow: "hidden", marginTop: 12 }}>
+          <table className="table">
+            <thead>
+              <tr><th>Roll</th><th>Student</th><th>Move To Section</th><th>New Roll No</th><th></th></tr>
+            </thead>
+            <tbody>
+              {students.map((s) => (
+                <tr key={s.student_id}>
+                  <td>{s.roll_no}</td>
+                  <td>{s.first_name} {s.last_name}</td>
+                  <td>
+                    <select className="select" style={{ width: 150 }} value={moves[s.student_id]?.to_section_id || ""} onChange={(e) => setMove(s.student_id, { to_section_id: e.target.value })}>
+                      <option value="">Select</option>
+                      {sections.filter((sec) => sec.id !== fromSectionId).map((sec) => (
+                        <option key={sec.id} value={sec.id}>{sec.grade_name ? `${sec.grade_name} - ${sec.name}` : sec.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <input className="input" style={{ width: 70 }} value={moves[s.student_id]?.roll_no || ""} onChange={(e) => setMove(s.student_id, { roll_no: e.target.value })} />
+                  </td>
+                  <td>
+                    <button className="btn btn-primary" style={{ fontSize: 12, padding: "5px 10px" }} onClick={() => handleTransfer(s.student_id)} disabled={!moves[s.student_id]?.to_section_id}>
+                      Move
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const PromotionHistoryTab = ({ history, loading }) => {
+  if (loading) return <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>Loading history…</div>;
+  return (
+    <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+      <div style={{ overflowX: "auto" }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>From Session</th>
+              <th>To Session</th>
+              <th>Promoted</th>
+              <th>Retained</th>
+              <th>TC</th>
+              <th>Graduated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((h) => (
+              <tr key={h.id}>
+                <td>{new Date(h.created_at).toLocaleDateString()}</td>
+                <td>{h.from_year_name}</td>
+                <td>{h.to_year_name}</td>
+                <td>{h.total_promoted}</td>
+                <td>{h.total_retained}</td>
+                <td>{h.total_tc}</td>
+                <td>{h.total_graduated}</td>
+              </tr>
+            ))}
+            {history.length === 0 && (
+              <tr><td colSpan={7} style={{ textAlign: "center", padding: 30, color: C.textMuted }}>Koi promotion run abhi tak nahi hua</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 
 
 // MODULE: TIMETABLE MANAGEMENT — VISUAL REBUILD
@@ -20902,6 +21610,8 @@ const SchoolERP = () => {
         return <StudentsModule />;
       case "teachers":
         return <TeachersModule />;
+      case "promotion":
+        return <PromotionModule />;
       case "attendance":
         return <AttendanceModule />;
       case "arrangement":
@@ -21231,6 +21941,7 @@ export const uploadToCloudinary = async (file) => {
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authCheckFailed, setAuthCheckFailed] = useState(false);
 
   const logout = React.useCallback(() => {
     localStorage.removeItem("erp_token");
@@ -21239,6 +21950,35 @@ const AuthProvider = ({ children }) => {
 
   // 🔴 apiRequest ko is logout ka reference de do (reload ki jagah)
   useEffect(() => { authLogoutRef = logout; }, [logout]);
+
+  // 🔴 INACTIVITY AUTO-LOGOUT — 15 min inactive → logout, 1 min pehle warning
+  const [showIdleWarning, setShowIdleWarning] = useState(false);
+  useEffect(() => {
+    if (!user) { setShowIdleWarning(false); return; }
+
+    const TIMEOUT_MS = 15 * 60 * 1000;   // 👈 yahan change karo (5*60*1000 ya 30*60*1000)
+    const WARNING_MS = 60 * 1000;        // logout se 1 min pehle warning dikhao
+
+    let idleTimer, warnTimer;
+
+    const resetTimers = () => {
+      setShowIdleWarning(false);
+      clearTimeout(idleTimer);
+      clearTimeout(warnTimer);
+      warnTimer = setTimeout(() => setShowIdleWarning(true), TIMEOUT_MS - WARNING_MS);
+      idleTimer = setTimeout(() => logout(), TIMEOUT_MS);
+    };
+
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+    events.forEach((ev) => window.addEventListener(ev, resetTimers));
+    resetTimers();
+
+    return () => {
+      clearTimeout(idleTimer);
+      clearTimeout(warnTimer);
+      events.forEach((ev) => window.removeEventListener(ev, resetTimers));
+    };
+  }, [user, logout]);
 
   useEffect(() => {
     (async () => {
@@ -21261,9 +22001,14 @@ const AuthProvider = ({ children }) => {
         const d = res?.data || res;
         setUser({ id: d.id, role: d.role, name: d.full_name || "Principal", schoolId: d.school_id });
       } catch (e) {
-        // Invalid/expired token OR timed out — silently clear, login screen dikhao
-        localStorage.removeItem("erp_token");
-        setUser(null);
+        if (e.message === "Auth check timed out") {
+          // Server slow/unreachable — token abhi bhi VALID ho sakta hai, isko delete mat karo
+          setAuthCheckFailed(true);
+        } else {
+          // Server ne clearly bola invalid/expired (401) — tabhi token delete karo
+          localStorage.removeItem("erp_token");
+          setUser(null);
+        }
       } finally {
         setLoading(false);
       }
@@ -21301,10 +22046,39 @@ const AuthProvider = ({ children }) => {
       throw { response: { data: { error: error.message || "Login failed" } } };
     }
   };
-  if (loading) return <SplashScreen />; 
+  if (loading) return <SplashScreen />;
+  if (authCheckFailed) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", gap: 14 }}>
+        <p style={{ color: "#666", fontSize: 14 }}>Server se connect nahi ho pa raha — internet/server check karo.</p>
+        <button className="btn btn-primary" onClick={() => window.location.reload()}>
+          Dobara try karo
+        </button>
+      </div>
+    );
+  } 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
       {children}
+      {showIdleWarning && (
+        <div
+          style={{
+            position: "fixed", bottom: 20, right: 20, zIndex: 9999,
+            background: "#1a1a1a", color: "#fff", padding: "14px 18px",
+            borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+            display: "flex", alignItems: "center", gap: 14, fontSize: 13.5,
+          }}
+        >
+          <span>Inactivity ki wajah se 1 minute me logout ho jayega.</span>
+          <button
+            className="btn btn-primary"
+            style={{ padding: "5px 12px", fontSize: 12.5 }}
+            onClick={() => setShowIdleWarning(false)} // agla activity event already timer reset kar dega
+          >
+            Main yahi hoon
+          </button>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };
