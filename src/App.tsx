@@ -663,7 +663,7 @@ const SplashScreen = () => (
 
 
 
-const Icon = ({ name, size = 16, color }) => {
+const Icon = ({ name, size = 16, color = "currentColor" }) => {
   const icons = {
     dashboard: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z",
     students:
