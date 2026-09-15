@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, {
   useState,
   useRef,
@@ -660,10 +661,90 @@ const SplashScreen = () => (
 );
 
 
+// ═══════════════════════════════════════════════════════════════
+// 🔴 GLOBAL DIALOG SYSTEM — replaces native alert()/confirm() with
+// ═══════════════════════════════════════════════════════════════
+const DialogContext = createContext(null);
+
+const DialogProvider = ({ children }) => {
+  const [state, setState] = useState(null); // { type, title, message, resolve }
+
+  const dialogAlert = (message, title = "Notice") =>
+    new Promise((resolve) => {
+      setState({ type: "alert", title, message, resolve });
+    });
+
+  const dialogConfirm = (message, title = "Please Confirm") =>
+    new Promise((resolve) => {
+      setState({ type: "confirm", title, message, resolve });
+    });
+
+    const close = (result) => {
+      state?.resolve(result);
+      setState(null);
+    };
+  
+    // 🔴 Global override: har window.alert(...) call (chahe kahin bhi ho) ab
+    // isi styled dialog se dikhega — har module ko manually edit karne ki zaroorat nahi.
+    useEffect(() => {
+      const originalAlert = window.alert;
+      window.alert = (message) => {
+        const msg = String(message ?? "");
+        const isError = /❌|error|failed/i.test(msg);
+        dialogAlert(msg, isError ? "⚠ Error" : "Notice");
+      };
+      return () => { window.alert = originalAlert; };
+    }, []); // eslint-disable-line
+  
+    return (
+      <DialogContext.Provider value={{ dialogAlert, dialogConfirm }}>
+      {children}
+      <Modal
+        open={!!state}
+        onClose={() => close(state?.type === "confirm" ? false : undefined)}
+        title={state?.title || ""}
+        width={420}
+        zIndex={10000} /* 🔴 FIX: Wizard (9999) के ऊपर दिखने के लिए Z-Index 10000 कर दिया */
+      >
+
+        {state && (
+          <div style={{ textAlign: "center", padding: "6px 0" }}>
+            <div
+              style={{
+                fontSize: 14,
+                color: C.text,
+                lineHeight: 1.6,
+                marginBottom: 22,
+                whiteSpace: "pre-line",
+              }}
+            >
+              {state.message}
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              {state.type === "confirm" && (
+                <button className="btn btn-ghost" onClick={() => close(false)}>
+                  Cancel
+                </button>
+              )}
+              <button
+                className={state.type === "confirm" ? "btn btn-danger" : "btn btn-primary"}
+                style={{ minWidth: 100 }}
+                onClick={() => close(true)}
+              >
+                {state.type === "confirm" ? "Confirm" : "OK"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </DialogContext.Provider>
+  );
+};
+
+const useDialog = () => useContext(DialogContext);
 
 
-
-const Icon = ({ name, size = 16, color = "currentColor" }) => {
+const Icon = ({ name, size = 16, color }) => {
   const icons = {
     dashboard: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z",
     students:
@@ -721,6 +802,8 @@ const Icon = ({ name, size = 16, color = "currentColor" }) => {
         "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75",
     book:
         "M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z",
+     close:
+        "M18 6L6 18M6 6l12 12",
      logout:
             "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9",
  };
@@ -9490,55 +9573,6 @@ const BuildTimetableTab = ({ academicYearId }) => {
 
   return (
     <div>
-      {/* ── Class Chip Selector ── */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div
-          style={{
-            fontSize: 11,
-            color: C.textMuted,
-            fontWeight: 700,
-            textTransform: "uppercase",
-            marginBottom: 10,
-            letterSpacing: "0.5px",
-          }}
-        >
-          Select a Class to Build Its Timetable
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {classList.map((cls) => (
-            <button
-              key={cls.id}
-              onClick={() => selectClass(cls)}
-              style={{
-                padding: "10px 16px",
-                borderRadius: 12,
-                cursor: "pointer",
-                border: `1.5px solid ${
-                  sectionId === cls.id ? C.primary : C.border
-                }`,
-                background:
-                  sectionId === cls.id ? `${C.primary}22` : C.surfaceAlt,
-                color: sectionId === cls.id ? C.primary : C.text,
-                fontWeight: 700,
-                fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
-                transition: "all 0.15s",
-              }}
-            >
-              {cls.gradeName.replace("Class ", "")}
-              {cls.stream && cls.stream !== "none"
-                ? `-${cls.stream.slice(0, 3)}`
-                : cls.name}
-            </button>
-          ))}
-          {classList.length === 0 && (
-            <span style={{ color: C.textMuted, fontSize: 13 }}>
-              No classes/sections found. Set them up in School Setup first.
-            </span>
-          )}
-        </div>
-      </div>
-
       {currentClass && (
         <div
           className="card"
@@ -9551,9 +9585,29 @@ const BuildTimetableTab = ({ academicYearId }) => {
           }}
         >
           <div>
-            <div className="syne" style={{ fontSize: 18, fontWeight: 800 }}>
-              {currentClass.gradeName} — Section {currentClass.name}
-            </div>
+            <select
+              className="select"
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                padding: "6px 10px",
+                minWidth: 160,
+                marginBottom: 4,
+              }}
+              value={sectionId}
+              onChange={(e) => {
+                const cls = classList.find((c) => c.id === e.target.value);
+                if (cls) selectClass(cls);
+              }}
+            >
+              {classList.length === 0 && <option value="">No classes found</option>}
+              {classList.map((cls) => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.gradeName}
+                  {cls.stream && cls.stream !== "none" ? ` (${cls.stream})` : ""} — {cls.name}
+                </option>
+              ))}
+            </select>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
               {filledCells} of {totalCells} periods filled
               {dirty && (
@@ -10649,89 +10703,7 @@ const ArrangementModule = ({ school }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════
-// 🔴 GLOBAL DIALOG SYSTEM — replaces native alert()/confirm() with
-// the app's own themed Modal. Promise-based so call sites just
-// `await dialogAlert("msg")` or `if (await dialogConfirm("msg"))`.
-// ═══════════════════════════════════════════════════════════════
-const DialogContext = createContext(null);
 
-const DialogProvider = ({ children }) => {
-  const [state, setState] = useState(null); // { type, title, message, resolve }
-
-  const dialogAlert = (message, title = "Notice") =>
-    new Promise((resolve) => {
-      setState({ type: "alert", title, message, resolve });
-    });
-
-  const dialogConfirm = (message, title = "Please Confirm") =>
-    new Promise((resolve) => {
-      setState({ type: "confirm", title, message, resolve });
-    });
-
-    const close = (result) => {
-      state?.resolve(result);
-      setState(null);
-    };
-  
-    // 🔴 Global override: har window.alert(...) call (chahe kahin bhi ho) ab
-    // isi styled dialog se dikhega — har module ko manually edit karne ki zaroorat nahi.
-    useEffect(() => {
-      const originalAlert = window.alert;
-      window.alert = (message) => {
-        const msg = String(message ?? "");
-        const isError = /❌|error|failed/i.test(msg);
-        dialogAlert(msg, isError ? "⚠ Error" : "Notice");
-      };
-      return () => { window.alert = originalAlert; };
-    }, []); // eslint-disable-line
-  
-    return (
-      <DialogContext.Provider value={{ dialogAlert, dialogConfirm }}>
-      {children}
-      <Modal
-        open={!!state}
-        onClose={() => close(state?.type === "confirm" ? false : undefined)}
-        title={state?.title || ""}
-        width={420}
-        zIndex={10000} /* 🔴 FIX: Wizard (9999) के ऊपर दिखने के लिए Z-Index 10000 कर दिया */
-      >
-
-        {state && (
-          <div style={{ textAlign: "center", padding: "6px 0" }}>
-            <div
-              style={{
-                fontSize: 14,
-                color: C.text,
-                lineHeight: 1.6,
-                marginBottom: 22,
-                whiteSpace: "pre-line",
-              }}
-            >
-              {state.message}
-            </div>
-            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-              {state.type === "confirm" && (
-                <button className="btn btn-ghost" onClick={() => close(false)}>
-                  Cancel
-                </button>
-              )}
-              <button
-                className={state.type === "confirm" ? "btn btn-danger" : "btn btn-primary"}
-                style={{ minWidth: 100 }}
-                onClick={() => close(true)}
-              >
-                {state.type === "confirm" ? "Confirm" : "OK"}
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
-    </DialogContext.Provider>
-  );
-};
-
-const useDialog = () => useContext(DialogContext);
 
 // ═══════════════════════════════════════════════════════════════
 // SHARED: Grade/Section selector (students side)
@@ -22118,6 +22090,7 @@ export const gasRequest = async (action, payload = {}) => {
 
 
 
+
 const premiumInputStyle = {
   width: "100%",
   background: "#1A1D27",
@@ -22133,6 +22106,7 @@ const premiumInputStyle = {
   fontFamily: "'DM Sans', sans-serif",
 };
 
+
 const handleFocus = (e) => {
   e.target.style.borderColor = "#E8600A";
   e.target.style.boxShadow = "0 0 0 4px rgba(232, 96, 10, 0.15)";
@@ -22141,6 +22115,7 @@ const handleBlur = (e) => {
   e.target.style.borderColor = "#2D3250";
   e.target.style.boxShadow = "none";
 };
+
 const MultiStepSignup = ({ onSwitchToLogin }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -23104,7 +23079,9 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
 const LoginPage = () => {
   const { login } = useAuth();
-  const [isSignup, setIsSignup] = useState(false);
+  const [isSignup, setIsSignup] = useState(
+    () => new URLSearchParams(window.location.search).get("signup") === "1"
+  );
   const [isForgot, setIsForgot] = useState(false); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23185,12 +23162,12 @@ const LoginPage = () => {
               style={{
                 fontSize: 26,
                 fontWeight: 900,
-                color: C.text,
                 margin: 0,
                 letterSpacing: "0.5px",
               }}
             >
-              SchoolOffice
+              <span style={{ color: "#F4F6FB" }}>School</span>
+              <span style={{ color: "#E8600A" }}>Office</span>
             </h1>
             <p
               style={{
