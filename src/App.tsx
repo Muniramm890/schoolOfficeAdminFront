@@ -9390,6 +9390,7 @@ const MessageHistoryTab = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
+  const [viewers, setViewers] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -9409,6 +9410,13 @@ const MessageHistoryTab = () => {
     } catch (e) { console.error(e.message); }
   };
 
+  const openViewers = async (id) => {
+    try {
+      const res = await apiRequest(`/comm/messages/${id}/viewers`);
+      setViewers(res?.data || null);
+    } catch (e) { console.error(e.message); }
+  };
+
   const statusColor = (s) => (s === "sent" ? C.green : s === "partial" ? (C.orange || C.red) : s === "failed" ? C.red : C.textMuted);
 
   if (loading) return <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>Loading...</div>;
@@ -9418,7 +9426,7 @@ const MessageHistoryTab = () => {
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <table className="table">
           <thead>
-            <tr><th>Title</th><th>Category</th><th>Files</th><th>Recipients</th><th>Sent</th><th>Failed</th><th>Status</th><th>Date</th><th></th></tr>
+            <tr><th>Title</th><th>Category</th><th>Files</th><th>Recipients</th><th>Sent</th><th>Failed</th><th>Status</th><th>Date</th><th></th><th></th></tr>
           </thead>
           <tbody>
             {messages.map((m) => (
@@ -9432,10 +9440,11 @@ const MessageHistoryTab = () => {
                 <td><span style={{ color: statusColor(m.status), fontWeight: 600, textTransform: "capitalize" }}>{m.status}</span></td>
                 <td>{new Date(m.created_at).toLocaleDateString("en-IN")}</td>
                 <td><button className="btn btn-ghost" style={{ fontSize: 12, padding: "4px 8px" }} onClick={() => openDetail(m.id)}>View</button></td>
+                <td><button className="btn btn-ghost" style={{ fontSize: 12, padding: "4px 8px" }} onClick={() => openViewers(m.id)}>Viewers</button></td>
               </tr>
             ))}
             {messages.length === 0 && (
-              <tr><td colSpan={9} style={{ textAlign: "center", padding: 30, color: C.textMuted }}>Koi message abhi tak nahi bheja gaya</td></tr>
+              <tr><td colSpan={10} style={{ textAlign: "center", padding: 30, color: C.textMuted }}>Koi message abhi tak nahi bheja gaya</td></tr>
             )}
           </tbody>
         </table>
@@ -9471,6 +9480,27 @@ const MessageHistoryTab = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!viewers} onClose={() => setViewers(null)} title="Viewers" width={420}>
+        {viewers && (
+          <div>
+            <div style={{ fontSize: 12.5, color: C.textMuted, marginBottom: 10 }}>
+              {viewers.seen} / {viewers.total} seen (in-app only)
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 350, overflowY: "auto" }}>
+              {viewers.viewers.map((v, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: `1px solid ${C.border || "#eee"}` }}>
+                  <span>{v.name} <span style={{ color: C.textMuted, fontSize: 11 }}>({v.recipient_type})</span></span>
+                  <span style={{ color: v.is_read ? C.green : C.textMuted }}>{v.is_read ? "Seen" : "Not seen"}</span>
+                </div>
+              ))}
+              {viewers.viewers.length === 0 && (
+                <div style={{ textAlign: "center", padding: 20, color: C.textMuted }}>No in-app recipients</div>
+              )}
+            </div>
           </div>
         )}
       </Modal>
@@ -21994,6 +22024,20 @@ const SchoolERP = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [school, setSchool] = useState(SCHOOL_CONFIG);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showNotifModal, setShowNotifModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await apiRequest("/notifications/unread-count");
+        setUnreadCount(res?.data?.count || 0);
+      } catch (e) { /* silent */ }
+    };
+    fetchUnread();
+    const iv = setInterval(fetchUnread, 30000); // 30s poll
+    return () => clearInterval(iv);
+  }, []);
 
   useEffect(() => {
     injectStyles();
@@ -22201,19 +22245,22 @@ const SchoolERP = () => {
               <button
                 className="btn btn-ghost"
                 style={{ padding: "7px 9px", position: "relative" }}
+                onClick={() => setShowNotifModal(true)}
               >
                 <Icon name="bell" size={17} />
-                <span
-                  style={{
-                    position: "absolute",
-                    top: 5,
-                    right: 5,
-                    width: 7,
-                    height: 7,
-                    background: C.red,
-                    borderRadius: "50%",
-                  }}
-                />
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 5,
+                      right: 5,
+                      width: 7,
+                      height: 7,
+                      background: C.red,
+                      borderRadius: "50%",
+                    }}
+                  />
+                )}
               </button>
             </div>
             <div
@@ -22257,6 +22304,7 @@ const SchoolERP = () => {
       </div>
 
       <ProfileModal open={showProfileModal} onClose={() => setShowProfileModal(false)} />
+      <NotificationModal open={showNotifModal} onClose={() => setShowNotifModal(false)} onUnreadChange={setUnreadCount} />
     </div>
   );
 };
@@ -23878,6 +23926,94 @@ const LoginPage = () => {
     </div>
   );
 };
+
+const NotificationModal = ({ open, onClose, onUnreadChange }) => {
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [detail, setDetail] = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest("/notifications");
+      setList(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) { console.error(e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { if (open) load(); }, [open]); // eslint-disable-line
+
+  const openMsg = async (n) => {
+    if (!n.is_read) {
+      try {
+        await apiRequest(`/notifications/${n.id}/read`, "PATCH");
+        setList((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
+        onUnreadChange?.((c) => Math.max(0, c - 1));
+      } catch (e) { console.error(e.message); }
+    }
+    try {
+      const res = await apiRequest(`/comm/messages/${n.related_id}`);
+      setDetail(res?.data || null);
+    } catch (e) { console.error(e.message); }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="Notifications" width={480}>
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 30, color: C.textMuted }}>Loading...</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 420, overflowY: "auto" }}>
+          {list.map((n) => (
+            <div
+              key={n.id}
+              onClick={() => openMsg(n)}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                cursor: "pointer",
+                background: n.is_read ? "transparent" : (C.blueBg || "#eef4ff"),
+                border: `1px solid ${C.border || "#e5e7eb"}`,
+              }}
+            >
+              <div style={{ fontSize: 13.5, fontWeight: n.is_read ? 500 : 700 }}>{n.title}</div>
+              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{n.message}</div>
+              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>
+                {new Date(n.created_at).toLocaleString("en-IN")}
+              </div>
+            </div>
+          ))}
+          {list.length === 0 && (
+            <div style={{ textAlign: "center", padding: 30, color: C.textMuted }}>Koi notification nahi</div>
+          )}
+        </div>
+      )}
+
+      <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.title || ""} width={480}>
+        {detail && (
+          <div>
+            <p style={{ fontSize: 13.5, color: C.textMuted, marginBottom: 10 }}>{detail.body}</p>
+            <div style={{ fontSize: 12, marginBottom: 10 }}><strong>By:</strong> {detail.created_by_name}</div>
+            {detail.attachments?.length > 0 && (
+              <div style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+                {detail.attachments.map((a) => (
+                  a.file_type === "image" ? (
+                    <img key={a.id} src={a.file_url} alt={a.file_name} style={{ maxWidth: "100%", borderRadius: 8 }} />
+                  ) : (
+                    <a key={a.id} href={a.file_url} target="_blank" rel="noopener noreferrer" style={{ color: C.blue }}>
+                      {a.file_name}
+                    </a>
+                  )
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+    </Modal>
+  );
+};
+
+
 
 const ProfileModal = ({ open, onClose }) => {
   const { dialogAlert } = useDialog();
