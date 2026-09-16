@@ -10939,18 +10939,26 @@ const TodayArrangementTab = ({ onSaved }) => {
       }));
     if (entries.length === 0) return dialogAlert("Select at least one substitute before confirming.", "Nothing to Save");
 
-    const ok = await dialogConfirm(`Confirm arrangement for ${entries.length} period(s) on ${date}?`, "Confirm Arrangement");
+    const ok = await dialogConfirm(`Confirm and notify ${entries.length} teacher(s) for ${date}? This will save the arrangement and send app + email + WhatsApp alerts.`, "Confirm & Notify");
     if (!ok) return;
     setSaving(true);
-        try {
-      const res = await apiRequest("/arrangement/confirm", "POST", { date, entries });
-      const notifiedInApp = res?.data?.notified_in_app || 0;
-      const msg = notifiedInApp > 0
-        ? `Arrangement saved. ${notifiedInApp} teacher(s) notified in-app. Use "Notify" to also send email and WhatsApp.`
-        : "Arrangement saved.";
-      await dialogAlert(msg, "Saved");
-      loadDraft();
+    try {
+      await apiRequest("/arrangement/confirm", "POST", { date, entries });
+      let notifiedCount = 0;
+      try {
+        const notifyRes = await apiRequest("/arrangement/notify", "POST", { date });
+        notifiedCount = notifyRes?.data?.notified ?? 0;
+      } catch (notifyErr) {
+        await dialogAlert("Arrangement saved, but sending email/WhatsApp failed: " + notifyErr.message, "Partial Success");
+        await loadDraft();
+        onSaved();
+        setSaving(false);
+        return;
+      }
+      await dialogAlert(`Saved and notified ${notifiedCount} teacher(s) via app, email and WhatsApp.`, "Done");
+      await loadDraft();
       onSaved();
+      setSaving(false);
     } catch (e) {
       dialogAlert("Save failed: " + e.message, "Error");
     } finally {
@@ -15001,43 +15009,33 @@ const PayrollGenerateTab = ({ staffList, leaveTypes, onSaved }) => {
       net: finalPreview.reduce((s, p) => s + p.net_pay, 0),
     }), [finalPreview]);
 
-     const handleConfirm = async () => {
-    const entries = gapsWithLiveSelections
-      .filter((g) => selections[g.key])
-      .map((g) => ({
-        period_slot_id: g.period_slot_id, section_id: g.section_id, subject_id: g.subject_id,
-        original_teacher_id: g.original_teacher_id, substitute_teacher_id: selections[g.key],
-        original_status: g.original_status,
-        is_suggested_match: g.suggested.some((t) => t.teacher_id === selections[g.key]),
-      }));
-    if (entries.length === 0) return dialogAlert("Select at least one substitute before confirming.", "Nothing to Save");
+    const handleConfirm = async () => {
+      if (finalPreview.length === 0) return;
 
-    const ok = await dialogConfirm(`Confirm and notify ${entries.length} teacher(s) for ${date}? This will save the arrangement and send app + email + WhatsApp alerts.`, "Confirm & Notify");
-    if (!ok) return;
-    setSaving(true);
-    try {
-      await apiRequest("/arrangement/confirm", "POST", { date, entries });
-      let notifiedCount = 0;
-      try {
-        const notifyRes = await apiRequest("/arrangement/notify", "POST", { date });
-        notifiedCount = notifyRes?.data?.notified ?? 0;
-      } catch (notifyErr) {
-        await dialogAlert("Arrangement saved, but sending email/WhatsApp failed: " + notifyErr.message, "Partial Success");
-        await loadDraft();
-        onSaved();
-        setSaving(false);
-        return;
+      // Block save if any override is missing its mandatory reason
+      const missingReason = finalPreview.find((p) => p.is_manually_adjusted && !p.adjustment_note?.trim());
+      if (missingReason) {
+        return dialogAlert(`Please add a reason for the adjustment on ${missingReason.full_name} before saving.`, "Reason Required");
       }
-      await dialogAlert(`Saved and notified ${notifiedCount} teacher(s) via app, email and WhatsApp.`, "Done");
-      await loadDraft();
-      onSaved();
-      setSaving(false);
-    } catch (e) {
-      dialogAlert("Save failed: " + e.message, "Error");
-    } finally {
-      setSaving(false);
-    }
-  };
+
+      const adjustedCount = finalPreview.filter((p) => p.is_manually_adjusted).length;
+      const confirmMsg = `Save payroll for ${finalPreview.length} staff members for ${monthLabel(monthYear)}?`
+        + (adjustedCount > 0 ? ` (${adjustedCount} manually adjusted)` : "") + ` Total payout: ${inr(totals.net)}.`;
+      const ok = await dialogConfirm(confirmMsg, "Confirm Payroll");
+      if (!ok) return;
+      setSaving(true);
+      try {
+        await apiRequest("/payroll/save-run", "POST", { month_year: monthYear, entries: finalPreview });
+        await dialogAlert("Payroll saved successfully. You can now view slips in the Payslips tab.", "Success");
+        onSaved();
+        setPreview([]);
+        setOverrides({});
+      } catch (e) {
+        dialogAlert("Save failed: " + e.message, "Error");
+      } finally {
+        setSaving(false);
+      }
+    };
 
   const skippedStaff = staffList.filter((s) => !s.has_salary_structure);
 
