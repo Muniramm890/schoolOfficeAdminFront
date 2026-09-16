@@ -10852,6 +10852,7 @@ const TodayArrangementTab = ({ onSaved }) => {
   const [loading, setLoading] = useState(false);
   const [selections, setSelections] = useState({}); // { [gapKey]: substitute_teacher_id }
   const [saving, setSaving] = useState(false);
+  const [notifying, setNotifying] = useState(false);
 
   const loadDraft = React.useCallback(async () => {
     setLoading(true);
@@ -10931,15 +10932,34 @@ const TodayArrangementTab = ({ onSaved }) => {
     const ok = await dialogConfirm(`Confirm arrangement for ${entries.length} period(s) on ${date}?`, "Confirm Arrangement");
     if (!ok) return;
     setSaving(true);
-    try {
-      await apiRequest("/arrangement/confirm", "POST", { date, entries });
-      await dialogAlert("Arrangement saved. Notification sending will be wired next.", "Saved");
+        try {
+      const res = await apiRequest("/arrangement/confirm", "POST", { date, entries });
+      const notifiedInApp = res?.data?.notified_in_app || 0;
+      const msg = notifiedInApp > 0
+        ? `Arrangement saved. ${notifiedInApp} teacher(s) notified in-app. Use "Notify" to also send email and WhatsApp.`
+        : "Arrangement saved.";
+      await dialogAlert(msg, "Saved");
       loadDraft();
       onSaved();
     } catch (e) {
       dialogAlert("Save failed: " + e.message, "Error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleNotify = async () => {
+    const ok = await dialogConfirm(`Send email + WhatsApp to all substitute teachers for ${date}?`, "Notify Teachers");
+    if (!ok) return;
+    setNotifying(true);
+    try {
+      const res = await apiRequest("/arrangement/notify", "POST", { date });
+      const count = res?.data?.notified ?? 0;
+      await dialogAlert(`Notified ${count} teacher(s) via email and WhatsApp.`, "Sent");
+    } catch (e) {
+      dialogAlert("Notify failed: " + e.message, "Error");
+    } finally {
+      setNotifying(false);
     }
   };
 
@@ -10993,7 +11013,10 @@ const TodayArrangementTab = ({ onSaved }) => {
             ))}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <button className="btn btn-ghost" onClick={handleNotify} disabled={notifying} style={{ padding: "12px 20px", fontSize: 14 }}>
+              {notifying ? "Sending..." : "Notify Teachers (Email + WhatsApp)"}
+            </button>
             <button className="btn btn-primary" onClick={handleConfirm} disabled={saving} style={{ padding: "12px 28px", fontSize: 14 }}>
               {saving ? "Saving..." : `Confirm Arrangement (${filledCount})`}
             </button>
