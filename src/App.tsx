@@ -10948,6 +10948,28 @@ const TodayArrangementTab = ({ onSaved }) => {
       try {
         const notifyRes = await apiRequest("/arrangement/notify", "POST", { date });
         notifiedCount = notifyRes?.data?.notified ?? 0;
+        const status = notifyRes?.data?.status;
+        const results = notifyRes?.data?.results ?? [];
+        if (status === "failed" || status === "partial") {
+          const failLines = results
+            .filter((r) => r.overall !== "sent")
+            .map((r) => {
+              const failedChannels = ["app", "email", "whatsapp"]
+                .filter((ch) => r[ch]?.status === "failed")
+                .map((ch) => `${ch}: ${r[ch].error || "failed"}`)
+                .join(" | ");
+              return `${r.teacher_name} — ${failedChannels}`;
+            })
+            .join("\n");
+          await dialogAlert(
+            `Saved. Notify ${status === "failed" ? "failed for all" : "partially failed for some"} teacher(s):\n\n${failLines}`,
+            status === "failed" ? "Notify Failed" : "Partially Notified"
+          );
+          await loadDraft();
+          onSaved();
+          setSaving(false);
+          return;
+        }
       } catch (notifyErr) {
         await dialogAlert("Arrangement saved, but sending email/WhatsApp failed: " + notifyErr.message, "Partial Success");
         await loadDraft();
@@ -11037,7 +11059,10 @@ const ArrangementHistoryTab = ({ history, onRefresh }) => {
   const [dateFrom, setDateFrom] = useState(daysAgoISO(30));
   const [dateTo, setDateTo] = useState(todayISO());
 
-  const filtered = history.filter((h) => h.substitution_date >= dateFrom && h.substitution_date <= dateTo);
+  const filtered = history.filter((h) => {
+    const d = h.substitution_date?.slice(0, 10); // normalize to YYYY-MM-DD before comparing
+    return d >= dateFrom && d <= dateTo;
+  });
 
   const handleCancel = async (row) => {
     const ok = await dialogConfirm(`Cancel this substitution for ${row.substitute_teacher_name}?`, "Cancel Substitution");
@@ -11079,7 +11104,15 @@ const ArrangementHistoryTab = ({ history, onRefresh }) => {
                   <td style={{ padding: "10px 14px", color: C.textMuted }}>{r.original_teacher_name}</td>
                   <td style={{ padding: "10px 14px", fontWeight: 700 }}>{r.substitute_teacher_name}</td>
                   <td style={{ padding: "10px 14px" }}>
-                    {r.notified_at ? <span style={{ color: C.green, fontSize: 11, fontWeight: 700 }}>✓ Sent</span> : <span style={{ color: C.textFaint, fontSize: 11 }}>—</span>}
+                    {r.notify_status === "sent" ? (
+                      <span style={{ color: C.green, fontSize: 11, fontWeight: 700 }}>✓ Sent</span>
+                    ) : r.notify_status === "partial" ? (
+                      <span style={{ color: "#d97706", fontSize: 11, fontWeight: 700 }} title="Some channels (app/email/WhatsApp) failed — check CommHub message history">⚠ Partial</span>
+                    ) : r.notify_status === "failed" ? (
+                      <span style={{ color: C.red, fontSize: 11, fontWeight: 700 }} title="All channels failed — check CommHub message history">✗ Failed</span>
+                    ) : (
+                      <span style={{ color: C.textFaint, fontSize: 11 }}>—</span>
+                    )}
                   </td>
                   <td style={{ padding: "10px 14px", textAlign: "right" }}>
                     <button className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 10px", color: C.red }} onClick={() => handleCancel(r)}>
@@ -21218,6 +21251,9 @@ const UserManagementModule = () => {
   const [pwValue, setPwValue] = useState("");
   const [pwResult, setPwResult] = useState(null);
   const [savingPw, setSavingPw] = useState(false);
+  const [emailModal, setEmailModal] = useState(null);
+  const [emailValue, setEmailValue] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
 
   const [roleModal, setRoleModal] = useState(null);
   const [roleValue, setRoleValue] = useState("teacher");
@@ -21389,6 +21425,24 @@ const UserManagementModule = () => {
   };
 
   const openPwModal = (row) => { setPwMode("auto"); setPwValue(""); setPwResult(null); setPwModal(row); };
+  const openEmailModal = (row) => { setEmailValue(row.email || ""); setEmailModal(row); };
+
+  const handleUpdateEmail = async () => {
+    if (!emailModal) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue.trim())) {
+      dialogAlert("Enter a valid email address.", "Invalid Email");
+      return;
+    }
+    const ok = await dialogConfirm(`Change login email for ${emailModal.full_name} to "${emailValue.trim()}"? They will need to use this new email to log in.`, "Confirm Email Change");
+    if (!ok) return;
+    setSavingEmail(true);
+    try {
+      await apiRequest(`/admin/users/${emailModal.member_id}/email`, "PUT", { newEmail: emailValue.trim() });
+      setEmailModal(null);
+      await loadStaff();
+      dialogAlert("Email updated successfully.", "Done");
+    } catch (e) { dialogAlert("Failed: " + e.message, "Error"); } finally { setSavingEmail(false); }
+  };
 
   const handleResetPw = async () => {
     if (!pwModal) return;
@@ -21502,7 +21556,8 @@ const UserManagementModule = () => {
                             <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
                               <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Change Role" onClick={() => openRoleModal(s)} disabled={s.is_self}><Icon name="setup" size={13} /></button>
                               <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Module Access" onClick={() => openPermModal(s)} disabled={s.role === "school_admin"}><Icon name="eye" size={13} /></button>
-                              <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Reset Password" onClick={() => openPwModal(s)}><Icon name="edit" size={13} /></button>
+                               <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Reset Password" onClick={() => openPwModal(s)}><Icon name="edit" size={13} /></button>
+                              <button className="btn btn-ghost" style={{ padding: "5px 9px" }} title="Change Email" onClick={() => openEmailModal(s)}><Icon name="user" size={13} /></button>
                               {s.is_active ? (
                                 <button className="btn btn-danger" style={{ padding: "5px 9px" }} title="Block" onClick={() => handleToggleBlock(s)} disabled={s.is_self}><Icon name="warning" size={13} /></button>
                               ) : (
@@ -21694,8 +21749,27 @@ const UserManagementModule = () => {
         )}
       </Modal>
 
-      <Modal open={!!authorizeModal} onClose={() => setAuthorizeModal(null)} title="Authorize Student Login" width={440}>
-        {authorizeModal && (
+      <Modal open={!!emailModal} onClose={() => setEmailModal(null)} title="Change Login Email" width={420}>
+        {emailModal && (
+          <div>
+            <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>
+              Changing login email for <b style={{ color: C.text }}>{emailModal.full_name}</b>
+            </div>
+            <FormRow label="New Email">
+              <input className="input" type="email" value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="name@example.com" />
+            </FormRow>
+            <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 4, marginBottom: 8 }}>
+              This changes their login username directly — no OTP verification. Change is recorded in the audit log.
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
+              <button className="btn btn-ghost" onClick={() => setEmailModal(null)} disabled={savingEmail}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleUpdateEmail} disabled={savingEmail}>{savingEmail ? "Saving…" : "Update Email"}</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!authorizeModal} onClose={() => setAuthorizeModal(null)} title="Authorize Student Login" width={440}>        {authorizeModal && (
           authResult !== null ? (
             <div style={{ textAlign: "center", padding: "8px 0" }}>
               <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
