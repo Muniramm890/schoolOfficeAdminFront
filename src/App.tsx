@@ -4009,10 +4009,7 @@ const StudentsModule = () => {
           }}
         >
           <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
-            <Icon
-              name="search"
-              size={14}
-              color={C.textMuted}
+            <div
               style={{
                 position: "absolute",
                 left: 10,
@@ -4020,7 +4017,9 @@ const StudentsModule = () => {
                 transform: "translateY(-50%)",
                 pointerEvents: "none",
               }}
-            />
+            >
+              <Icon name="search" size={14} color={C.textMuted} />
+            </div>
             <input
               className="input"
               placeholder="Search name or admission no…"
@@ -11465,12 +11464,13 @@ const AttendanceModule = () => {
           flexWrap: "wrap",
         }}
       >
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 6, background: C.surfaceAlt, padding: 4, borderRadius: 12, border: `1px solid ${C.border}`, flexWrap: "wrap" }}>
           {TABS[mode].map((t) => (
             <button
               key={t.id}
-              className={`tab ${tab === t.id ? "active" : ""}`}
+              className="btn"
               onClick={() => setTab(t.id)}
+              style={{ padding: "8px 12px", fontSize: 12, fontWeight: 700, borderRadius: 9, background: tab === t.id ? C.surface : "transparent", color: tab === t.id ? C.primary : C.textMuted, boxShadow: tab === t.id ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}
             >
               {t.label}
             </button>
@@ -12661,51 +12661,79 @@ const StudentClassAnalysisTab = () => {
             Loading…
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Roll</th>
-                  <th>Student</th>
-                  <th>P</th>
-                  <th>A</th>
-                  <th>L</th>
-                  <th>OD</th>
-                  <th>%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.students.map((s) => (
-                  <tr key={s.student_id}>
-                    <td style={{ color: C.textMuted }}>{s.roll_no || "—"}</td>
-                    <td style={{ fontWeight: 600 }}>
-                      {[s.first_name, s.last_name].filter(Boolean).join(" ")}
-                    </td>
-                    <td style={{ color: C.green }}>{s.present_days}</td>
-                    <td style={{ color: C.red }}>{s.absent_days}</td>
-                    <td style={{ color: C.yellow }}>{s.leave_days}</td>
-                    <td style={{ color: C.blue }}>{s.od_days}</td>
-                    <td>
-                      <span
-                        className="syne"
-                        style={{
-                          fontWeight: 700,
-                          color:
-                            s.percentage >= 90
-                              ? C.green
-                              : s.percentage >= 75
-                              ? C.yellow
-                              : C.red,
-                        }}
-                      >
-                        {s.percentage}%
-                      </span>
-                    </td>
+          <>
+            {(data.dates || []).length > 45 && (
+              <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 10 }}>
+                {data.dates.length} dates in this range — scroll horizontally to see the full register.
+              </div>
+            )}
+            <div style={{ overflowX: "auto", maxWidth: "100%" }}>
+              <table className="table" style={{ minWidth: 420 + (data.dates || []).length * 34 }}>
+                <thead>
+                  <tr>
+                    <th style={{ position: "sticky", left: 0, background: C.surface, zIndex: 2 }}>Roll</th>
+                    <th style={{ position: "sticky", left: 44, background: C.surface, zIndex: 2 }}>Student</th>
+                    {(data.dates || []).map((d) => (
+                      <th key={d} style={{ fontSize: 10, fontWeight: 600, textAlign: "center", padding: "6px 4px", whiteSpace: "nowrap" }}>
+                        {new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
+                      </th>
+                    ))}
+                    <th style={{ textAlign: "center" }}>P</th>
+                    <th style={{ textAlign: "center" }}>A</th>
+                    <th style={{ textAlign: "center" }}>L</th>
+                    <th style={{ textAlign: "center" }}>OD</th>
+                    <th style={{ textAlign: "center" }}>%</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {data.students.map((s) => (
+                    <tr key={s.student_id}>
+                      <td style={{ color: C.textMuted, position: "sticky", left: 0, background: C.surface, zIndex: 1 }}>{s.roll_no || "—"}</td>
+                      <td style={{ fontWeight: 600, position: "sticky", left: 44, background: C.surface, zIndex: 1, whiteSpace: "nowrap" }}>
+                        {[s.first_name, s.last_name].filter(Boolean).join(" ")}
+                      </td>
+                      {(data.dates || []).map((d) => {
+                        const st = s.daily?.[d];
+                        return (
+                          <td key={d} style={{ textAlign: "center", padding: "6px 4px" }}>
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 700,
+                                color: st ? STATUS_META[st]?.color || C.textMuted : C.border,
+                              }}
+                            >
+                              {st || "·"}
+                            </span>
+                          </td>
+                        );
+                      })}
+                      <td style={{ color: C.green, textAlign: "center" }}>{s.present_days}</td>
+                      <td style={{ color: C.red, textAlign: "center" }}>{s.absent_days}</td>
+                      <td style={{ color: C.yellow, textAlign: "center" }}>{s.leave_days}</td>
+                      <td style={{ color: C.blue, textAlign: "center" }}>{s.od_days}</td>
+                      <td style={{ textAlign: "center" }}>
+                        <span
+                          className="syne"
+                          style={{
+                            fontWeight: 700,
+                            color:
+                              s.percentage >= 90
+                                ? C.green
+                                : s.percentage >= 75
+                                ? C.yellow
+                                : C.red,
+                          }}
+                        >
+                          {s.percentage}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -18688,6 +18716,7 @@ const ResultsSectionWiseTab = ({ examGroupId }) => {
   const [loading, setLoading] = useState(true);
   const [drill, setDrill] = useState(null);
   const [drillRows, setDrillRows] = useState([]);
+    const [drillSubjects, setDrillSubjects] = useState([]);
   const [drillLoading, setDrillLoading] = useState(false);
 
   useEffect(() => {
@@ -18702,8 +18731,10 @@ const ResultsSectionWiseTab = ({ examGroupId }) => {
     setDrill(row);
     setDrillLoading(true);
     try {
-      const res = await apiRequest(`/results/section-results?exam_group_id=${examGroupId}&section_id=${row.section_id}`);
-      setDrillRows(Array.isArray(res?.data) ? res.data : []);
+      // Same API used by Exam Management → "Results & Publish" tab
+      const res = await apiRequest(`/exams/${examGroupId}/results?section_id=${row.section_id}`);
+      setDrillRows(Array.isArray(res?.data?.rows) ? res.data.rows : []);
+      setDrillSubjects(Array.isArray(res?.data?.subjects) ? res.data.subjects : []);
     } catch (e) { console.error(e); } finally { setDrillLoading(false); }
   };
 
@@ -18744,14 +18775,26 @@ const ResultsSectionWiseTab = ({ examGroupId }) => {
             <div className="pulse" style={{ textAlign: "center", color: C.primary, padding: 20 }}>Loading…</div>
           ) : (
             <div style={{ overflowX: "auto" }}>
-            <table className="table" style={{ minWidth: 620 }}>
-              <thead><tr><th>Rank</th><th>Roll</th><th>Name</th><th>Marks</th><th>%</th><th>Grade</th><th>Status</th></tr></thead>
+            <table className="table" style={{ minWidth: 620 + drillSubjects.length * 90 }}>
+              <thead>
+                <tr>
+                  <th>Rank</th><th>Roll</th><th>Name</th>
+                  {drillSubjects.map((sub) => (<th key={sub.id}>{sub.name}</th>))}
+                  <th>Total</th><th>%</th><th>Grade</th><th>Status</th>
+                </tr>
+              </thead>
               <tbody>
                 {drillRows.map((s) => (
                   <tr key={s.student_id}>
                     <td>{s.class_rank ?? "-"}</td>
                     <td>{s.roll_no || "-"}</td>
-                    <td>{s.student_name}</td>
+                    <td>{s.first_name} {s.last_name || ""}</td>
+                    {drillSubjects.map((sub) => {
+                      const m = s.marks?.[sub.id];
+                      if (!m) return <td key={sub.id}>-</td>;
+                      if (m.status !== "present") return <td key={sub.id} style={{ color: C.red }}>{m.val}</td>;
+                      return <td key={sub.id}>{m.val ?? "-"}</td>;
+                    })}
                     <td>{s.status === "incomplete" ? "-" : `${s.total_marks}/${s.max_total}`}</td>
                     <td>{s.percentage ?? "-"}</td>
                     <td>{s.grade || "-"}</td>
