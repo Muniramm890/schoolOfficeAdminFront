@@ -14018,11 +14018,22 @@ const loadRazorpayScript = () => new Promise((resolve) => {
   document.body.appendChild(script);
 });
 
-
+// 🔴 NEW: Cashfree checkout SDK loader
+const loadCashfreeScript = () => new Promise((resolve) => {
+  if (window.Cashfree) return resolve(true);
+  const script = document.createElement("script");
+  script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+  script.onload = () => resolve(true);
+  script.onerror = () => resolve(false);
+  document.body.appendChild(script);
+});
+// Change to "production" once you're live with real Cashfree keys.
+const CASHFREE_MODE = "production";
 
 // ── COLLECT PAYMENT MODAL (ITEMIZED & DISCOUNT SUPPORT) ──
 const CollectPaymentModal = ({ account, onClose, onSuccess }) => {
   const [method, setMethod] = useState("Cash");
+  const [gateway, setGateway] = useState("razorpay"); 
   const [ref, setRef] = useState("");
   const [bank, setBank] = useState("");
   const [date, setDate] = useState(todayISO());
@@ -14037,7 +14048,7 @@ const CollectPaymentModal = ({ account, onClose, onSuccess }) => {
   const [loadingItems, setLoadingItems] = useState(false);
 
   useEffect(() => {
-    setMethod("Cash"); setRef(""); setBank(""); setDate(todayISO()); setRemarks(""); setError("");
+    setMethod("Cash"); setGateway("razorpay"); setRef(""); setBank(""); setDate(todayISO()); setRemarks(""); setError("");
     setInputs({}); setPendingItems([]);
     
     if (account) {
@@ -14179,6 +14190,64 @@ const CollectPaymentModal = ({ account, onClose, onSuccess }) => {
     }
   };
 
+  // 🔴 NEW: Cashfree flow — same payload shape as handleRazorpayPay
+const handleCashfreePay = async () => {
+  if (totalPayingPaise <= 0) { setError("Enter a valid paying amount to proceed online"); return; }
+  setError(""); setRzpLoading(true);
+
+  const breakdown = Object.entries(inputs)
+    .filter(([cid, vals]) => toPaise(vals.pay) > 0 || toPaise(vals.discount) > 0)
+    .map(([cid, vals]) => ({
+      category_id: cid,
+      pay_amount: toPaise(vals.pay),
+      discount_amount: toPaise(vals.discount)
+    }));
+
+  try {
+    const scriptOk = await loadCashfreeScript();
+    if (!scriptOk) throw new Error("Failed to load payment gateway. Check your internet connection.");
+
+    const orderRes = await apiRequest("/payments/cashfree/create-order", "POST", {
+      student_id: account.student_id,
+      amount_paise: totalPayingPaise,
+      breakdown: breakdown,
+    });
+    const order = orderRes?.data;
+    if (!order?.payment_session_id) throw new Error("Could not create payment order");
+
+    const cashfree = window.Cashfree({ mode: CASHFREE_MODE });
+    const result = await cashfree.checkout({
+      paymentSessionId: order.payment_session_id,
+      redirectTarget: "_modal",
+    });
+
+    if (result?.error) {
+      setError(`Payment failed: ${result.error.message || "Try again"}`);
+      setRzpLoading(false);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await apiRequest("/payments/cashfree/verify", "POST", {
+        cf_order_id: order.order_id,
+        student_id: account.student_id,
+        amount_paise: totalPayingPaise,
+        remarks: remarks || null,
+        breakdown: breakdown,
+      });
+      onSuccess();
+    } catch (e) {
+      setError("Could not confirm payment: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  } catch (e) {
+    setError(e.message || "Could not start payment");
+  } finally {
+    setRzpLoading(false);
+  }
+};
   return (
     <Modal open={!!account} onClose={onClose} title="Collect Fee Payment" width={600}>
       {account && (
@@ -14279,17 +14348,39 @@ const CollectPaymentModal = ({ account, onClose, onSuccess }) => {
           </FormRow>
 
           {isOnlineMethod ? (
-            <div style={{
-              padding: 16, background: `${C.blue}11`, border: `1px solid ${C.blue}33`, borderRadius: 12, marginBottom: 16,
-              display: "flex", alignItems: "center", gap: 12,
-            }}>
-              <div style={{ fontSize: 28 }}>🔒</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>Secure Razorpay Checkout</div>
-                <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 2 }}>Payment gateway opens here. Grand total ₹{grandTotalAmount} will be processed.</div>
-              </div>
-            </div>
-          ) : (
+  <>
+    <FormRow label="Pay Via">
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {[
+          { id: "razorpay", label: "Razorpay" },
+          { id: "cashfree", label: "Cashfree" },
+        ].map((g) => (
+          <button key={g.id} onClick={() => setGateway(g.id)} disabled={rzpLoading} style={{
+            padding: "7px 14px", borderRadius: 8, cursor: "pointer", fontSize: 12.5, fontWeight: 700,
+            border: `1.5px solid ${gateway === g.id ? C.primary : C.border}`,
+            background: gateway === g.id ? `${C.primary}22` : C.surfaceAlt,
+            color: gateway === g.id ? C.primary : C.textMuted,
+          }}>
+            {g.label}
+          </button>
+        ))}
+      </div>
+    </FormRow>
+
+    <div style={{
+      padding: 16, background: `${C.blue}11`, border: `1px solid ${C.blue}33`, borderRadius: 12, marginBottom: 16,
+      display: "flex", alignItems: "center", gap: 12,
+    }}>
+      <div style={{ fontSize: 28 }}>🔒</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>
+          Secure {gateway === "cashfree" ? "Cashfree" : "Razorpay"} Checkout
+        </div>
+        <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 2 }}>Payment gateway opens here. Grand total ₹{grandTotalAmount} will be processed.</div>
+      </div>
+    </div>
+  </>
+) : (
             <FormGrid cols={2}>
               <FormRow label="Payment Date">
                 <input className="input" type="date" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} />
@@ -14321,9 +14412,9 @@ const CollectPaymentModal = ({ account, onClose, onSuccess }) => {
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", borderTop: `1px solid ${C.border}33`, paddingTop: 16 }}>
             <button className="btn btn-ghost" onClick={onClose} disabled={saving || rzpLoading}>Cancel</button>
             {isOnlineMethod ? (
-              <button className="btn btn-primary" onClick={handleRazorpayPay} disabled={saving || rzpLoading || grandTotalAmount <= 0} style={{ minWidth: 180, opacity: (saving || rzpLoading || grandTotalAmount <= 0) ? 0.7 : 1 }}>
-                {rzpLoading || saving ? "Processing…" : `🔒 Pay ₹${grandTotalAmount} Securely`}
-              </button>
+              <button className="btn btn-primary" onClick={gateway === "cashfree" ? handleCashfreePay : handleRazorpayPay} disabled={saving || rzpLoading || grandTotalAmount <= 0} style={{ minWidth: 180, opacity: (saving || rzpLoading || grandTotalAmount <= 0) ? 0.7 : 1 }}>
+  {rzpLoading || saving ? "Processing…" : `🔒 Pay ₹${grandTotalAmount} Securely`}
+</button>
             ) : (
               <button className="btn btn-primary" onClick={handleManualSubmit} disabled={saving || (totalPayingPaise <= 0 && totalDiscountPaise <= 0)} style={{ minWidth: 160, opacity: (saving || (totalPayingPaise <= 0 && totalDiscountPaise <= 0)) ? 0.7 : 1 }}>
                 {saving ? "Processing…" : `Confirm Collection`}
