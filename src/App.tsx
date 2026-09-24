@@ -14155,7 +14155,11 @@ const CollectPaymentModal = ({ account, onClose, onSuccess }) => {
         name: account.school_name || "School Fee Payment",
         description: `Fee collection — ${account.student_name}`,
         order_id: order.order_id,
-        prefill: { name: account.student_name },
+        prefill: {
+          name: account.student_name,
+          contact: order.guardian_phone || "",
+          email: order.guardian_email || "",
+        },
         theme: { color: C.primary },
         handler: async (response) => {
           setSaving(true);
