@@ -23508,6 +23508,7 @@ const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authCheckFailed, setAuthCheckFailed] = useState(false);
+  const [forceLoggedOut, setForceLoggedOut] = useState(false);
 
   useEffect(() => {
     if (!authCheckFailed || !dialogConfirm) return;
@@ -23515,7 +23516,14 @@ const AuthProvider = ({ children }) => {
       "We couldn't reach the server. Please check your internet connection and try again.",
       "Connection Problem"
     ).then((retry) => {
-      if (retry) window.location.reload();
+      if (retry) {
+        window.location.reload();
+      } else {
+        // Cancel = force logout to login page, no more splash/retry loop
+        localStorage.removeItem("erp_token");
+        setUser(null);
+        setForceLoggedOut(true);
+      }
     });
   }, [authCheckFailed]); // eslint-disable-line
 
@@ -23628,7 +23636,7 @@ const AuthProvider = ({ children }) => {
     }
   };
   if (loading) return <SplashScreen />;
-  if (authCheckFailed) return <SplashScreen />; 
+  if (authCheckFailed && !forceLoggedOut) return <SplashScreen />; 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
       {children}
