@@ -23504,9 +23504,20 @@ export const uploadToCloudinary = async (file) => {
 };
 
 const AuthProvider = ({ children }) => {
+  const { dialogAlert, dialogConfirm } = useDialog() || {};
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authCheckFailed, setAuthCheckFailed] = useState(false);
+
+  useEffect(() => {
+    if (!authCheckFailed || !dialogConfirm) return;
+    dialogConfirm(
+      "We couldn't reach the server. Please check your internet connection and try again.",
+      "Connection Problem"
+    ).then((retry) => {
+      if (retry) window.location.reload();
+    });
+  }, [authCheckFailed]); // eslint-disable-line
 
   const logout = React.useCallback(() => {
     localStorage.removeItem("erp_token");
@@ -23517,9 +23528,8 @@ const AuthProvider = ({ children }) => {
   useEffect(() => { authLogoutRef = logout; }, [logout]);
 
   // 🔴 INACTIVITY AUTO-LOGOUT — 15 min inactive → logout, 1 min pehle warning
-  const [showIdleWarning, setShowIdleWarning] = useState(false);
   useEffect(() => {
-    if (!user) { setShowIdleWarning(false); return; }
+    if (!user) return;
 
     const TIMEOUT_MS = 15 * 60 * 1000;   // 👈 yahan change karo (5*60*1000 ya 30*60*1000)
     const WARNING_MS = 60 * 1000;        // logout se 1 min pehle warning dikhao
@@ -23527,10 +23537,16 @@ const AuthProvider = ({ children }) => {
     let idleTimer, warnTimer;
 
     const resetTimers = () => {
-      setShowIdleWarning(false);
       clearTimeout(idleTimer);
       clearTimeout(warnTimer);
-      warnTimer = setTimeout(() => setShowIdleWarning(true), TIMEOUT_MS - WARNING_MS);
+      warnTimer = setTimeout(async () => {
+        if (!dialogConfirm) return;
+        const stay = await dialogConfirm(
+          "You've been inactive for a while. You will be logged out in 1 minute due to inactivity.",
+          "Session Timeout Warning"
+        );
+        if (stay) resetTimers();
+      }, TIMEOUT_MS - WARNING_MS);
       idleTimer = setTimeout(() => logout(), TIMEOUT_MS);
     };
 
@@ -23612,38 +23628,10 @@ const AuthProvider = ({ children }) => {
     }
   };
   if (loading) return <SplashScreen />;
-  if (authCheckFailed) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", gap: 14 }}>
-        <p style={{ color: "#666", fontSize: 14 }}>Server se connect nahi ho pa raha — internet/server check karo.</p>
-        <button className="btn btn-primary" onClick={() => window.location.reload()}>
-          Dobara try karo
-        </button>
-      </div>
-    );
-  } 
+  if (authCheckFailed) return <SplashScreen />; 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
       {children}
-      {showIdleWarning && (
-        <div
-          style={{
-            position: "fixed", bottom: 20, right: 20, zIndex: 9999,
-            background: "#1a1a1a", color: "#fff", padding: "14px 18px",
-            borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-            display: "flex", alignItems: "center", gap: 14, fontSize: 13.5,
-          }}
-        >
-          <span>Inactivity ki wajah se 1 minute me logout ho jayega.</span>
-          <button
-            className="btn btn-primary"
-            style={{ padding: "5px 12px", fontSize: 12.5 }}
-            onClick={() => setShowIdleWarning(false)} // agla activity event already timer reset kar dega
-          >
-            Main yahi hoon
-          </button>
-        </div>
-      )}
     </AuthContext.Provider>
   );
 };
@@ -25417,14 +25405,14 @@ const MainLayout = () => {
 // Naya Main App Export
 export default function App() {
   return (
-    <AuthProvider>
-      <DataProvider>
-        <SessionProvider>
-          <DialogProvider>
+    <DialogProvider>
+      <AuthProvider>
+        <DataProvider>
+          <SessionProvider>
             <MainLayout />
-          </DialogProvider>
-        </SessionProvider>
-      </DataProvider>
-    </AuthProvider>
+          </SessionProvider>
+        </DataProvider>
+      </AuthProvider>
+    </DialogProvider>
   );
 }
