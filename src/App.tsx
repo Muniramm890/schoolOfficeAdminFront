@@ -11598,19 +11598,20 @@ function buildArrangementPlan(draft) {
     .map((te) => {
       const busy = busyByPeriod[te.period_slot_id] || new Set();
       const takenBySubst = alreadyAssignedByPeriod[te.period_slot_id] || new Set();
+      const existing = existingMap[`${te.period_slot_id}_${te.section_id}`]; // pehle nikal liya, taaki niche exempt kar sakein
 
       const freeTeachers = draft.teachers.filter((t) =>
         t.teacher_id !== te.teacher_id &&
         !unavailable[t.teacher_id] &&
         !busy.has(t.teacher_id) &&
-        !takenBySubst.has(t.teacher_id)
+        // is teacher ko "taken" tabhi maano jab wo KISI AUR gap ke liye confirm hua ho —
+        // apne hi gap ke confirmed substitute ko list se mat hatao
+        (!takenBySubst.has(t.teacher_id) || t.teacher_id === existing?.substitute_teacher_id)
       );
 
       const qualifiedSet = subjectQualified[te.subject_id] || new Set();
       const suggested = freeTeachers.filter((t) => qualifiedSet.has(t.teacher_id));
       const others = freeTeachers.filter((t) => !qualifiedSet.has(t.teacher_id));
-
-      const existing = existingMap[`${te.period_slot_id}_${te.section_id}`];
 
       return {
         key: `${te.period_slot_id}_${te.section_id}`,
