@@ -315,22 +315,44 @@ const FEES_DATA = STUDENTS.map((s) => ({
 // ═══════════════════════════════════════════════════════════════
 // THEME & COLORS
 // ═══════════════════════════════════════════════════════════════
-const C = {
-  primary: SCHOOL_CONFIG.color,
-  primaryLight: SCHOOL_CONFIG.colorLight,
-  primaryDark: SCHOOL_CONFIG.colorDark,
+const DARK_SURFACE = {
   bg: "#0F1117",
   surface: "#1A1D27",
   surfaceAlt: "#21253A",
   border: "#2D3250",
   text: "#E8EAF6",
   textMuted: "#8B92B8",
+};
+const LIGHT_SURFACE = {
+  bg: "#F7F7FB",
+  surface: "#FFFFFF",
+  surfaceAlt: "#F1F1F8",
+  border: "#E4E4F0",
+  text: "#14151F",
+  textMuted: "#676C8A",
+};
+const getSavedTheme = () => localStorage.getItem("erp_theme") || "dark";
+
+// C ko "let" rakha hai aur mutate karte hain — kabhi reassign nahi karte,
+// kyunki poori file me C.xxx bare reference se padha jaata hai. Isliye
+// in-place mutation + ek re-render se sabhi jagah naya theme aa jaata hai.
+let C = {
+  primary: SCHOOL_CONFIG.color,
+  primaryLight: SCHOOL_CONFIG.colorLight,
+  primaryDark: SCHOOL_CONFIG.colorDark,
+  ...(getSavedTheme() === "light" ? LIGHT_SURFACE : DARK_SURFACE),
   green: "#22C55E",
   red: "#EF4444",
   yellow: "#F59E0B",
   blue: "#3B82F6",
   purple: "#A855F7",
   cyan: "#06B6D4",
+};
+
+const applyTheme = (mode) => {
+  Object.assign(C, mode === "light" ? LIGHT_SURFACE : DARK_SURFACE);
+  localStorage.setItem("erp_theme", mode);
+  injectStyles(); // stylesheet ko naye C values ke sath dobara likhta hai
 };
 
 const CHART_COLORS = [
@@ -347,10 +369,14 @@ const CHART_COLORS = [
 // ═══════════════════════════════════════════════════════════════
 // CSS INJECTION
 // ═══════════════════════════════════════════════════════════════
+let _styleTag = null;
 const injectStyles = () => {
-  const style = document.createElement("style");
+  if (!_styleTag) {
+    _styleTag = document.createElement("style");
+    document.head.appendChild(_styleTag);
+  }
 
-  style.textContent = `
+  _styleTag.textContent = `
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'DM Sans',sans-serif;background:${C.bg};color:${C.text};overflow-x:hidden;}
@@ -420,9 +446,6 @@ const injectStyles = () => {
     .logo-loader-spin{display:inline-block;border-radius:14px;overflow:hidden;animation:logoSpinZoom 1.4s ease-in-out infinite;}
     @keyframes logoSpinZoom{0%{transform:scale(0.82) rotate(0deg);opacity:0.75;}50%{transform:scale(1.08) rotate(180deg);opacity:1;}100%{transform:scale(0.82) rotate(360deg);opacity:0.75;}}
   `;
-
-  document.head.appendChild(style);
-
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -23103,6 +23126,13 @@ const SchoolERP = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [themeMode, setThemeMode] = useState(getSavedTheme());
+
+  const toggleTheme = () => {
+    const next = themeMode === "dark" ? "light" : "dark";
+    applyTheme(next);     // C object mutate hota hai
+    setThemeMode(next);   // ye re-render trigger karta hai → saare children naye C values utha lete hain
+  };
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -23366,6 +23396,14 @@ const SchoolERP = () => {
                 </div>
               </div>
             </div>
+            <button
+              className="btn btn-ghost"
+              onClick={toggleTheme}
+              title="Toggle theme"
+              style={{ padding: "7px 9px", fontSize: 15 }}
+            >
+              {themeMode === "dark" ? "☀️" : "🌙"}
+            </button>
             <button
               className="btn btn-danger"
               onClick={logout}
