@@ -2014,6 +2014,39 @@ const DashboardModule = ({ school }) => {
         })();
       }, []);
 
+      // 🔴 Real KPI trends (vs last month) — replaces hardcoded 3.2 / 0 / 5.8 / -2.1
+      const [kpiTrends, setKpiTrends] = useState(null);
+      useEffect(() => {
+        (async () => {
+          try {
+            const res = await apiRequest("/dashboard/kpi-trends");
+            setKpiTrends(res?.data || null);
+          } catch (e) {
+            console.error("Failed to load KPI trends", e);
+            setKpiTrends(null);
+          }
+        })();
+      }, []);
+
+      // 🔴 Real 7-day attendance trend (replaces Math.random())
+      const [realAttendanceTrend, setRealAttendanceTrend] = useState([]);
+      useEffect(() => {
+        (async () => {
+          try {
+            const res = await apiRequest("/dashboard/summary");
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const mapped = (res?.data?.attendanceTrend || []).map((d) => ({
+              day: days[new Date(d.date).getDay()],
+              rate: d.rate,
+            }));
+            setRealAttendanceTrend(mapped);
+          } catch (e) {
+            console.error("Failed to load attendance trend", e);
+            setRealAttendanceTrend([]);
+          }
+        })();
+      }, []);
+
 
   const totalStudents = STUDENTS.length;
   const totalTeachers = staffAttendance.length || TEACHERS.length;
@@ -2040,10 +2073,7 @@ const DashboardModule = ({ school }) => {
       }));
 
 
-  const attendanceTrend = Array.from({ length: 7 }, (_, i) => ({
-    day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i],
-    rate: Math.floor(Math.random() * 15) + 82,
-  }));
+      const attendanceTrend = realAttendanceTrend;
 
     const feeStatusDist = [
     { name: "Paid", value: feeOverview?.summary?.paid_count || 0 },
@@ -2115,7 +2145,7 @@ const DashboardModule = ({ school }) => {
           sub={`Across ${CLASSES.length} classes`}
           icon="students"
           color={C.blue}
-          trend={3.2}
+          trend={kpiTrends?.students}
         />
         <KpiCard
           label="Teaching Staff"
@@ -2123,7 +2153,7 @@ const DashboardModule = ({ school }) => {
           sub={`${presentToday} present today`}
           icon="teachers"
           color={C.green}
-          trend={0}
+          trend={kpiTrends?.staff}
         />
         <KpiCard
           label="Fee Collected"
@@ -2131,7 +2161,7 @@ const DashboardModule = ({ school }) => {
           sub="This academic year"
           icon="fee"
           color={C.primary}
-          trend={5.8}
+          trend={kpiTrends?.feeCollected}
         />
         <KpiCard
           label="Fee Pending"
@@ -2139,7 +2169,7 @@ const DashboardModule = ({ school }) => {
           sub={`${feeOverview?.summary?.pending_count || 0} students`}
           icon="warning"
           color={C.red}
-          trend={-2.1}
+          trend={kpiTrends?.feePending}
         />
       </div>
 
@@ -23389,9 +23419,34 @@ const SchoolERP = () => {
               onMouseEnter={(e) => (e.currentTarget.style.background = C.border)}
               onMouseLeave={(e) => (e.currentTarget.style.background = C.surfaceAlt)}
             >
-              <span style={{ fontSize: 18 }}>👨‍💼</span>
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt=""
+                  style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    background: C.primary,
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {(user?.name || "U").trim().charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="hide-mobile">
-                <div style={{ fontSize: 12, fontWeight: 600 }}>Principal</div>
+                <div style={{ fontSize: 12, fontWeight: 600, textTransform: "capitalize" }}>
+                  {(user?.role || "User").replace(/_/g, " ")}
+                </div>
                 <div style={{ fontSize: 10, color: C.textMuted }}>
                   {school.name.split(" ")[0]}
                 </div>
@@ -23566,7 +23621,14 @@ const AuthProvider = ({ children }) => {
     });
   }, [authCheckFailed]); // eslint-disable-line
 
-  const logout = React.useCallback(() => {
+  const logout = React.useCallback(async () => {
+    try {
+      await apiRequest("/auth/logout", "POST");
+    } catch (e) {
+      // Backend call fail ho (network issue, token already expired, etc.)
+      // to bhi user ko frontend se logout hona hi chahiye
+      console.error("Logout API call failed:", e.message);
+    }
     localStorage.removeItem("erp_token");
     setUser(null);
   }, []);
@@ -23627,7 +23689,7 @@ const AuthProvider = ({ children }) => {
         // 🔴 Server se actually verify karo ki token valid hai — race against 5s timeout
         const res = await Promise.race([apiRequest("/auth/me"), timeout]);
         const d = res?.data || res;
-        setUser({ id: d.id, role: d.role, name: d.full_name || "Principal", schoolId: d.school_id });
+        setUser({ id: d.id, role: d.role, name: d.full_name || "User", schoolId: d.school_id, avatarUrl: d.avatar_url || "" });
       } catch (e) {
         if (e.message === "Auth check timed out") {
           // Server slow/unreachable — token abhi bhi VALID ho sakta hai, isko delete mat karo
@@ -23667,8 +23729,9 @@ const AuthProvider = ({ children }) => {
             setUser({
               id: payload.userId || payload.user?.id,
               role: payload.role || payload.user?.role,
-              name: payload.name || payload.user?.fullName || "Principal",
+              name: payload.name || payload.user?.fullName || "User",
               schoolId: payload.schoolId || payload.user?.school?.id,
+              avatarUrl: payload.avatarUrl || payload.user?.avatar_url || "",
             });
     } catch (error) {
       throw { response: { data: { error: error.message || "Login failed" } } };
@@ -25398,11 +25461,14 @@ const DataProvider = ({ children }) => {
 
     const fetchAllData = async () => {
       try {
-        // Fetch real data from Azure backend
-        const [realStudents, realTeachers] = await Promise.all([
-          apiRequest("/students"),
+        
+        const [studentsRes, teachersRes] = await Promise.all([
+          apiRequest("/students?limit=2000"),
           apiRequest("/teachers"),
         ]);
+
+        const realStudents = studentsRes?.data || [];
+        const realTeachers = teachersRes?.data || [];
 
         setAppData({
           students: realStudents.length > 0 ? realStudents : STUDENTS,
