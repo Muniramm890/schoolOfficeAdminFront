@@ -2308,7 +2308,7 @@ const DashboardModule = ({ school }) => {
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
               <XAxis dataKey="day" tick={{ fill: C.textMuted, fontSize: 11 }} />
               <YAxis
-                domain={[70, 100]}
+               domain={['dataMin - 5', 'dataMax + 5']}
                 tick={{ fill: C.textMuted, fontSize: 11 }}
               />
               <Tooltip
@@ -2344,7 +2344,7 @@ const DashboardModule = ({ school }) => {
                 dataKey="name"
                 tick={{ fill: C.textMuted, fontSize: 10 }}
               />
-              <YAxis tick={{ fill: C.textMuted, fontSize: 10 }} />
+              <YAxis tick={{ fill: C.textMuted, fontSize: 10 }} tickFormatter={(v) => `₹${v}K`} />
               <Tooltip
                 contentStyle={{
                   background: C.surface,
@@ -2352,6 +2352,7 @@ const DashboardModule = ({ school }) => {
                   borderRadius: 8,
                   color: C.text,
                 }}
+                formatter={(v) => `₹${v}K`}
               />
               <Bar
                 dataKey="paid"
@@ -15287,22 +15288,21 @@ const FeesModule = ({ school }) => {
               </h3>
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart
-                                    data={(overviewData?.byClass || []).map((c) => ({
-                                      name: c.class_name,
-                                      paid: Math.round((c.paid_paise || 0) / 100000) / 10,
-                                      pending: Math.round((c.pending_paise || 0) / 100000) / 10,
-                                    }))}
-                  barSize={14}
+                  data={(overviewData?.byClass || []).map((c) => ({
+                    name: (c.class_name || "").replace("Class ", "C"),
+                    paid: (c.paid_paise || 0) / 100000,
+                    pending: (c.pending_paise || 0) / 100000,
+                  }))}
+                  barSize={16}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
-                  <XAxis dataKey="name" tick={{ fill: C.textMuted, fontSize: 10 }} angle={-35} textAnchor="end" height={60} />
+                  <XAxis dataKey="name" tick={{ fill: C.textMuted, fontSize: 10 }} />
                   <YAxis tick={{ fill: C.textMuted, fontSize: 10 }} tickFormatter={(v) => `₹${v}K`} />
                   <Tooltip
                     contentStyle={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text }}
                     formatter={(v) => `₹${v}K`}
                   />
-                  <Legend formatter={(v) => <span style={{ color: C.textMuted, fontSize: 11 }}>{v}</span>} />
-                  <Bar dataKey="paid" fill={C.green} radius={[4, 4, 0, 0]} name="Collected" />
+                  <Bar dataKey="paid" fill={C.green} radius={[4, 4, 0, 0]} name="Paid" />
                   <Bar dataKey="pending" fill={C.red} radius={[4, 4, 0, 0]} name="Pending" />
                 </BarChart>
               </ResponsiveContainer>
