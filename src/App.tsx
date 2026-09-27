@@ -15315,9 +15315,10 @@ const FeesModule = ({ school }) => {
               {(overviewData?.byClass || [])
                 .filter((c) => c.pending_paise > 0)
                 .sort((a, b) => b.pending_paise - a.pending_paise)
-                .slice(0, 6)
+                .slice(0, 10)
+              
                 .map((c) => {
-                  const total = c.paid_paise + c.pending_paise;
+                  const total = Number(c.paid_paise || 0) + Number(c.pending_paise || 0);
                   const recoveryPct = total > 0 ? Math.round((c.paid_paise / total) * 100) : 0;
                   return (
                     <div key={c.class_name} style={{ marginBottom: 12 }}>
